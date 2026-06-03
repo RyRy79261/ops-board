@@ -27,8 +27,11 @@
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
     "@opsboard/typescript-config": "workspace:*",
+    "@types/pg": "^8.11.10",
+    "@vitest/coverage-v8": "^4.1.7",
     "drizzle-kit": "^0.31.0",
     "eslint": "^10.4.0",
+    "pg": "^8.13.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.7"
   }

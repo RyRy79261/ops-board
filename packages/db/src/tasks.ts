@@ -1,5 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { createHttpDb } from "./index";
+import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
 import type { Task, TaskDependency, TaskStatus } from "./schema";
 
@@ -29,8 +30,9 @@ export interface DependencyEdge {
 }
 
 /** All categories, ordered by `sort_order` (the board iterates this, never a hardcoded array). */
-export async function getCategories(): Promise<CategoryView[]> {
-  const db = createHttpDb();
+export async function getCategories(
+  db: OpsboardDb = createHttpDb(),
+): Promise<CategoryView[]> {
   const rows = await db
     .select()
     .from(schema.categories)
@@ -51,8 +53,10 @@ export async function getCategories(): Promise<CategoryView[]> {
  * (inferred) Task rows — the board groups / buckets them and derives blocked +
  * window state via @opsboard/core.
  */
-export async function getTasks(missionId: string): Promise<Task[]> {
-  const db = createHttpDb();
+export async function getTasks(
+  missionId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<Task[]> {
   return db
     .select()
     .from(schema.tasks)
@@ -61,8 +65,10 @@ export async function getTasks(missionId: string): Promise<Task[]> {
 }
 
 /** One task by id, or null. */
-export async function getTask(id: string): Promise<Task | null> {
-  const db = createHttpDb();
+export async function getTask(
+  id: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<Task | null> {
   const [row] = await db
     .select()
     .from(schema.tasks)
@@ -79,9 +85,8 @@ export async function getTask(id: string): Promise<Task | null> {
  */
 export async function getTaskDependencies(
   missionId: string,
+  db: OpsboardDb = createHttpDb(),
 ): Promise<DependencyEdge[]> {
-  const db = createHttpDb();
-
   const taskRows = await db
     .select({ id: schema.tasks.id })
     .from(schema.tasks)
@@ -117,8 +122,8 @@ export type UpdateTaskStatusResult =
 export async function updateTaskStatus(
   taskId: string,
   status: TaskStatus,
+  db: OpsboardDb = createHttpDb(),
 ): Promise<UpdateTaskStatusResult> {
-  const db = createHttpDb();
   const [row] = await db
     .update(schema.tasks)
     .set({ status, updatedAt: new Date() })

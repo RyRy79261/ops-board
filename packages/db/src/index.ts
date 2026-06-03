@@ -1,9 +1,22 @@
 import { neon, neonConfig, Pool } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { drizzle as drizzleServerless } from "drizzle-orm/neon-serverless";
+import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
 
 export * as schema from "./schema";
+
+/**
+ * The drizzle Postgres database type the query services accept. Deliberately
+ * broad: it is the base `PgDatabase` generic parameterised only by our schema,
+ * so BOTH the production neon-http client (`createHttpDb`'s `NeonHttpDatabase`)
+ * AND a `drizzle-orm/node-postgres` client (used by the integration tests) are
+ * assignable to it — every driver's database class extends `PgDatabase`. The
+ * services only touch `.select` / `.insert` / `.update` / `.query`, all of
+ * which live on this base type, so the real service code runs unchanged
+ * against an injected node-postgres client.
+ */
+export type OpsboardDb = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 // In Node.js (e.g. cron jobs, CLI), use the WebSocket-backed serverless driver.
 // In edge / route handlers, prefer the HTTP driver — zero connection cost.
