@@ -79,15 +79,15 @@ Labelled single-line text entry. A vertical `[Label?] + Field` stack. The Field 
 
 **Anatomy:** frame [vertical, width fill_container, gap 7]
 ├─ text "Label" (id HRF5b) — optional; JetBrains Mono 11 / normal, $muted-foreground, letterSpacing 1.5, UPPERCASE (e.g. "NOTE")
-└─ frame "Area" (id h3v6q) [width fill_container, h 96, fill $muted, stroke $input 1px inner, layout vertical, padding [10,12]]
-   └─ text "Value" (id jsHam) — placeholder OR typed text; JetBrains Mono 14 / normal, lineHeight 1.5, width fill_container, textGrowth fixed-width. Placeholder fill $muted-foreground-subtle; filled fill $foreground (showcase filled cell switches to DM Sans — informational only)
+└─ frame "Area" (id h3v6q showcase / TVfNR product) [width fill_container, h 96, fill $muted (showcase) / $background (product), stroke $input 1px inner (showcase) / $primary (product focused), layout vertical, padding [10,12] showcase / 12 uniform product]
+   └─ text "Value" (id jsHam showcase / apQ8S product) — placeholder OR typed text; width fill_container, textGrowth fixed-width. Placeholder = JetBrains Mono 14 / lineHeight 1.5 / $muted-foreground-subtle (showcase). PRODUCT typed value (NMzE5 ReportComposer apQ8S, the only product free-text surface) = **DM Sans 14 / lineHeight 1.45 / $foreground** — screens win for the filled value
 
 **Props:**
 
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `label` | ReactNode |  |  | Optional eyebrow label above the area. |
-| `value` | string |  |  | Controlled multi-line value; renders $foreground JetBrains Mono 14, lineHeight 1.5. |
+| `value` | string |  |  | Controlled multi-line value; renders $foreground DM Sans 14, lineHeight 1.45 (per the product ReportComposer surface). |
 | `placeholder` | string |  |  | Placeholder in $muted-foreground-subtle. |
 | `rows` | number |  |  | Optional row count; default height is 96px (min-h). |
 | `error` | string |  |  | Error message; stroke → $destructive, helper rendered $destructive role=alert. |
@@ -108,7 +108,7 @@ Labelled single-line text entry. A vertical `[Label?] + Field` stack. The Field 
 
 Labelled multi-line text entry. Identical pattern to TextInput but with a taller fixed-height `Area` (96px) and a `vertical` layout so the value flows from the top-left. Corner radius 0. Wraps shadcn `Textarea`.
 
-**Geometry:** Area height **96px** (min-height in build; allow vertical growth), fill `$muted`, stroke `$input` 1px inner, padding `[10,12]`. Value text is JetBrains Mono 14 / lineHeight 1.5, `width: fill_container`, anchored top-left.
+**Geometry:** Area height **96px** (min-height in build; allow vertical growth), `width: fill_container`. Showcase Area: fill `$muted`, stroke `$input` 1px inner, padding `[10,12]`. The real product surface (NMzE5 ReportComposer Description Field, node `TVfNR`) is `$background` fill, `$primary` stroke (focused), and **padding `12` uniform** (not `[10,12]`). Value text anchored top-left: placeholder = JetBrains Mono 14 / lineHeight 1.5 (showcase); **typed value = DM Sans 14 / lineHeight 1.45 / `$foreground`** on the product screen (`apQ8S`).
 
 **Label:** optional, JetBrains Mono 11 / normal `$muted-foreground` letterSpacing 1.5 UPPERCASE.
 
@@ -117,15 +117,15 @@ Labelled multi-line text entry. Identical pattern to TextInput but with a taller
 |---|---|---|---|---|
 | default / empty | `$muted` | `$input` | placeholder `$muted-foreground-subtle` | e.g. "Add context for the dispatcher…" |
 | focused · ring | `$background` | `$primary` | — | shadcn `focus-visible:ring-2 ring-ring` |
-| filled | `$background` | `$border` | `$foreground` (multi-line) | e.g. "Pickup blocked at dock 3 — reroute to dock 7…" |
+| filled | `$background` | `$border` (showcase) / `$primary` (product focused TVfNR) | `$foreground` (multi-line, DM Sans 14 / lh 1.45 on the product surface) | e.g. "Pickup blocked at dock 3 — reroute to dock 7…" |
 | error · destructive | `$background` | `$destructive` | `$foreground` | pair with helper in `$destructive` |
 | disabled | base `opacity ~0.45` | — | — | inherits TextInput disabled treatment |
 
 **Build note:** map to `min-h-[96px]` (camp ships `min-h-[80px]`; bump to 96 to match the screen). Auto-grow optional; the design fixes height at 96.
 
-**Screen usages:** RcvKu component library: Textarea spec matrix — BASE / FOCUSED·RING / FILLED cells (placeholder "Add context for the dispatcher…", filled "Pickup blocked at dock 3 — reroute…"); NMzE5 Shake-to-Report / ReportComposer: multi-line message capture (composer body) — the only product surface for free-text notes (read-only board has no task-edit textarea)
+**Screen usages:** RcvKu component library: Textarea spec matrix — BASE / FOCUSED·RING / FILLED cells (placeholder "Add context for the dispatcher…", filled "Pickup blocked at dock 3 — reroute…"); NMzE5 Shake-to-Report / ReportComposer: multi-line message capture (composer body, Description Field `TVfNR` / Val `apQ8S`) — the only product surface for free-text notes (read-only board has no task-edit textarea): h96, fill $background, stroke $primary, padding 12 uniform, value DM Sans 14 / lineHeight 1.45 / $foreground
 
-**Reconciliation (screen ← library):** Canonical fixed height 96 and placeholder-only. Widened to: explicit FILLED state (fill $background, stroke $border, $foreground multi-line value) and a destructive error state by analogy to TextInput (the showcase only shows base/focused/filled but the error treatment is required for the ReportComposer). The showcase filled cell renders the value in DM Sans — kept informational; the canonical value font (JetBrains Mono) is authoritative for the contract since every other field uses it.
+**Reconciliation (screen ← library):** Canonical fixed height 96 and placeholder-only. Widened to: explicit FILLED state and a destructive error state by analogy to TextInput (the showcase only shows base/focused/filled but the error treatment is required for the ReportComposer). Value-font split confirmed against screens: the showcase placeholder is JetBrains Mono 14 (lineHeight 1.5), but the **actual product surface** — NMzE5 ReportComposer's Description Field (`TVfNR`/`apQ8S`), the only product free-text textarea — renders the typed value in **DM Sans 14 / lineHeight 1.45 / $foreground** with **padding 12 uniform** (not `[10,12]`). Screens win, so the product textarea value is DM Sans 14 / lh 1.45 (this is the inverse of TextInput, where the DM Sans was a showcase-only ERROR cell and JetBrains Mono held on every product input).
 
 ---
 
@@ -140,6 +140,8 @@ Labelled multi-line text entry. Identical pattern to TextInput but with a taller
    ├─ text "Value" (id x7bA7R) — placeholder OR selected value; JetBrains Mono 14 / normal. Placeholder fill $muted-foreground-subtle; selected fill $foreground
    └─ icon "Chevron" (id aR80e) — lucide `chevron-down`, 16×16, $muted-foreground
 
+SCREEN OVERLOAD — COMPACT (NMzE5 Settings rows, nodes XGS3g desktop / SQZnJ mobile — inline in a SettingsRow, NO standalone label): Trigger **h 34** (NOT 40), fill $muted, stroke $input 1px inner, padding **[0,10]** (NOT [0,12]), gap 10 (desktop) / 8 (mobile), alignItems center — note this row uses `gap` + alignment rather than space_between; Value (id ZmbIY / HiVHO) = **JetBrains Mono 12 / weight 500** (NOT 14 normal), $foreground; Chevron (id Jhh7R / G5h7J) = lucide `chevron-down` **14×14** (NOT 16), $muted-foreground
+
 [OPEN] Popover/Content (Radix SelectContent, not drawn as a discrete node on screen — implied by "OPEN · POPOVER" cell): surface $popover, 1px $border, item rows JetBrains Mono 14, selected item shows lucide `check`; matches camp SelectContent/SelectItem.
 
 **Props:**
@@ -152,11 +154,12 @@ Labelled multi-line text entry. Identical pattern to TextInput but with a taller
 | `onValueChange` | (value: string) => void |  |  | Radix change handler. |
 | `placeholder` | string |  |  | Trigger placeholder when no value (e.g. "Select priority…"), $muted-foreground-subtle. |
 | `items` | Array<{ value: string; label: ReactNode }> | ✓ |  | Options rendered as SelectItem rows in the popover. |
+| `size` | "default" | "compact" |  | "default" | default = h40 / value JetBrains Mono 14 normal / chevron 16 / padding [0,12]; compact = h34 / value JetBrains Mono 12 weight 500 / chevron 14 / padding [0,10] — the inline Settings-row trigger (NMzE5 XGS3g/SQZnJ). |
 | `disabled` | boolean |  | false | Dims trigger, non-interactive. |
 | `error` | string |  |  | Stroke → $destructive + helper in $destructive (parity with TextInput). |
 | `id` | string |  |  | Auto-generated via useId for label association. |
 
-**Variants:** `base/placeholder`, `open·popover`, `filled (value selected)`, `error·destructive`, `disabled`
+**Variants:** `base/placeholder`, `open·popover`, `filled (value selected)`, `error·destructive`, `disabled`, `size: default (40px)`, `size: compact (34px, Settings rows)`
 
 **States:** `closed/placeholder`, `hover`, `focused`, `open (popover visible)`, `item-selected`, `filled (closed with value)`, `disabled`
 
@@ -168,7 +171,9 @@ Labelled multi-line text entry. Identical pattern to TextInput but with a taller
 
 Labelled single-choice dropdown. Trigger mirrors TextInput's Field but always carries a trailing `chevron-down` and uses `space_between`. Built on Radix `Select` (camp's `select.tsx`).
 
-**Trigger geometry:** h 40, fill `$muted`, stroke `$input` 1px inner, padding `[0,12]`, `justifyContent space_between`, `alignItems center`. Value JetBrains Mono 14; chevron lucide `chevron-down` 16×16 `$muted-foreground`.
+**Trigger geometry (default):** h 40, fill `$muted`, stroke `$input` 1px inner, padding `[0,12]`, `justifyContent space_between`, `alignItems center`. Value JetBrains Mono 14 normal; chevron lucide `chevron-down` 16×16 `$muted-foreground`.
+
+**Trigger geometry (compact — `size='compact'`, NMzE5 Settings rows `XGS3g`/`SQZnJ`):** h **34**, fill `$muted`, stroke `$input` 1px inner, padding **`[0,10]`**, `gap 10` (desktop) / `8` (mobile), `alignItems center`. Value **JetBrains Mono 12 / weight 500**; chevron `chevron-down` **14×14** `$muted-foreground`. This is the divergent on-screen Settings rendering — captured as an explicit variant (mirroring SearchField's compact treatment) so it's reproducible; the showcase trigger stays the default.
 
 **State → style map (exact):**
 | State | Trigger fill | Trigger stroke | Value | Chevron |
@@ -182,9 +187,9 @@ Labelled single-choice dropdown. Trigger mirrors TextInput's Field but always ca
 
 **Note:** the board's intent/scope dropdown-like UI (AI Research INTENT row) is a bespoke badge, NOT this Select — do not conflate.
 
-**Screen usages:** RcvKu component library: Select spec matrix — BASE ("Select priority…") / OPEN·POPOVER ("High", trigger $background/$primary); NMzE5 Settings: any single-choice preference (theme/range) renders through this trigger pattern; component-usage-map lists Select for the Account·Settings board
+**Screen usages:** RcvKu component library: Select spec matrix — BASE ("Select priority…") / OPEN·POPOVER ("High", trigger $background/$primary); NMzE5 Settings: single-choice preference rows render through the **compact** trigger (nodes `XGS3g` desktop / `SQZnJ` mobile — h34, padding [0,10], value JetBrains Mono 12 weight 500, chevron 14, e.g. "MacBook Pro Mic"); component-usage-map lists Select for the Account·Settings board
 
-**Reconciliation (screen ← library):** Canonical only renders the trigger (label + value + chevron). Widened to: (1) explicit filled-closed state (value $foreground, trigger stays $muted/$input); (2) Radix popover content styling inherited from camp's SelectContent/SelectItem (the screens never draw the open list, so the canonical trigger-only def is extended by composition rather than redrawn); (3) error/destructive state added for parity. The chevron stays $muted-foreground; OPEN cell only swaps trigger fill/stroke to $background/$primary (focus ring), matching TextInput's focused treatment.
+**Reconciliation (screen ← library):** Canonical only renders the trigger (label + value + chevron) at h40 / JetBrains Mono 14 / chevron 16. Widened to: (1) explicit filled-closed state (value $foreground, trigger stays $muted/$input); (2) Radix popover content styling inherited from camp's SelectContent/SelectItem (the screens never draw the open list, so the canonical trigger-only def is extended by composition rather than redrawn); (3) error/destructive state added for parity; (4) a **`compact` size** added to capture the divergent NMzE5 Settings trigger (`XGS3g`/`SQZnJ`: h34, padding [0,10], value JetBrains Mono 12 weight 500, chevron 14×14) — screens win, so the Settings-row Select is the compact variant rather than the default 40px trigger (parallel to how SearchField gained a compact variant for the Manual bar). The chevron stays $muted-foreground; OPEN cell only swaps trigger fill/stroke to $background/$primary (focus ring), matching TextInput's focused treatment.
 
 ---
 
@@ -364,10 +369,15 @@ Single-select radio with an adjacent DM Sans label. An 18×18 circle (the ONE in
 
 ON state (showcase "Switch On"): Track fill $primary, strokeWidth 0, justifyContent end; Knob fill $primary-foreground.
 
-SCREEN OVERLOAD (NMzE5 Settings, 11 instances — standalone, NO inline label, sits in SettingsRow trailing slot):
+SCREEN OVERLOAD — SQUARE (NMzE5 Settings, 7 instances — standalone, NO inline label, sits in SettingsRow trailing slot: IOSAg/IKIoK/favri/Fc7Sa desktop + j0pQg/J0XnUa/XICuj mobile):
   Track 44×24, cornerRadius 2, strokeWidth 1
-  • ON:  fill $primary, stroke $primary, justifyContent end, Knob = ellipse 18×18 fill $primary-foreground
+  • ON:  fill $primary, stroke $primary, justifyContent end, Knob = ellipse 18×18 fill $primary-foreground (e.g. IOSAg)
   • OFF: fill $muted,   stroke $border-hover, (knob left), Knob = ellipse 18×18 fill $foreground
+
+SCREEN OVERLOAD — PILL (NMzE5 ReportComposer/ShakeReport Toggle Rows, 4 instances — NOT in SettingsRow: NYAsE/tfit5/JkQ33/Jd7oZ):
+  Track 42×24, cornerRadius 12, NO stroke (strokeWidth 0)
+  • ON:  fill $primary, justifyContent end, Knob = ellipse 18×18 fill $primary-foreground (e.g. NYAsE)
+  • OFF: fill $muted,  (knob left), Knob = ellipse 18×18 fill $foreground
 
 **Props:**
 

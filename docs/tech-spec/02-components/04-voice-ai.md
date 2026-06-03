@@ -20,7 +20,7 @@
 | `className` | string |  |  | For fixed positioning: bottom-right both desktop & mobile (brief §11.1), z-150, `padding-bottom: env(safe-area-inset-bottom)` on mobile. |
 | `aria-label` | string | ✓ | 'Voice command' | State-appropriate label; error state adds `role="alert"`. |
 
-**Variants:** `idle: 72px button fill $primary, lucide `mic` 28px (board idle uses 30px), Pulse Ring visible static, hint 'TAP TO RECORD' ($muted-foreground)`, `requesting (DOCUMENTED-but-MISSING on boards): button $primary, spinner glyph, hint 'Allow microphone…' — synthesize from brief §11`, `recording: button fill $destructive, lucide `square` glyph, Pulse Ring stroke $destructive (animated), hint '● TAP TO STOP' ($destructive); pairs with live waveform + mm:ss in RecordingPanel`, `processing: button fill $muted + 1px $border ring (Pulse Ring hidden/`enabled:false`), lucide `loader-circle` (spinning), hint 'TRANSCRIBING…' ($muted-foreground)`, `error: button fill $muted + stroke $destructive, lucide `triangle-alert` 28px, a 2px $destructive underline bar below the button, hint 'TAP TO RETRY' ($destructive)`
+**Variants:** `idle: 72px button fill $primary, lucide `mic` 28px (board idle uses 30px), Pulse Ring visible static, hint 'TAP TO RECORD' ($muted-foreground)`, `requesting (DOCUMENTED-but-MISSING on boards): button $primary, spinner glyph, hint 'Allow microphone…' — synthesize from brief §11`, `recording: button fill $destructive, lucide `square` glyph, Pulse Ring stroke $destructive (animated), hint '● TAP TO STOP' ($destructive); pairs with live waveform + mm:ss in RecordingPanel`, `processing: button fill $muted + 1px $border ring (Pulse Ring hidden/`enabled:false`), lucide `loader` (spinning) — authoritative T2BChB processing cell node PAmqB is `loader` 30px; the RcvKu showcase ref CodHK overrides to `loader-circle`, but screens win → `loader`, hint 'TRANSCRIBING…' ($muted-foreground)`, `error: button fill $muted + stroke $destructive, lucide `triangle-alert` 28px, a 2px $destructive underline bar below the button, hint 'TAP TO RETRY' ($destructive)`
 
 **States:** `idle`, `requesting`, `recording`, `processing`, `error/retry`, `hover (idle → border/ring brighten)`, `focus-visible (ring $ring)`
 
@@ -48,7 +48,7 @@ frame 96×96 (layout:none)
 | **idle** | $primary | `mic` (28/30px) | $primary, static | `TAP TO RECORD` ($muted-foreground) |
 | **requesting** *(brief-only, no board art)* | $primary | spinner | — | `Allow microphone…` |
 | **recording** | $destructive | `square` | $destructive, animated | `● TAP TO STOP` ($destructive) |
-| **processing** | $muted + 1px $border | `loader-circle` (spin) | hidden | `TRANSCRIBING…` |
+| **processing** | $muted + 1px $border | `loader` (spin) — screen T2BChB PAmqB 30px (showcase CodHK overrides to `loader-circle`; screens win) | hidden | `TRANSCRIBING…` |
 | **error** | $muted + stroke $destructive | `triangle-alert` | — + 2px $destructive underline bar | `TAP TO RETRY` ($destructive) |
 
 ### Props
@@ -465,15 +465,15 @@ Interactive → `aria-label="Source {n}"`; static → reads inline with prose.
 |---|---|---|---|---|
 | `domain` | string | ✓ |  | Mono domain, e.g. 'capenature.co.za'. |
 | `title` | string | ✓ |  | DM Sans source title. |
-| `faviconColor` | token | hex |  | $cat-bureaucratic | Favicon dot tone — screens use per-source colors (capenature=$cat-bureaucratic blue, afrikaburn=#ff6b35 orange, tankwatown=#e0c05a/$cat-gear amber, sars=…). |
+| `faviconColor` | token | hex |  | $cat-bureaucratic | Favicon dot tone — data-driven per source. The GZ7xA §03 SOURCES list (the SourceRow molecule, nodes zGvDz/cSEk4/uTFis) maps: tankwatown.org=$cat-bureaucratic, capenature.co.za=$cat-travel, sars.gov.za=$primary. (The AINotesBlock 'Sources' sub-list is a separate 8px-favicon structure with capenature=$cat-travel/afrikaburn=$primary(#ff6b35)/tankwatown=$cat-gear.) |
 | `href` | string |  |  | External link target → opens in new tab. |
-| `status` | 'ok' | 'failed' |  | 'ok' | Partial-results: a failed source uses an error treatment (x icon, muted/destructive) instead of external-link. |
+| `status` | 'ok' | 'failed' |  | 'ok' | Partial-results: the `failed` row is STRUCTURALLY DIFFERENT, not a restyle — GZ7xA cell 07 (jtSc3/W3nmk) renders ONLY `circle-x` 13px $warning + domain (mono 11 normal $foreground) + 'UNREACHABLE' (mono 10 ls1 $warning); NO favicon dot, NO separate title, NO external-link icon. |
 
-**Variants:** `ok (canonical): favicon dot + domain + title + external-link icon`, `failed (GZ7xA partial-results cell 07): same shape but failed/error treatment — x/alert icon, retry affordance context (the divergent failed-source variant)`, `favicon tones: $cat-bureaucratic / #ff6b35 / #e0c05a per source`
+**Variants:** `ok (canonical): favicon dot + domain + title + external-link icon`, `failed (GZ7xA partial-results cell 07, jtSc3/W3nmk): a STRUCTURALLY REDUCED row — `circle-x` 13px $warning + domain (mono 11 normal) + 'UNREACHABLE' (mono 10 ls1 $warning); drops the favicon dot, title, and external-link entirely (not just a recolor of the ok row)`, `favicon tones (§03 list): tankwatown.org=$cat-bureaucratic / capenature.co.za=$cat-travel / sars.gov.za=$primary (data-driven per source)`
 
 **States:** `default`, `hover (underline/elevate if linked)`, `failed (unreachable source)`
 
-**Tokens:** `$cat-bureaucratic`, `#ff6b35`, `#e0c05a ($cat-gear)`, `$muted-foreground`, `$foreground`, `$muted-foreground-subtle`, `$border`, `$destructive (failed)`
+**Tokens:** `$cat-bureaucratic`, `$cat-travel`, `$primary` (§03 favicon tones), `#ff6b35 / #e0c05a ($cat-gear)` (AINotesBlock sub-list tones), `$muted-foreground`, `$foreground`, `$muted-foreground-subtle`, `$border`, `$warning (failed/UNREACHABLE)`
 
 **A11y:** row is a link → `<a target="_blank" rel="noopener">` with `aria-label="{title}, {domain} (opens in new tab)"`; favicon dot decorative `aria-hidden`; external-link icon decorative; the new-tab affordance announced via label; failed row: `aria-label` includes 'unreachable'
 
@@ -494,7 +494,7 @@ frame [horizontal, gap10, pad10/0, center, fill]
 Stacks with top 1px $border dividers under a 'SOURCES' label inside AINotesBlock.
 
 ### Variants / states
-`ok` (canonical) · `failed` (partial-results — x/alert icon + muted/destructive). Favicon tone per source ($cat-bureaucratic / #ff6b35 / #e0c05a). hover (if linked).
+`ok` (canonical) · `failed` (partial-results — structurally reduced: `circle-x` $warning + domain + 'UNREACHABLE', no favicon/title/ext). Favicon tone per source, data-driven (§03 list: tankwatown=$cat-bureaucratic / capenature=$cat-travel / sars=$primary). hover (if linked).
 
 ### Props
 `domain` (req), `title` (req), `faviconColor?`=$cat-bureaucratic, `href?`, `status?`='ok'.
@@ -507,7 +507,7 @@ Linked row `<a target=_blank rel=noopener>` + new-tab label; dot/icon `aria-hidd
 
 **Screen usages:** GZ7xA §03 AINotesBlock 'Sources' — 3 rows (tankwatown.org, capenature.co.za, sars.gov.za) with top-border dividers; GZ7xA §04 cell 07 'PARTIAL RESULTS' — failed-source rows (2) in a card-elevated box; RcvKu showcase 'spec/SourceRow' canonical ggMJH + AINotesBlock source list refs
 
-**Reconciliation (screen ← library):** Canonical ggMJH is the healthy 'ok' row. The SCREEN reuses the same shape for FAILED sources (partial-results cell 07) with an error treatment (triage 'SourceRow reused as failed-source row'). Contract WIDENED with `status: 'ok'|'failed'`. Favicon tone is per-source (data-driven) — defaults to $cat-bureaucratic but screens set orange/amber/etc. Add `href` to make the whole row the external link (canonical only draws the icon).
+**Reconciliation (screen ← library):** Canonical ggMJH is the healthy 'ok' row. The SCREEN's FAILED rows (partial-results cell 07, jtSc3/W3nmk) are NOT a restyle of the ok row — they are a structurally reduced layout (`circle-x` 13px $warning + domain mono 11 normal + 'UNREACHABLE' mono 10 $warning; no favicon dot, no title, no external-link). Treat `status='failed'` as a distinct internal layout sharing only the row container, not a token swap on the ok anatomy. Contract WIDENED with `status: 'ok'|'failed'`. Favicon tone is per-source (data-driven) — defaults to $cat-bureaucratic; the §03 SOURCES list sets tankwatown=$cat-bureaucratic, capenature=$cat-travel, sars=$primary (nodes zGvDz/cSEk4/uTFis). Add `href` to make the whole row the external link (canonical only draws the icon).
 
 ---
 

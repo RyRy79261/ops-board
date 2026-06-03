@@ -17,7 +17,7 @@
 | `id` | string |  |  | Anchor id for TOC deep-linking. |
 | `className` | string |  |  | - |
 
-**Variants:** `header-with-number`, `header-without-number`, `body: paragraph-only`, `body: with bullet List`, `body: with embedded Callout (warning/info/danger)`, `body: with sub-heading (H3)`, `body: with inline link`, `fixed 600px column`, `fill_container pane`
+**Variants:** `header-with-number`, `header-without-number`, `body: paragraph-only`, `body: with bullet List`, `body: with embedded Callout (info/warning)`, `body: with sub-heading (H3)`, `body: with inline link`, `fixed 600px column`, `fill_container pane`
 
 **States:** `static read-only`, `anchor-targeted (scroll-into-view, no persistent state)`, `hover on inline links`
 
@@ -38,7 +38,7 @@ frame LegalSection [vertical, gap 14, width fill_container | 600]
 └─ Body [vertical, gap 14]
    ├─ P  DM Sans 16/normal $foreground lh1.65 fill
    ├─ List [vertical, gap 9] → LI [gap 12]{ Mk(Sq 6×6 $primary, top 9) + T DM Sans 16 $foreground lh1.6 } × n
-   └─ Callout (CodeCallout, tone=warning|info|danger)
+   └─ Callout (CodeCallout, tone=info|warning)  [Legal sections use $primary/$warning only; no $destructive Callout on-screen]
 ```
 
 ### Variants & states
@@ -192,7 +192,7 @@ Canonical `CQp4D` defines the EMPTY state (explicit `slot:[]` + centered SlotHin
 | `onSelect` | () => void |  |  | - |
 | `className` | string |  |  | - |
 
-**Variants:** `active (left border $primary + label $foreground + optional wash)`, `inactive`, `desktop left-rail item`, `mobile SectionNavChip pill (sibling)`
+**Variants:** `active (left border $primary + label $primary 14/600 + optional wash)`, `inactive`, `desktop left-rail item`, `mobile SectionNavChip pill (sibling)`
 
 **States:** `default (inactive)`, `active/current (scroll-spy)`, `hover`, `focus-visible ($ring)`
 
@@ -207,19 +207,19 @@ Manual table-of-contents item: a 248px row with a left-accent rail and a DM Sans
 ### Anatomy
 ```
 frame ManualTOCItem [width 248, fill #00000000 (active → bg-primary/12), border-left 2 (#00000000 → $primary active), padding 9/12]
-└─ L 'Window states' DM Sans 14/normal ($muted-foreground → $foreground active)
+└─ L 'Window states' DM Sans 14 ($muted-foreground/normal → $primary/600 active)  [screen: active row tvaRu label Ez23n = $primary 14/600]
 ```
 
 ### Variants & states
-- **Active** (left border → $primary, label → $foreground, optional $primary/12 wash) vs **inactive** (transparent border, muted label).
+- **Active** (left border → $primary, label → $primary 14/600, optional $primary/12 wash) vs **inactive** (transparent border, muted label).
 - Desktop left-rail item vs mobile SectionNavChip pill (sibling components, one nav model).
 - **States:** default (inactive); active/current (scroll-spy); hover (label → $foreground); focus-visible ($ring).
 
 ### Tokens
-`$primary` (active rail/wash) · `$foreground` (active label) · `$muted-foreground` (inactive) · transparent fill/border.
+`$primary` (active rail/wash + active label) · `$muted-foreground` (inactive label) · transparent fill/border.
 
 ### Reconciliation
-Canonical `AqpmA` ships ONLY the inactive default (transparent rail, muted label). ADDED explicit active tokens from the screen + brief NavCard rules: active = border-left-2 $primary + label $foreground (+ optional bg-primary/12). Mobile uses SectionNavChip (pill) — kept as a sibling presentation sharing the active-section source.
+Canonical `AqpmA` ships ONLY the inactive default (transparent rail, muted label). ADDED explicit active tokens from the screen: active = border-left-2 $primary + label $primary 14/600 (+ optional bg-primary/12 wash) — verified on NMzE5 active row `tvaRu` (label `Ez23n` = $primary 14/600, fill #ff6b351f, border-left $primary) and mirrored by the mobile SectionNavChip `T5qoy` (label `vDidy` = $primary mono 11/700). Mobile uses SectionNavChip (pill) — kept as a sibling presentation sharing the active-section source.
 
 ### Maps to
 - **camp-404:** NavCard-lite sidebar item with a left-accent active rail (echoes window-state border-l-2).
@@ -227,7 +227,7 @@ Canonical `AqpmA` ships ONLY the inactive default (transparent rail, muted label
 
 **Screen usages:** NMzE5 Manual desktop: left TOC rows with left-border active indicator.; NMzE5 Manual mobile: SectionNavChip pills.; RcvKu showcase 'cl-manualtocitem' (default-vs-active pair).
 
-**Reconciliation (screen ← library):** Canonical only shows inactive; active state added (border-left-2 $primary + label $foreground + optional bg-primary/12) per screen + brief. Drift: active was stroke-color-only — contract makes active a first-class prop with redundant visual+ARIA channels. Mobile SectionNavChip kept as a sibling, not collapsed.
+**Reconciliation (screen ← library):** Canonical only shows inactive; active state added (border-left-2 $primary + label $primary 14/600 + optional bg-primary/12) per screen (tvaRu/Ez23n). Drift: active was stroke-color-only — contract makes active a first-class prop with redundant visual+ARIA channels (left-accent + label-color + aria-current). Mobile SectionNavChip kept as a sibling, not collapsed.
 
 ---
 
@@ -258,7 +258,7 @@ Canonical `AqpmA` ships ONLY the inactive default (transparent rail, muted label
 
 ## CodeCallout
 
-Left-accent callout block with two realizations: a **code/console** form (mono lines: comment / spoken command / success result) for the Manual voice demos, and a tinted **prose-callout** form (icon + mono caps title + DM Sans body) embedded in Legal sections in warning/info/danger tones.
+Left-accent callout block with two realizations: a **code/console** form (mono lines: comment / spoken command / success result) for the Manual voice demos, and a tinted **prose-callout** form (icon + mono caps title + DM Sans body). The prose-callout is embedded in Legal sections in **info ($primary) and warning ($warning) tones only** (all 6 Legal `Sec §NN` callouts on NMzE5 — iRWkH/FXRG9 $primary, HHY3C/Dx7Rl/ZITNf/t2ytm $warning). The **danger ($destructive) tone** is supported but appears outside Legal, on Account/Debug `Alert`/`Last Error` frames (V7FNVF, X1UBu = #e05a5a1f / $destructive).
 
 ### Anatomy
 ```
@@ -284,15 +284,15 @@ frame [horizontal, gap 12, fill, bg-warning/12, border-left 2 $warning, padding 
 `$card-elevated` · `$primary` · `$muted-foreground-subtle` · `$foreground` · `$success` · `$warning` · `$destructive` · tint fills via /12.
 
 ### Reconciliation
-WIDENED. Canonical `g2Ink7` is ONLY the code form. Legal screens add a tinted prose 'Callout' (icon + caps title + body) in warning/info/danger — unified into one component with `variant` + `tone`. Raw tints (#d9a73e1f) → /12 token alphas (brief §3). Shared DNA: $card-elevated/tinted surface + left-accent border-l-2 + sharp corners.
+WIDENED. Canonical `g2Ink7` is ONLY the code form. Legal screens add a tinted prose 'Callout' (icon + caps title + body) in **info/warning only** (no $destructive Callout in any Legal section); the danger tone comes from the Account/Debug `Alert`/`Last Error` frames. Unified into one component with `variant` + `tone`. Raw tints (#d9a73e1f) → /12 token alphas (brief §3). Shared DNA: $card-elevated/tinted surface + left-accent border-l-2 + sharp corners.
 
 ### Maps to
 - **camp-404:** Card/Alert surface + border-l-2 accent.
 - **shadcn:** Alert is closest for the bordered shape; code form is an app-level extension.
 
-**Screen usages:** NMzE5 Manual: code/console CodeCallout (voice command example).; NMzE5 Legal: tinted 'Callout' blocks (warning/info/danger) embedded in §sections.; RcvKu showcase 'cl-codecallout'.
+**Screen usages:** NMzE5 Manual: code/console CodeCallout (voice command example).; NMzE5 Legal: tinted 'Callout' blocks (info/warning) embedded in §sections.; NMzE5 Account/Debug: danger-toned 'Alert'/'Last Error' frames (same shape, $destructive).; RcvKu showcase 'cl-codecallout'.
 
-**Reconciliation (screen ← library):** WIDENED: canonical is code-only; Legal screens add tinted prose callouts (icon + caps title + body) in warning/info/danger. Unified via variant ('code'|'callout') + tone axis. Raw hex tints → /12 token alphas. Shared structural DNA: tinted/$card-elevated surface + left-accent border-l-2 + sharp corners.
+**Reconciliation (screen ← library):** WIDENED: canonical is code-only; Legal screens add tinted prose callouts (icon + caps title + body) in info/warning (the danger tone is sourced from Account/Debug Alert frames, not Legal). Unified via variant ('code'|'callout') + tone axis. Raw hex tints → /12 token alphas. Shared structural DNA: tinted/$card-elevated surface + left-accent border-l-2 + sharp corners.
 
 ---
 
@@ -557,7 +557,7 @@ Canonical `cfa4F` matches the screen. Raw tints normalize: #e05a5a0d → bg-dest
 | `disabled` | boolean |  | false | - |
 | `className` | string |  |  | - |
 
-**Variants:** `selected ($primary border + filled dot)`, `unselected (empty circle, $border-hover)`, `range label 7d/30d/90d/all-time`, `count value`, `disabled (zero affected)`
+**Variants:** `selected ($primary border + filled dot)`, `unselected (empty circle, $border-hover)`, `range label: Last 7 days / Last 30 days / Last 6 months / Last year / All time`, `count value`, `disabled (zero affected)`
 
 **States:** `unselected`, `selected`, `hover`, `focus-visible`, `disabled`
 
@@ -578,15 +578,15 @@ frame [width 420, $muted, $border 1 (→ $primary selected), gap 12, padding 12/
 ```
 
 ### Variants & states
-- **Selected** (Radio filled dot + $primary border) vs **unselected** (empty circle, $border-hover).
-- Range label (7d/30d/90d/all-time); affected-count value; disabled (zero affected).
+- **Selected** (Radio filled dot + $primary row border + count → $primary) vs **unselected** (empty circle, $border-hover, count $muted-foreground).
+- Range set is exactly five rows: **Last 7 days (64) · Last 30 days (310) · Last 6 months (820) · Last year (1,204, selected) · All time (3,902)** — affected-count value; disabled (zero affected).
 - **States:** unselected, selected, hover, focus-visible, disabled.
 
 ### Tokens
 `$muted` `$border` `$background` `$border-hover` `$foreground` `$muted-foreground` · `$primary` (selected accent + dot).
 
 ### Reconciliation
-Canonical `aRrxF` shows only the unselected row (empty 18px circle). ADDED the selected state from the radio model + brief: Radio border → $primary + inner filled dot + row border → $primary. Radio is the rounded-full exception (radius 9). Built as a RadioGroupItem.
+Canonical `aRrxF` shows only the unselected row (empty 18px circle). ADDED the selected state from the radio model + brief: Radio border → $primary + inner filled dot + row border → $primary + count → $primary. Radio is the rounded-full exception (radius 9). Built as a RadioGroupItem. Range set verified on NMzE5 desktop (mnoWv/Y9EtG/N9TFL/GUu9T/RIGlU) and mobile (tdwvP/zIAfv/X0QdGe/muknx/jHCAb): Last 7 days / 30 days / 6 months / year (selected) / All time — no '90 days' range exists.
 
 ### Maps to
 - **camp-404:** label-wrapped radio option in a Card-like row.

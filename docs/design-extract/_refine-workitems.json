@@ -1,0 +1,248 @@
+[
+ {
+  "file": "docs/tech-spec/03-surfaces/states.md",
+  "extract_hint": "docs/design-extract/boards/TvXzz__empty-loading-error-states.json",
+  "findings": [
+   {
+    "item": "\u00a77 + checklist: Divergence ledger vs canonical defs (EmptyState Ie7mv, Skeleton HLa60, LoadingScreen lLfcN, ErrorBoundaryFallback d4KRE9, Button AtbGz, ErrorStateCard d2mdF, Spinner db8Tm)",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Canonical node ids and their property values are asserted: EmptyState Ie7mv (60x60 Hex polygon 2px stroke + inner 22x22 lucide mic abs at 19,19), Skeleton HLa60 (Bar fill_container x14 + Tags sub-row 70x12/90x12), LoadingScreen lLfcN, ErrorBoundaryFallback d4KRE9 (2px accent, ERR/TRACE), Button AtbGz, ErrorStateCard d2mdF, Spinner db8Tm (spec lines 175-204, 256)",
+    "evidence": "NONE of these node ids (Ie7mv, HLa60, lLfcN, d4KRE9, AtbGz, d2mdF, db8Tm) appear in the TvXzz extract; they belong to other boards/components and cannot be verified against this authoritative screen"
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/03-surfaces/ai-research.md",
+  "extract_hint": "docs/design-extract/boards/GZ7xA__ai-research-task-agent.json",
+  "findings": [
+   {
+    "item": "Errors & Edge States \u2014 Desktop gallery tKi6z: frame geometry, 8 ErrorStateCards (text/icons/severity/actions), severity-stripe color mapping",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Desktop Errors D01 'NO RESULTS' accent-stripe fill (Cell 01 Accent frame)",
+    "evidence": "Spec \u00a7 severity table (line ~599) maps 'Neutral / no-data | $muted-foreground | #7a7a8e | NO RESULTS (D01/M1)' and per-state list line 610 says 'severity $muted-foreground'; spec \u00a7595 explicitly asserts stripe + header text + header icon 'all share one token'. In the design, the Cell 01 Accent fill is '$border-hover' (#3a3a4a) while the header icon AND header text are '$muted-foreground' (#7a7a8e). So for D01 the stripe diverges from icon/header \u2014 a build following the spec would render the wrong stripe color. Mobile M1 stripe IS $muted-foreground (consistent), confirming desktop D01 is the anomaly."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/03-surfaces/account-settings-legal-manual.md",
+  "extract_hint": "docs/design-extract/boards/NMzE5__account-settings-legal-manual.json",
+  "findings": [
+   {
+    "item": "Shake-to-Report \u2014 Success/Error toast scrim characterization",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Success-state Overlay scrim fill (node yKx5U)",
+    "evidence": "Overlay yKx5U (Success state Zy2pG) has fill #0a0a0c80 (line 25428) \u2014 identical to the Error overlay (yKx5U-equivalent at line 25892/25895, also #0a0a0c80). The spec \u00a73 Success (line 422) does NOT state the Success overlay scrim fill at all (only mentions 'Backdrop opacity 0.6' and padding), and \u00a73 Error (line 430) presents #0a0a0c80 as a distinctive Error-state 'lighter scrim (\u224850%)'. The Success scrim value is therefore an on-screen fact missing from the spec's Success section."
+   },
+   {
+    "item": "Shake-to-Report \u2014 Success/Error toast scrim characterization",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Open item (line 680): 'success uses scrim #0a0a0ce6 path implied gone (backdrop 0.6) while error uses lighter #0a0a0c80 scrim'",
+    "evidence": "The Success overlay (yKx5U) is actually fill #0a0a0c80 (line 25428), NOT #0a0a0ce6. Both Success and Error overlays use the identical #0a0a0c80 scrim. The spec's claim that #0a0a0c80 is error-specific / that Success differs is unsupported \u2014 the two scrims are the same value."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/01-atoms-status.md",
+  "extract_hint": "components/components-batch1.json ; boards: category/timeline/deps/mobile",
+  "findings": [
+   {
+    "item": "StatusCycleButton",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "done \u2192 task name 'line-through text-muted-foreground' redundant channel (A11y line 312, variants lines 306/328)",
+    "evidence": "ZERO line-through/textDecoration/strikethrough properties exist in ANY board extract (Category/Timeline/Deps/Mobile/showcase grep = 0 hits). _triage-raw.json foundations.drift_vs_brief explicitly states 'Board omits ... the line-through-name treatment.' The line-through is a design-brief/ops-board.html intent, NOT present in the authoritative Pencil screens \u2014 yet the spec presents it as a screen-confirmed done variant."
+   },
+   {
+    "item": "StatusDot",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "size enum omits 7px",
+    "evidence": "Spec props (line 352) and reconciliation (line 376) fix size at '6 | 8' / 'size \u2208 {6,8}'. Dependencies (b1b079) renders 10 category dots at width=7 inside 'Cat Tag' (BXAnH/l5Vab/VINL4/EwvdT/v8d3ad/zsKiI/oTBm8/Rx617 etc.). A 7px size exists on a screen but is not in the contract's enum. (Triage radius note also lists board dots at 7/10/14px.)"
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/02-atoms-form.md",
+  "extract_hint": "components/components-batch1.json ; board: NMzE5",
+  "findings": [
+   {
+    "item": "Cmp \u00b7 Textarea",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Real product Textarea value font/lineHeight/padding (ReportComposer Description Field)",
+    "evidence": "NMzE5 node TVfNR (Description Field 'Box', the only product free-text surface the spec itself names) renders h96 fill $background stroke $primary, padding 12 (uniform, NOT [10,12]), value apQ8S = DM Sans 14 / lineHeight 1.45 / $foreground. The contract states 'typed value = JetBrains Mono 14' and dismisses DM Sans as a 'showcase artifact\u2026 JetBrains Mono is authoritative', but the actual product screen uses DM Sans 14 / lineHeight 1.45 / padding 12. Spec-to-screen mismatch on the surface the spec calls authoritative."
+   },
+   {
+    "item": "Cmp \u00b7 Select",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Compact Settings Select rendering (height/value-font/padding/chevron-size)",
+    "evidence": "NMzE5 nodes XGS3g and SQZnJ ('Select' in SettingsRow Group/Row) render height 34 (NOT 40), value ZmbIY JetBrains Mono 12 weight 500 (NOT 14 normal), padding [0,10] (NOT [0,12]), gap 10, chevron Jhh7R 14x14 (NOT 16). The contract's 'Trigger geometry: h 40 \u2026 chevron 16x16' and 'NMzE5 Settings\u2026 renders through this trigger pattern' do not capture this divergent compact size; no compact variant was added (unlike SearchField, where the divergence was widened)."
+   },
+   {
+    "item": "Cmp \u00b7 Switch",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Pill Switch rendering in ReportComposer/ShakeReport Toggle Rows (not captured by the square contract)",
+    "evidence": "NMzE5 nodes NYAsE, tfit5, JkQ33, Jd7oZ ('Switch' in Context Block/Toggle Row) render width 42 (NOT 44), cornerRadius 12 (PILL, NOT square 2), NO stroke, fill $primary, Knob ellipse 18x18 $primary-foreground. Triage corroborates (composites[16]/[30]: ReportComposer has an 'inline Switch (mirrors Cmp\u00b7Switch) = drift'). The contract's geometry ('square 44x24 cornerRadius 2 \u2014 NOT a pill') does not serve these 4 instances."
+   },
+   {
+    "item": "Cmp \u00b7 Switch",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Switch screen-instance count and location",
+    "evidence": "Contract states '11 standalone Switch toggles in SettingsRow trailing slots'. NMzE5 actually has exactly 11 Switch frames = 7 square in Settings (5 ON / 2 OFF: IOSAg,IKIoK,favri,Fc7Sa,j0pQg,J0XnUa,XICuj) + 4 pill in ReportComposer (NYAsE,tfit5,JkQ33,Jd7oZ). Only 7 are in SettingsRow, not 11."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/03-cards-data.md",
+  "extract_hint": "components/components-batch1.json, components-batch2.json ; boards: category/timeline/deps/mobile/states",
+  "findings": [
+   {
+    "item": "Cmp \u00b7 StatTile",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "size='detail' value (22) is claimed for 'Category/Timeline/Deps desktop', but the three boards render three DIFFERENT Val sizes",
+    "evidence": "Category D3JA0i tiles (aFnL2/W7cAa/UAoqL/Z9zT1U): Val fontSize=22. Timeline a3Dgz tiles (RcNqQ/N2F82H/OZv4Q/UFJ4x): Val fontSize=21. Dependencies b1b079 tiles (lLKcH/p31a7B/XESZE/TQKqp): Val fontSize=20. Spec \u00a7size-scale row 'Mission detail header (Category/Timeline/Deps desktop) Val 22' is only true for Category."
+   },
+   {
+    "item": "Cmp \u00b7 ProgressBar",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Contract prop table states height default 4 with note 'always 4 on screens' \u2014 Timeline mission-detail Progress Bar is height 6",
+    "evidence": "Timeline a3Dgz node bMFeK 'Progress Bar' (parent 'Mission Detail'): height=6, gap=2, segments Seg Done($success,180)/Seg Attn($warning,180)/Seg Rest($muted,fill). 'always 4 on screens' is false."
+   },
+   {
+    "item": "Cmp \u00b7 ProgressBar",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Timeline remainder uses a THIRD remainder tone ($muted) not covered by remainderTone enum 'track'($card-elevated)|'border'($border)",
+    "evidence": "Timeline bMFeK 'Seg Rest' fill=$muted; track frame fill=none. Deps xLPwD 'Remaining Seg' fill=$border with track fill=$muted. The enum omits a $muted remainder/track."
+   },
+   {
+    "item": "Cmp \u00b7 ProgressBar",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Anatomy/mode='progress' description names the track as $card-elevated, but the Deps board progress bar track fill is $muted (not $card-elevated)",
+    "evidence": "Dependencies b1b079 xLPwD 'Progress Bar': fill=$muted (not $card-elevated), segments Done Seg($success,376)/Active Seg($primary,118)/Remaining Seg($border,fill). Screen-usages line says 'success/primary/border over $card-elevated' but the track is $muted."
+   },
+   {
+    "item": "MissionSummaryCard",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "variants table 'Desktop detail header \u2026 StatTile size detail (22)' \u2014 only Category renders 22; Timeline=21, Deps=20",
+    "evidence": "Same evidence as StatTile: Timeline a3Dgz tiles Val=21 (RcNqQ etc.), Deps b1b079 tiles Val=20 (lLKcH etc.). The detail-header variant cannot be a single size=22."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/04-voice-ai.md",
+  "extract_hint": "components/components-batch2.json, components-batch4.json ; boards: voice-toasts, ai-research",
+  "findings": [
+   {
+    "item": "VoiceFAB",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "processing glyph: spec states lucide 'loader-circle' (variant list, state matrix, anatomy), but the authoritative T2BChB processing cell renders icon 'loader' (node PAmqB, 30px). Triage explicitly notes 'Processing FAB cell uses a 30px loader icon... Canonical Spinner is loader-circle... Icon name differs.' The RcvKu showcase ref CodHK does override to 'loader-circle', so spec follows showcase not screen; per screens-win the glyph should be 'loader'.",
+    "evidence": "T2BChB node PAmqB icon='loader'; spec L23/L51 say 'loader-circle'; showcase CodHK descendants O4jXV icon='loader-circle'"
+   },
+   {
+    "item": "SourceRow",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "favicon tone mapping is wrong vs the actual \u00a703 sources. Spec says 'capenature=$cat-bureaucratic blue, tankwatown=#e0c05a/$cat-gear amber'; the screen renders tankwatown.org=$cat-bureaucratic (node zGvDz), capenature.co.za=$cat-travel (cSEk4), sars.gov.za=$primary (uTFis). Also spec lists 'afrikaburn=#ff6b35' but afrikaburn.org appears only in the canonical AINotesBlock (F8Yism), not the \u00a703 list (which has sars.gov.za).",
+    "evidence": "GZ7xA \u00a703 favicons: zGvDz=$cat-bureaucratic (tankwatown), cSEk4=$cat-travel (capenature), uTFis=$primary (sars); spec L468/L472 mapping contradicts"
+   },
+   {
+    "item": "SourceRow",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "'failed' variant is structurally divergent from the SourceRow molecule. Partial-results rows (\u00a704 cell 07) are circle-x icon + domain + 'UNREACHABLE' label \u2014 they have NO favicon dot, NO title, NO external-link. The spec describes failed as 'same shape but x/alert icon', overstating reuse.",
+    "evidence": "GZ7xA cell 07 nodes jtSc3/W3nmk: icon 'circle-x' $warning + domain mono11 + 'UNREACHABLE' mono10 $warning; no Favicon/Title/Ext children, unlike canonical ggMJH"
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/05-typography.md",
+  "extract_hint": "components/components-batch2.json, components-batch3.json ; board: design-system WCTkf",
+  "findings": [
+   {
+    "item": "Type/Title",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Variant table line 86 cites 'MissionDetailHeader (D3JA0i)' and line 97 cites 'D3JA0i MissionDetailHeader ... (canonical lu9U0)'. D3JA0i is the BOARD FRAME id, not a MissionDetailHeader node. The canonical MissionDetailHeader frame is uJ5hm and its Title text node is lu9U0.",
+    "evidence": "boards/D3JA0i__category-board-desktop.json:5 id 'D3JA0i' is the top board frame; canonical header frame is uJ5hm with Title child lu9U0 (26/700) at components-batch3.json:693-720. Spec conflates board id with node id, violating the EVIDENCE RULE."
+   },
+   {
+    "item": "Type/Title",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Variant table line 88 cites 'Dependencies mission title (b1b079)'. b1b079 is the BOARD FRAME id; the actual Deps title text node is K2mivY.",
+    "evidence": "boards/b1b079__dependencies-desktop.json:5 id 'b1b079' is the board frame; the 24/700 title is node K2mivY (b1b079:561-568). Fact (24/700) is correct; node-id citation is wrong."
+   },
+   {
+    "item": "Type/Section",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Variant 'section-lg (24px, w600) \u2014 larger Legal layout' (line 117, 138). The grep for 44px Legal H1 and the WCTkf scale show no 24px section step in WCTkf; 24px on NMzE5 is the desktop page TITLE ('Account & security' 24/700, also Deps title 24/700) which is weight 700, not a 24/600 Section. A 24/600 Section heading node id is not cited.",
+    "evidence": "WCTkf section step zyroj=20/600 (WCTkf:287-295); NMzE5 24px instances found are titles at 700 (K2mivY 24/700). The 'section-lg 24/600' lacks a cited node id \u2014 flag as uncertain."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/06-chrome-nav.md",
+  "extract_hint": "components/components-batch3.json, components-batch4.json ; boards: category/timeline/deps/mobile",
+  "findings": [
+   {
+    "item": "AppHeader",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Exact values + Reconciliation: 'the Category/Timeline/Dependencies boards render the wordmark at letter-spacing 1px (drift)' / 'the 1px on product boards is drift to normalize to 4px'",
+    "evidence": "Wordmark letterSpacing is NOT uniformly 1px: Category D3JA0i (DM3Qo/ROl5q) = 4 (matches canonical, no drift); Timeline a3Dgz (X3tLM/R6wbDy) = 1.5; Dependencies b1b079 (OPS node line ~49) = 1. Only Dependencies is 1px. The 'all three boards = 1px' generalization is wrong; Category actually matches canonical 4px."
+   },
+   {
+    "item": "MissionDetailHeader",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "'Dependencies/Timeline desktop variant: adds a leading live dot before the title, a richer target LINE with a LOCATION suffix, title 25/600 (vs 26/700)' \u2014 attributed to BOTH Dependencies and Timeline",
+    "evidence": "These are Timeline-ONLY: a3Dgz Title Row (GXK29) has Live Dot ellipse Q5u0nz $primary 8x8 + Mission Title KP4U1 DM Sans 25/600, and Target Line ytHvB ends in '\u00b7 TANKWA KAROO, ZA' (TargetLoc ph1sw). Dependencies b1b079 Title Row (W3wCDA) has NO live dot, Title K2mivY is DM Sans 24/700 (not 25/600), and target v3BA3 = 'TARGET: 27 APR 2026 \u00b7 328 DAYS OUT' (a days-out suffix, NOT a location)."
+   },
+   {
+    "item": "DependencyConnector",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "'Dependencies board b1b079 (6 connectors: 3 muted-subtle normal + 3 primary critical-path...)' and '3 normal + 3 critical connectors'",
+    "evidence": "The tree (E3MHw) has only 5 in-tree Connector frames: 3 muted-subtle (gtvCL/PlSBk, t3RLGv/VYqED, OhnIh/j8JOJT) + 2 primary/critical (SE8nt/ZRR9o, annQn/dEMly). Critical path is on exactly 2 rows ('Submit visa application' MbSmE, 'Collect passport' PRkvq) \u2014 consistent with 2, not 3. The 3rd primary corner-down-right glyph (azaWQ) is the legend chip, which the spec itself says is NOT part of the connector. So '6 connectors / 3 critical' double-counts the legend glyph."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/02-components/07-asm-debug.md",
+  "extract_hint": "components/components-batch3.json, components-batch4.json ; boards: NMzE5, states",
+  "findings": [
+   {
+    "item": "ManualTOCItem",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Active label color: screen TOC active row (node tvaRu, label 'Task cards') renders label fill=$primary with border-left $primary + wash #ff6b351f. The mobile SectionNav active chip (node T5qoy/vDidy) also uses label $primary 11/700. Spec must say active label \u2192 $primary.",
+    "evidence": "Spec line 195 variants 'active (left border $primary + label $foreground ...)', line 210 anatomy 'L ... ($muted-foreground \u2192 $foreground active)', line 216, reconciliation line 222 all say active label $foreground; screen node tvaRu label fill=$primary."
+   },
+   {
+    "item": "ManualTOCItem",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Active label color $foreground",
+    "evidence": "No active TOC item on NMzE5 uses $foreground label; active (tvaRu) uses $primary. The '$foreground active' claim (lines 195/210/216/222) is unsupported by the screen."
+   },
+   {
+    "item": "CodeCallout",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "Legal sections embed a danger ($destructive) tinted Callout (spec line 261 'embedded in Legal sections in warning/info/danger tones'; variant 'tone: danger'; reconciliation 'in warning/info/danger').",
+    "evidence": "All 6 Legal \u00a7-section Callout frames on NMzE5 are stroke $primary (#ff6b351f) or stroke $warning (#d9a73e1f) only (nodes iRWkH, HHY3C, Dx7Rl, FXRG9, ZITNf, t2ytm). No $destructive-toned Callout exists in Legal sections; the only destructive-tinted left-accent frames are named 'Alert'/'Last Error' in the Account/Debug context (e.g. V7FNVF, X1UBu), not Legal."
+   },
+   {
+    "item": "DeleteHistoryRangeOption",
+    "direction": "design\u2192spec (add/correct on-screen detail)",
+    "finding": "Range set: screen renders five ranges \u2014 Last 7 days (64), Last 30 days (310), Last 6 months (820), Last year (1,204, SELECTED), All time (3,902). Spec omits 'Last 6 months' and 'Last year'.",
+    "evidence": "NMzE5 radio rows mnoWv/Y9EtG/N9TFL/GUu9T/RIGlU (and mobile tdwvP/zIAfv/X0QdGe/muknx/jHCAb). Spec line 560 variants 'range label 7d/30d/90d/all-time' lists neither 6-months nor 1-year."
+   },
+   {
+    "item": "DeleteHistoryRangeOption",
+    "direction": "spec\u2192design (remove/correct unsupported claim)",
+    "finding": "range label '90d' (Last 90 days) \u2014 spec line 560.",
+    "evidence": "No '90 days'/'Last 90' range exists in any board (grep across all *.json returned 0). Invented value; the real third range is 'Last 6 months'."
+   }
+  ]
+ },
+ {
+  "file": "docs/tech-spec/01-foundations.md",
+  "extract_hint": "docs/design-extract/boards/WCTkf__design-system.json + docs/design-extract/00-variables.json",
+  "findings": [
+   {
+    "item": "Tint / alpha convention (12% fill / 18% hover-lift)",
+    "direction": "design\u2192spec (add/correct)",
+    "finding": "~40%-alpha hue stroke on tint demo frames (e.g. JNawK stroke '#ff6b3566', f41OQ '#d9a73e66', AEhEs '#5ae0a066', strokeWidth 1 on all six demo frames)",
+    "evidence": "Every 12% and 18% tint demo frame carries a 1px hue stroke at alpha suffix '66' (~40%). Spec \u00a75 only enumerates the 1f (12%), 2e (18%), and 0f (~6% CrossRef) alpha steps and says left-accent borders use the solid token; the ~40% (66) border alpha on tinted surfaces is not documented as a convention."
+   }
+  ]
+ }
+]

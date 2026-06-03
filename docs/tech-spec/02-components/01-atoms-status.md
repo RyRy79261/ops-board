@@ -303,13 +303,13 @@ StatusBadge (frame, cornerRadius=999, stroke=$border [not-started] | none [tinte
 | `disabled` | boolean |  | false | Per §10 the button is ALWAYS ENABLED — window-state/blocked are advisory, never gating. Should effectively never be true on the board. |
 | `size` | number |  | 18 | Box size px (18 default). Must be wrapped in a ≥44px touch target. |
 
-**Variants:** `not-started (empty square, stroke $border 2px; hover stroke $success)`, `in-progress (stroke $primary, fill #ff6b351f = primary/12, glyph ◼ in $primary)`, `done (stroke $success, fill $success, glyph ✓ in $background/near-black) + name line-through text-muted-foreground`
+**Variants:** `not-started (empty square, stroke $border 2px; hover stroke $success)`, `in-progress (stroke $primary, fill #ff6b351f = primary/12, glyph ◼ in $primary)`, `done (stroke $success, fill $success, glyph ✓ in $background/near-black) + paired task name → $muted-foreground (brief §10 also calls for line-through, but NO board renders strikethrough — text-decoration absent across all done rows; left as a brief-intent build option, not screen-confirmed)`
 
 **States:** `not-started`, `in-progress`, `done`, `hover (not-started→border $success)`, `focus-visible (2px $ring)`, `always-enabled (no disabled-on-blocked/closed — §10 guard rule)`
 
 **Tokens:** `$border`, `$border-hover`, `$primary`, `primary/12 (#ff6b351f)`, `$success`, `$background (done glyph color)`, `$ring`, `--radius (0; the 18px square is SHARP — §5 exception, NOT rounded)`
 
-**A11y:** Renders as a real <button> role=button; the ONLY direct board interaction (LOCKED #4).; aria-label announces current status + that activation cycles it (e.g. 'Task status: in progress, activate to mark done').; MUST have a ≥44px touch target (Touch44 wrapper) — every board OMITS it (drift); contract REQUIRES it.; Keyboard-activatable (Enter/Space); 2px $ring focus-visible ring.; Tri-state, NOT a checkbox (do not use role=checkbox).; Always enabled (§10) — blocked/closed advisory only; never dead.; done also drives line-through text-muted-foreground on the task name (redundant channel).
+**A11y:** Renders as a real <button> role=button; the ONLY direct board interaction (LOCKED #4).; aria-label announces current status + that activation cycles it (e.g. 'Task status: in progress, activate to mark done').; MUST have a ≥44px touch target (Touch44 wrapper) — every board OMITS it (drift); contract REQUIRES it.; Keyboard-activatable (Enter/Space); 2px $ring focus-visible ring.; Tri-state, NOT a checkbox (do not use role=checkbox).; Always enabled (§10) — blocked/closed advisory only; never dead.; done dims the paired task name to $muted-foreground; the brief §10 line-through is OPTIONAL (no board renders strikethrough — it is brief-intent, not a screen-confirmed channel). The status glyph + color carry meaning either way (LOCKED #6).
 
 ### StatusCycleButton — the ONE direct board interaction (§10, LOCKED #4)
 
@@ -325,7 +325,7 @@ StatusBadge (frame, cornerRadius=999, stroke=$border [not-started] | none [tinte
       • done        → text '✓' fill $background (near-black), fill $success, stroke $success
 ```
 
-**Variants (showcase RcvKu + boards):** `not-started · base` (empty, stroke $border 2px; hover $success) · `in-progress` (stroke $primary, fill #ff6b351f, ◼ in $primary) · `done` (stroke $success, fill $success, ✓ in $background) — **+ task name → line-through text-muted-foreground**.
+**Variants (showcase RcvKu + boards):** `not-started · base` (empty, stroke $border 2px; hover $success) · `in-progress` (stroke $primary, fill #ff6b351f, ◼ in $primary) · `done` (stroke $success, fill $success, ✓ in $background) — **+ paired task name → $muted-foreground** (brief §10/§9 also specify line-through, but **no board renders strikethrough** — done/closed names are muted only, text-decoration absent across all done rows; line-through is a brief-intent build option, not a screen-confirmed channel).
 
 **States:** not-started · in-progress · done · hover (not-started→border $success) · focus-visible (2px $ring) · **always-enabled** (no disabled-on-blocked/closed — §10 guard rule; never make the single interaction dead).
 
@@ -348,9 +348,9 @@ StatusBadge (frame, cornerRadius=999, stroke=$border [not-started] | none [tinte
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `tone` | 'accent'|cat-*|'success'|'warning'|'muted' |  | accent | Fill color. accent=$primary; cat-*=category hue; success=$success (live/sync/done); warning=$warning; muted=$muted-foreground (inactive). |
-| `size` | 6 | 8 |  | 8 | 6px (sync/live + task meta) or 8px (category group-header dots). |
+| `size` | 6 | 7 | 8 |  | 8 | 6px (sync/live + task meta) · 7px (Dependencies inline CategoryTag leading dot, e.g. b1b079 `BXAnH`) · 8px (category group-header dots). |
 
-**Variants:** `accent ($primary) — base`, `medical / bureaucratic / travel / gear / tech ($cat-* hues)`, `success ($success — live/sync/done)`, `warning ($warning)`, `muted ($muted-foreground)`, `sizes: 6px / 8px`
+**Variants:** `accent ($primary) — base`, `medical / bureaucratic / travel / gear / tech ($cat-* hues)`, `success ($success — live/sync/done)`, `warning ($warning)`, `muted ($muted-foreground)`, `sizes: 6px / 7px / 8px`
 
 **States:** `static indicator (no interactive states)`, `optional pulse (live/recording — handled by parent, not the dot)`
 
@@ -369,15 +369,15 @@ StatusDot (ellipse, width=8 [group headers] | 6 [sync + meta], height=match, fil
 
 **Variants (showcase RcvKu):** `accent · base` ($primary 8×8) · medical/bureaucratic/travel/gear/tech ($cat-* 8×8) · `done` ($success) · `warning` ($warning). Plus `muted` ($muted-foreground, inactive).
 
-**Sizes:** 8px (category group-header dots) · 6px (SyncStatus live dot + in-card task meta dots).
+**Sizes:** 8px (category group-header dots) · 7px (Dependencies inline CategoryTag leading dot — b1b079 `Cat Tag` ellipses `BXAnH`/`l5Vab`/`VINL4`/`EwvdT` etc., $cat-* hues) · 6px (SyncStatus live dot + in-card task meta dots).
 
 **Screen usage:** Category (5 — group-header cat dots), Dependencies (4 — sidebar window-chip dots warning/muted/success/cat-bureaucratic), Mobile (5 @8px headers + 6px meta), SyncStatus live indicator (6px $success).
 
-**Reconciliation:** Canonical = 8×8 $primary ellipse; showcase confirms the tone matrix. Screens add a **second size (6px)** for SyncStatus + in-card meta dots → `size ∈ {6,8}`. One component serves both StatusDot (status/live) and CategoryDot (category) roles. Purely presentational — no interactive states; always paired with a label (LOCKED #6).
+**Reconciliation:** Canonical = 8×8 $primary ellipse; showcase confirms the tone matrix. Screens add a **6px** size for SyncStatus + in-card meta dots and a **7px** size for the Dependencies inline CategoryTag leading dot (b1b079 `Cat Tag` ellipses at width 7) → `size ∈ {6,7,8}`. One component serves both StatusDot (status/live) and CategoryDot (category) roles. Purely presentational — no interactive states; always paired with a label (LOCKED #6).
 
 **Screen usages:** Showcase (RcvKu): accent·base + 5 cat hues + done + warning (8×8).; Category (D3JA0i): 5 — 8×8 cat dot per CategoryGroupHeader.; Dependencies (b1b079): 4 — sidebar window-chip dots (warning/muted/success/cat-bureaucratic).; Mobile (h9YSWg): 5 @8px group headers + 6px task meta.; SyncStatus live indicator: 6px $success (deps + mobile headers).
 
-**Reconciliation (screen ← library):** Canonical 8×8 $primary; showcase confirms tone matrix. Screens add 6px size (sync/meta) → size ∈ {6,8}. One component for StatusDot + CategoryDot. No interactive states.
+**Reconciliation (screen ← library):** Canonical 8×8 $primary; showcase confirms tone matrix. Screens add 6px (sync/meta) and 7px (Dependencies inline CategoryTag dot, b1b079 width 7) → size ∈ {6,7,8}. One component for StatusDot + CategoryDot. No interactive states.
 
 ---
 

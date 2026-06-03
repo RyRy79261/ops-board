@@ -83,9 +83,9 @@
 **Variants (UNION):**
 | variant | size | weight | where |
 |---|---|---|---|
-| `title` | 26 | 700 | canonical; MissionDetailHeader (D3JA0i), desktop page titles |
+| `title` | 26 | 700 | canonical; MissionDetailHeader (frame `uJ5hm`, Title node `lu9U0`), desktop page titles |
 | `title-600` | 25–26 | 600 | Timeline mission title (a3Dgz) |
-| `title-24` | 24 | 700 | Dependencies mission title (b1b079); desktop Account title |
+| `title-24` | 24 | 700 | Dependencies mission title (node `K2mivY` on board b1b079); desktop Account title |
 | `title-compact` | 22 | 600/700 | mobile mission-detail header; GZ7xA compact task titles |
 
 **States:** default, optional truncate (header beside actions).
@@ -94,7 +94,7 @@
 
 **Reconciliation:** canonical + WCTkf agree at 26/700. Screens diverge on size/weight (Timeline 25/600, Deps 24/700, mobile 22). WIDENED with `size`+`weight` axes; 22px maps to `--text-title-compact`. IMPORTANT: the mission **name** on cards/summary (16–17px w600) is the separate `subtitle` role — do NOT author it as Type/Title.
 
-**Screen usages:** D3JA0i MissionDetailHeader 'AfrikaBurn 2026' 26/700 (canonical lu9U0); a3Dgz mission title 25/600; b1b079 24/700; mobile 22/600-700; NMzE5 page titles 'Account & security' 24/700 desktop, 22/700 mobile; GZ7xA task titles 26/700, 22/700; RcvKu 'Type/Title (H1) · DM Sans 26/700'; WCTkf 'Mission Control' 26/700
+**Screen usages:** canonical MissionDetailHeader (frame `uJ5hm`, Title node `lu9U0`) 'AfrikaBurn 2026' 26/700; a3Dgz Timeline mission title 25/600; b1b079 Dependencies title (node `K2mivY`) 24/700; mobile 22/600-700; NMzE5 page titles 'Account & security' 24/700 desktop, 22/700 mobile; GZ7xA task titles 26/700, 22/700; RcvKu 'Type/Title (H1) · DM Sans 26/700'; WCTkf 'Mission Control' 26/700
 
 **Reconciliation (screen ← library):** Canonical (IRZCA) = DM Sans 26/700/lh1.2; WCTkf agrees. Screens diverge: Timeline 25/600, Deps 24/700, mobile 22/600-700, plus MissionSummaryCard uses 17px (separate `subtitle` role, flagged). WIDENED with size (title/title-24/title-compact) + weight (600/700) axes; 22px = --text-title-compact. Stays one component (DM Sans/$foreground/no tracking). Mission name on cards is NOT Title.
 
@@ -135,7 +135,7 @@
 |---|---|---|---|
 | `section` (default) | 20 | 600 | WCTkf foundations specimen + most Legal headings |
 | `section-700` | 20 | 700 | canonical def + LegalSection.Heading (batch3 `kkQKe`) |
-| `section-lg` | 24 | 600 | larger Legal layout (NMzE5) |
+| `section-lg` | 24 | 600 | larger Legal layout (NMzE5 Legal §-headings: `tds79` 'Overview', `QPTMI` 'Data We Collect', `iBJaf` 'Data Retention & Deletion' — all DM Sans 24/600 lh1.2) |
 | `section-manual` | 21/19 | 700 | Manual sub-headings desktop/mobile |
 | `section-compact` | 16 | 700 | Account subsection labels ('Account data') |
 

@@ -122,25 +122,27 @@ StatTile (vertical, gap 4)
 | CLOSING | `$warning` | `2` |
 | TOTAL | `$foreground` | `11` |
 
-### Size scale — THREE sizes exist for the same stat block; the contract makes it a `size` prop
-The screens render this metric at three different `Val` font sizes. Rather than three components, parametrise:
+### Size scale — multiple sizes exist for the same stat block; the contract makes it a `size` prop
+The screens render this metric at several different `Val` font sizes (30 canon, 22 Category, 21 Timeline, 20 Deps/summary, 13 mobile). Rather than a component per size, parametrise:
 
 | Source | `Val` size | `Lab` size | `Lab` ls | gap | `Lab` color |
 |---|---|---|---|---|---|
 | Canonical def `Cmp · StatTile` | **30** / 700 | 11 / 600 | 1.5 | 4 | `$muted-foreground-subtle` |
-| Mission **detail header** (Category/Timeline/Deps desktop) | **22** / 700 | 11 / 600 | 1.5 | 3 | `$muted-foreground-subtle` |
+| Category **detail header** `D3JA0i` (aFnL2 etc.) | **22** / 700 | 11 / 600 | 1.5 | 3 | `$muted-foreground-subtle` |
+| Timeline **detail header** `a3Dgz` (RcNqQ etc.) | **21** / 600 | 10 / normal | 1.5 | 3 | `$muted-foreground-subtle` |
+| Dependencies **detail header** `b1b079` (lLKcH etc.) | **20** / 700 | 10 / normal | 1.2 | 4 | `$muted-foreground` |
 | `MissionSummaryCard` def / library | **20** / 700 | 10 / 600 | 1 | 2 | `$muted-foreground-subtle` |
 | Mobile fused summary `h9YSWg` | **13** / 700 | 9 / 500 | — | 5 | `$muted-foreground` |
 
-`size`: `'showcase'(30) | 'detail'(22) | 'summary'(20) | 'mobile'(13)`.
+> The three desktop detail headers are NOT one size: Category renders Val **22**, Timeline **21** (Val weight 600, not 700), Dependencies **20** (Lab `$muted-foreground` / ls 1.2). The `detail` size pins to Category's 22; Timeline/Deps fall on `detail`/`summary` respectively. `size`: `'showcase'(30) | 'detail'(22, Category) | 'summary'(20, Deps + summary card) | 'mobile'(13)`. Timeline's 21 is a 1px drift normalised to `detail`.
 
 ### Drift to honour
 - Desktop detail-header BLOCKED `Val` is `$destructive`; mobile fused summary renders BLOCKED `Val` in `$muted-foreground` (a no-panic-red softening). Both are valid per tone+`size`; default BLOCKED tone = `$destructive`, mobile overrides to muted via the `tone` prop.
 - On the screens these tiles are **bespoke frames named DONE/BLOCKED/CLOSING/TOTAL**, not `StatTile` refs — codegen should still emit a single `StatTile` and feed `tone`+`label`+`value`.
 
-**Screen usages:** Category D3JA0i: 4 tiles in DetailHeader (Val 22); Timeline a3Dgz / Dependencies b1b079: 4 tiles in mission detail block; Mobile h9YSWg: 4 fused tiles (Val 13); Library RcvKu: 4 tiles inside MissionSummaryCard (Val 20)
+**Screen usages:** Category D3JA0i: 4 tiles in DetailHeader (Val 22, aFnL2/W7cAa/UAoqL/Z9zT1U); Timeline a3Dgz: 4 tiles in mission detail block (Val **21**/600, RcNqQ/N2F82H/OZv4Q/UFJ4x); Dependencies b1b079: 4 tiles (Val **20**, lLKcH/p31a7B/XESZE/TQKqp); Mobile h9YSWg: 4 fused tiles (Val 13); Library RcvKu: 4 tiles inside MissionSummaryCard (Val 20)
 
-**Reconciliation (screen ← library):** Canonical def is a single 30px tile; the screens never use 30 — they use 22 (detail header), 20 (summary card), or 13 (mobile). Contract adds a `size` enum to cover all four. Added a `tone` prop because the 4 metrics each colour the value differently and mobile softens BLOCKED off red. The screens inline these as named frames, not refs; the contract canonicalises them to one component.
+**Reconciliation (screen ← library):** Canonical def is a single 30px tile; the screens never use 30 — the three desktop detail headers render 22 (Category), 21 (Timeline), 20 (Deps), the summary card 20, and mobile 13. Contract adds a `size` enum (`detail`=22 ← Category, `summary`=20 ← Deps; Timeline's 21 normalised to `detail`) to cover the spread. Added a `tone` prop because the 4 metrics each colour the value differently and mobile softens BLOCKED off red. The screens inline these as named frames, not refs; the contract canonicalises them to one component.
 
 ---
 
@@ -162,12 +164,12 @@ The screens render this metric at three different `Val` font sizes. Rather than 
 |---|---|---|---|---|
 | `segments` | { tone: 'success'|'warning'|'destructive'|'primary'; value: number }[] | ✓ |  | Ordered segments; widths are value/total of the track. |
 | `total` | number | ✓ |  | Denominator for segment widths (task count). |
-| `mode` | 'window'|'progress' |  | 'window' | 'window' = success/warning/destructive (§9, canonical). 'progress' = success/primary + track (Dependencies board). |
-| `remainderTone` | 'track'|'border' |  | 'track' | How the unfilled remainder renders. 'track'=$card-elevated (default); 'border'=$border (mobile). |
+| `mode` | 'window'|'progress' |  | 'window' | 'window' = success/warning/destructive over a $card-elevated track (§9, canonical). 'progress' = success/primary over a **$muted** track + $border remainder (Dependencies board `xLPwD`). |
+| `remainderTone` | 'track'|'border'|'muted' |  | 'track' | How the unfilled remainder renders. 'track'=$card-elevated (default); 'border'=$border (mobile, Deps remaining seg); 'muted'=$muted (Timeline detail `bMFeK` Seg Rest). |
 | `gap` | number |  | 0 | Gap between segments in px (0 desktop, 2 summary/mobile). |
-| `height` | number |  | 4 | Bar height; always 4 on screens. |
+| `height` | number |  | 4 | Bar height; 4 on most screens, but the Timeline detail-header bar (a3Dgz `bMFeK`) is **6**. |
 
-**Variants:** `window mode (success/warning/destructive — default)`, `progress mode (success/primary/track — Dependencies board)`, `remainder: track ($card-elevated) | border ($border, mobile)`, `gap 0 | gap 2`
+**Variants:** `window mode (success/warning/destructive over $card-elevated track — default)`, `progress mode (success/primary over $muted track + $border remainder — Dependencies board)`, `remainder: track ($card-elevated) | border ($border, mobile + Deps) | muted ($muted, Timeline detail bMFeK)`, `gap 0 | gap 2`
 
 **States:** `static (read-only)`, `all-done (single full success segment; optional COMPLETE pill at organism level)`, `empty (no segments → bare track)`
 
@@ -192,12 +194,13 @@ Canonical order = `success` (done) + `warning` (closing) + `destructive` (blocke
 
 ### Drift to honour (reconciled variants)
 - **Mobile** renders the remainder as an explicit `$border` segment (not the bare track) — accept as `remainderTone='border'`.
-- **Dependencies board** renders `success(done) + primary(active) + border(remaining)` — i.e. a 2-segment *progress* semantic (done + in-progress) rather than the window-state semantic. The contract supports both via a `mode` prop: `mode='window'` (success/warning/destructive — DEFAULT, the §9 mandate) vs `mode='progress'` (success/primary/track — the Deps-board rendering). The §9 window-state mode is canonical; the progress mode is a documented divergence kept because the Dependencies screen uses it.
-- `gap` between segments: 0 (canonical def, detail header) or 2 (MissionSummaryCard def + mobile). Expose `gap`.
+- **Timeline detail header** (`a3Dgz` `bMFeK`): bar is **height 6** (not 4), the track frame itself has NO fill, and the remainder is an explicit `Seg Rest` `$muted` segment (`l0T7z`) — a THIRD remainder tone. Accept via `height=6` + `remainderTone='muted'`. Segments Seg Done(`$success`,180) / Seg Attn(`$warning`,180) / Seg Rest(`$muted`,fill).
+- **Dependencies board** (`b1b079` `xLPwD`) renders `success(done,376) + primary(active,118) + border(remaining,fill)` — i.e. a 2-segment *progress* semantic (done + in-progress) rather than the window-state semantic — AND its **track fill is `$muted`** (not `$card-elevated`), with the explicit remainder being `$border`. The contract supports both via a `mode` prop: `mode='window'` (success/warning/destructive — DEFAULT, the §9 mandate) vs `mode='progress'` (success/primary + `$muted` track / `$border` remainder — the Deps-board rendering). The §9 window-state mode is canonical; the progress mode is a documented divergence kept because the Dependencies screen uses it.
+- `gap` between segments: 0 (canonical def, Category detail header) or 2 (Timeline detail header, MissionSummaryCard def + mobile). Expose `gap`.
 
-**Screen usages:** Category D3JA0i: DetailHeader Progress (266/178/266 over $card-elevated); Timeline a3Dgz / Dependencies b1b079: mission detail progress (Deps uses success/primary/border — progress mode); Mobile h9YSWg: fused summary progress (106/80 + $border remainder, gap 2); Library RcvKu / MissionSummaryCard def: 120/70/90, gap 2
+**Screen usages:** Category D3JA0i: DetailHeader Progress `t9BKJ` (266/178/266 over $card-elevated, h4); Timeline a3Dgz: mission detail progress `bMFeK` (180/180 + `$muted` Seg Rest, **h6**, gap 2, track fill=none); Dependencies b1b079: mission detail progress `xLPwD` (success 376/primary 118/border remainder — progress mode, track fill **$muted** NOT $card-elevated); Mobile h9YSWg: fused summary progress (106/80 + $border remainder, gap 2); Library RcvKu / MissionSummaryCard def: 120/70/90, gap 2
 
-**Reconciliation (screen ← library):** Canonical def has the §9 window-state 3-segment model. Added `mode='progress'` to cover the Dependencies board's success/primary/track rendering (§9 divergence, flagged informational). Added `remainderTone` for the mobile $border remainder. Made widths data-driven via segments[]/total + a `gap` prop (0 vs 2 across screens).
+**Reconciliation (screen ← library):** Canonical def has the §9 window-state 3-segment model. Added `mode='progress'` to cover the Dependencies board's success/primary rendering over a **$muted** track (NOT $card-elevated) with a $border remainder (§9 divergence, flagged informational). Added `remainderTone` covering the mobile/Deps `$border` remainder AND the Timeline detail `$muted` Seg Rest (a third tone). Added a non-4 `height` (Timeline detail `bMFeK` is 6). Made widths data-driven via segments[]/total + a `gap` prop (0 vs 2 across screens).
 
 ---
 
@@ -430,7 +433,7 @@ MissionSummaryCard (fill $card · stroke $border 1px · padding 16 · gap 14)
 | Render | surface | Title | StatTile size | Target format | progress remainder |
 |---|---|---|---|---|---|
 | **MissionSummaryCard def / library** | `$card` card, padding 16 | DM Sans 17/600 | `summary` (20) | `TARGET: 2026-04-27` (ISO) | $card-elevated track |
-| **Desktop detail header** (Category/Timeline/Deps) | borderless, `border-bottom`, padding [24,32] | 25–26/600–700 (+optional live dot, +LOCATION on Timeline) | `detail` (22) | `Target: 27 Apr 2026` (sentence — drift) | track |
+| **Desktop detail header** (Category/Timeline/Deps) | borderless, `border-bottom`, padding [24,32] | 25–26/600–700 (+optional live dot, +LOCATION on Timeline) | per-board: Category **22**, Timeline **21**, Deps **20** (NOT a single size) | `Target: 27 Apr 2026` (sentence — drift) | Category $card-elevated; Timeline `$muted` (h6); Deps `$muted` track + $border |
 | **Mobile fused** `h9YSWg` | `$card`, padding 16 | 17/600 | `mobile` (13) | `TARGET: 2026-04-27` | **$border** remainder |
 
 Contract: one component with `variant: 'card'|'detail-header'` and the StatTile `size`/ProgressBar `remainderTone` flowing from it.
@@ -441,9 +444,9 @@ Contract: one component with `variant: 'card'|'detail-header'` and the StatTile 
 - Timeline detail header adds a **live dot** before the title and a **LOCATION** segment on the target line — expose as optional `liveDot` + `location` (detail-header variant only).
 - All-done state: progress fills success; optional `COMPLETE` pill.
 
-**Screen usages:** Timeline a3Dgz: mission detail block (overlaps MissionDetailHeader + this card); Mobile h9YSWg: 1 fused summary card (val 13, $border remainder, BLOCKED muted); Category D3JA0i / Dependencies b1b079: detail-header variant (val 22); Library RcvKu: MissionSummaryCard + medevac variant (val 20)
+**Screen usages:** Timeline a3Dgz: mission detail block (overlaps MissionDetailHeader + this card; StatTile val **21**); Mobile h9YSWg: 1 fused summary card (val 13, $border remainder, BLOCKED muted); Category D3JA0i: detail-header variant (val **22**); Dependencies b1b079: detail-header variant (val **20**); Library RcvKu: MissionSummaryCard + medevac variant (val 20)
 
-**Reconciliation (screen ← library):** Unifies MissionSummaryCard with the desktop MissionDetailHeader via a `variant` prop (they are the same content at different sizes/surfaces — three StatTile sizes 22/20/13 across the system). Picks ISO-uppercase target format (canon+mobile+showcase) over the Category desktop sentence-case outlier. Adds optional liveDot + location for the Timeline header. Adds blockedTone to cover mobile's no-red softening. Composes the reconciled StatTile (size prop) and ProgressBar (remainderTone) rather than the inlined bespoke frames the screens use.
+**Reconciliation (screen ← library):** Unifies MissionSummaryCard with the desktop MissionDetailHeader via a `variant` prop (they are the same content at different sizes/surfaces — StatTile renders 22 Category / 21 Timeline / 20 Deps+summary / 13 mobile across the system; the three desktop detail headers are NOT one size). Picks ISO-uppercase target format (canon+mobile+showcase) over the Category desktop sentence-case outlier. Adds optional liveDot + location for the Timeline header. Adds blockedTone to cover mobile's no-red softening. Composes the reconciled StatTile (size prop) and ProgressBar (remainderTone) rather than the inlined bespoke frames the screens use.
 
 ---
 

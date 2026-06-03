@@ -23,9 +23,11 @@ Method: screens are authoritative. A finding is a `design→spec` gap (on-screen
 - **Timeline §5.1 StatusCycleButton — 4 appearances + INSTANCE COUNTS** (Surface) — The 4 APPEARANCES themselves are all correct: subtle-stroke (Rkud0 $background + $muted-foreground-subtle 1.5); border-hover ($background + $border-hover 1.5); in-progress (HAihJ $background + $primary 1.5 + inner 8x8 $primary rect J1Lz09); done (Lw1pC/qczG2 $success fill + lucide check 12x12 $succe
 - **ManualTOCItem** (Component) — Contract is correct on structure (248-ish row, border-left 2, active wash) but states the wrong active LABEL color. The screen renders the active label in $primary, not $foreground.
 
-## 2. Medium-severity refinement backlog
+## 2. Medium-severity refinement backlog — RESOLVED
 
-These are real but non-build-breaking precision/coverage gaps — captured for a follow-up spec pass. (Reconciliation policy: where a screen diverges, the screen wins.)
+**Status:** a refinement pass (11 fixer agents, one per spec file) addressed all 30 medium findings: **29 fixed** in-place (each verified against the cited extract node before editing), **1 rejected** as a verifier error (a `05-typography` claim that was actually correct). The fixes are already applied to the `02-components/` and `03-surfaces/` files. The table below is the original backlog, retained for provenance.
+
+(Reconciliation policy: where a screen diverges, the screen wins.)
 
 | Scope | Item | Direction | Finding |
 |---|---|---|---|

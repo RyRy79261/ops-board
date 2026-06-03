@@ -419,7 +419,7 @@ All mobile screens are 390×844, clip true, `layout: none` (absolute stacking of
 - Description Box stroke reverts to **`$border`** (no longer focused/active `$primary`), transcript text loses the `▋` cursor: "The status filter resets every time I switch categories — selected tags don't stick when I come back to the board."
 - **Send Report** button: icon swapped to lucide **`loader-circle`** 16×16 `$primary-foreground`, label "SENDING REPORT…" (JBM 13/600/ls1). Button remains `$primary` (implies disabled-but-styled-active / spinner state).
 
-**State · Success (`Zy2pG`).** Backdrop opacity **0.6** (sheet has dismissed; only a light scrim remains). A top-anchored **Toast** is shown — Overlay padding [64,16,0,16], alignItems center:
+**State · Success (`Zy2pG`).** Backdrop opacity **0.6** (sheet has dismissed). A top-anchored **Toast** is shown over an **Overlay** (`yKx5U`, fill **`#0a0a0c80`** ≈50% scrim, padding [64,16,0,16], alignItems center) — the same scrim value as the Error toast overlay (see below):
 - **Toast** (`YSg6I`, fill_container, `$card`, stroke `$border` 1, vertical):
   - **Accent** bar (`RXt92`, fill_container × **2px**, fill **`$success`**) — the bespoke top accent stripe.
   - **Body** (vertical, gap 12, padding 16):
@@ -427,7 +427,7 @@ All mobile screens are 390×844, clip true, `layout: none` (absolute stacking of
     - Msg "Thanks — the build team has your bug report and the attached diagnostics." (DM Sans 13/normal `$foreground`, lineHeight 1.45, fill_container).
     - **RefRow** (`D8oJsG`, fill_container, `$card-elevated`, stroke `$border` 1, padding [10,12], space_between): L = lucide `hash` 13×13 `$muted-foreground` + "REFERENCE" (JBM 10/normal/ls1.5 `$muted-foreground`); V = **`OPS-R-2291`** (JBM 13/700/ls1 **`$primary`**) — the assigned reference number.
 
-**State · Error / Retry (`WzxLm`).** Backdrop opacity 0.6; Wordmark sync = "OFFLINE ⚠"; backdrop shows a fuller board (8 task rows incl. "Convoy roster — finalise"). Overlay fill is a **lighter scrim `#0a0a0c80`** (≈50%), padding [64,16,0,16], top-anchored:
+**State · Error / Retry (`WzxLm`).** Backdrop opacity 0.6; Wordmark sync = "OFFLINE ⚠"; backdrop shows a fuller board (8 task rows incl. "Convoy roster — finalise"). Overlay (`LMEXD`) fill is the **`#0a0a0c80`** (≈50%) scrim — identical to the Success toast overlay (`yKx5U`); both toast states share this lighter ~50% scrim (distinct from the prompt/composer/modal `#0a0a0ce6` ≈90% scrim). Padding [64,16,0,16], top-anchored:
 - **Toast** (`h4S6mx`, `$card`, stroke `$border` 1, vertical):
   - **Accent** bar (`Iv05k`, 2px, fill **`$destructive`**).
   - **Body** (gap 12, padding 16):
@@ -677,7 +677,7 @@ Stage `gap: 18`/14. **Five** rows, each pairing a pill (in a fixed-width `PW`/`P
 - Help Btn active styling (stroke $primary) is shown only in the open/menu state; the resting Help Btn appearance is not separately depicted.
 - Hover/pressed states for buttons and menu items are not enumerated on-board (only the 'Report an issue' highlighted row).
 - Reference-number format 'OPS-R-2291' vs the context 'LAST ERROR OPS-4012' — confirm the two ID namespaces (error code vs report reference) are intentionally different.
-- Toast positioning: success uses scrim #0a0a0ce6 path implied gone (backdrop 0.6) while error uses lighter #0a0a0c80 scrim — confirm whether the scrim differs by state intentionally or whether toasts should be scrim-less in production.
+- Toast positioning: BOTH toast states use the same lighter `#0a0a0c80` (≈50%) Overlay scrim — Success (`yKx5U`) and Error (`LMEXD`) are identical, and lighter than the prompt/composer/modal `#0a0a0ce6` (≈90%) scrim. (Earlier notes that the success path was "scrim-less / backdrop 0.6 only" or that #0a0a0c80 was error-specific were wrong — the App Backdrop sits at 0.6 *behind* the #0a0a0c80 toast scrim in both states.) Confirm whether toasts should keep this scrim in production.
 - Live TaskCard demo Touch target is 24x24 (desktop) / 22x22 (mobile) — below the canonical 44x44 a11y target and below the StatusCycleButton demo's own 30x30/28x28 touch frame. Decide the real card's touch-target size and whether the demo should match it.
 - WindowState pills demo: BLOCKED is coloured $muted-foreground (#7a7a8e), identical to OPEN/CLOSED — no visually distinct blocked hue. Design-brief §9 also specifies muted-foreground for blocked, so screen agrees with brief, but confirm BLOCKED is distinguishable from CLOSED only by icon (triangle-alert vs circle-x) + label.
 - Window-state icon naming drift vs design-brief §9: screen uses lucide 'timer' for CLOSING (brief says Clock) and 'circle-x' for CLOSED (brief says XCircle). Pick canonical lucide names.

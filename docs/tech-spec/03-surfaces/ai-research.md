@@ -592,22 +592,24 @@ A recovery/edge-state catalog for the voice-first Task Agent research flow: what
 ---
 
 ### Accent-stripe → severity color mapping
-Severity is encoded by **(a)** the accent/stripe fill, **(b)** the header text color, **(c)** the header icon fill — all three share one token. Desktop carries it on a 2px TOP `Accent` frame; mobile carries it on the 3px `strokeWidth.left`.
+Severity is encoded by **(a)** the accent/stripe fill, **(b)** the header text color, **(c)** the header icon fill — these share one token **except for desktop D01 NO RESULTS** (see note ‡). Desktop carries it on a 2px TOP `Accent` frame; mobile carries it on the 3px `strokeWidth.left`.
 
 | Severity tier | Token | Hex | Used by (state) |
 |---|---|---|---|
-| Neutral / no-data | `$muted-foreground` | `#7a7a8e` | NO RESULTS (D01 / M1) |
+| Neutral / no-data | `$muted-foreground` | `#7a7a8e` | NO RESULTS (D01 ‡ / M1) — *icon + header text*; **D01 desktop stripe is `$border-hover` `#3a3a4a`, not `$muted-foreground`** |
 | Caution / soft | `$warning` | `#d9a73e` | LOW CONFIDENCE (D02), AMBIGUOUS *(see note)*, RATE LIMITED (D05/M5), TIMEOUT (D06/M2), PARTIAL RESULTS (D07/M3) |
 | Critical / hard fail | `$destructive` | `#e05a5a` | CONNECTION ERROR (D04/M4), MICROPHONE BLOCKED (D08/M6) |
 | Info / agent prompt | `$primary` | `#ff6b35` | AMBIGUOUS / disambiguation (D03 only) |
 
 Note: **AMBIGUOUS (D03)** uses `$primary` (orange) for stripe/icon/header — treated as an agent *prompt* not an error. There is **no AMBIGUOUS card on mobile** (disambiguation lives on the dedicated `Mobile — Disambiguation` screen `#Fux3f`, out of this scope).
 
+‡ Note: **desktop D01 NO RESULTS is the one stripe-vs-icon/header divergence.** Its top `Accent` frame (`#ELFhU`) is `fill $border-hover (#3a3a4a)`, while the header icon (`#p533ux`) and header text (`#KUgbk`) are both `$muted-foreground (#7a7a8e)`. So for D01 the three channels do NOT share one token — the stripe reads as a near-invisible neutral border rather than the muted-foreground used elsewhere. Mobile M1 (`#M20Ya5`) keeps all three on `$muted-foreground` (left stroke + icon + header), so M1 is consistent; D01 desktop is the anomaly. A build must render the D01 desktop stripe as `$border-hover`, not `$muted-foreground`.
+
 ---
 
 ### The 8 desktop states (exact text + actions)
 
-1. **`#I3xLdC` 01 · NO RESULTS** — severity `$muted-foreground`. Icon `search-x`. Header `"NO RESULTS FOUND"`. Body `"Couldn't find reliable steps. Try rephrasing or narrowing the request."` Actions: **[SAY IT AGAIN]** (filled `$primary`, icon `mic`) · **[REPHRASE]** (outline, icon `pencil-line`).
+1. **`#I3xLdC` 01 · NO RESULTS** — severity `$muted-foreground` (icon `#p533ux` + header `#KUgbk`); **but the top `Accent` stripe `#ELFhU` is `$border-hover (#3a3a4a)`, not `$muted-foreground`** (the one stripe-vs-header divergence — see ‡ in the mapping section). Icon `search-x`. Header `"NO RESULTS FOUND"`. Body `"Couldn't find reliable steps. Try rephrasing or narrowing the request."` Actions: **[SAY IT AGAIN]** (filled `$primary`, icon `mic`) · **[REPHRASE]** (outline, icon `pencil-line`).
 2. **`#vZWGF` 02 · LOW CONFIDENCE** — severity `$warning`. Icon `badge-alert`. Header `"NEEDS CONFIRMATION"`. Body `"I'm not fully sure this is the task you meant. Confirm before I apply these steps."` Middle = **Target chip** `#LVVHf` (`fill $card-elevated (#22222e)`, `stroke $border` 1, `padding [10,12]`, `gap 8`, `alignItems center`): Name `"Renew passport — courier collection"` (DM Sans **12px** `$foreground`, `fill_container`) + Tag `"BUREAU"` (JetBrains Mono **10px** `letterSpacing 1` `$muted-foreground`). Actions: **[CONFIRM]** (filled `$warning`, icon `check`) · **[CANCEL]** (outline, no icon).
 3. **`#Aqxp3` 03 · AMBIGUOUS** — severity `$primary`. Icon `git-fork`. Header `"WHICH TASK DID YOU MEAN?"`. Body `"More than one task matches your request. Tap the one you meant."` Middle = **Picks** list `#OjupS` (`layout vertical`, `gap 8`) of **3** Pick rows (same chip styling as the Target chip): `"Book travel clinic — yellow fever"`/`MED`, `"Book courier — passport pickup"`/`BUREAU`, `"Book campsite — Tankwa gates"`/`TRAVEL`. Footer = **Say Line** `#krXAS` (`gap 6`, `alignItems center`): icon `mic` 12×12 `$muted-foreground-subtle` + `"none of these?"` (`$muted-foreground-subtle`, JetBrains Mono **11px**) + `"say it again"` (`$primary`, weight 600). No filled action buttons — the picks ARE the actions.
 4. **`#H7X1Dx` 04 · CONNECTION ERROR** — severity `$destructive`. Icon `wifi-off`. Header `"CONNECTION ERROR"`. Body `"Couldn't reach the research service. Check your connection and try again."` **Meta** line `#UcMIr`: `"OFFLINE · LAST SYNC 2M AGO"` (JetBrains Mono **10px** `letterSpacing 1` `$muted-foreground-subtle`). Actions: **[RETRY]** (filled `$primary`, icon `rotate-cw`) · **[DISMISS]** (outline).

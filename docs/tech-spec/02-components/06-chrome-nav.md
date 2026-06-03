@@ -96,14 +96,14 @@ AppHeader  fill_container  bg $muted  border-b 1 $border (inner)  padding [20,32
    └─ IconButton  More (⋯)
 ```
 
-**Exact values:** padding 20px (y) × 32px (x); border-bottom 1px `$border` inner; fill `$muted`; Actions gap 16px; wordmark letter-spacing 4px (showcase/canonical) — note the Category/Timeline/Dependencies *boards* render the wordmark at letter-spacing 1px (drift). Height resolves to ~61px per §11. **No '+ Mission' button** anywhere — creation is voice/MCP only (LOCKED).
+**Exact values:** padding 20px (y) × 32px (x); border-bottom 1px `$border` inner; fill `$muted`; Actions gap 16px; wordmark letter-spacing 4px (showcase/canonical). The product boards diverge: Category D3JA0i (OPS `DM3Qo`/BOARD `ROl5q`) renders at **4px (matches canonical — no drift)**; Timeline a3Dgz (`X3tLM`/`R6wbDy`) at **1.5px**; Dependencies b1b079 (`hAx2W`/`KrJtV`) at **1px** — only Timeline and Dependencies drift below the 4px token. Height resolves to ~61px per §11. **No '+ Mission' button** anywhere — creation is voice/MCP only (LOCKED).
 
 **Variants / states (UNION across screens):**
 - `full` (showcase E5VLtZ): wordmark + SyncStatus + Search + Notifications + More. This is the authoritative/intended chrome.
 - `wordmark-only` (Category D3JA0i, Timeline a3Dgz boards): only the Wordmark; the right Actions cluster is omitted (space_between leaves the right side empty). Triage flags this as drift/scope-gap.
 - `operator` (Dependencies b1b079): wordmark + the SyncStatus *operator block* (SOLO OPERATOR · live dot · 03 JUN 2026) — no Search/Notifications/More.
 
-**Reconciliation:** screens are authoritative and they diverge in what the right cluster holds. Resolve by making the Actions cluster a **slot** with three documented compositions: (a) full action set (Search/Notifications/More + SyncStatus — showcase), (b) SyncStatus-only / operator block (Dependencies), (c) empty (Category/Timeline as drawn). Default the production shell to the showcase `full` set; treat the bare wordmark-only board renderings as in-progress chrome, not a removal of the actions contract. Wordmark tracking is 4px (token); the 1px on product boards is drift to normalize to 4px.
+**Reconciliation:** screens are authoritative and they diverge in what the right cluster holds. Resolve by making the Actions cluster a **slot** with three documented compositions: (a) full action set (Search/Notifications/More + SyncStatus — showcase), (b) SyncStatus-only / operator block (Dependencies), (c) empty (Category/Timeline as drawn). Default the production shell to the showcase `full` set; treat the bare wordmark-only board renderings as in-progress chrome, not a removal of the actions contract. Wordmark tracking is 4px (token); Category (`DM3Qo`/`ROl5q`) already matches at 4px, while Timeline (1.5px) and Dependencies (1px) drift below it — normalize both to the 4px token.
 
 **Actions:** the only interactions are select-mission/switch-view (handled by Sidebar/ViewTabs, not here) and the optional Search/Notifications/More buttons. Read-only board — no create/edit.
 
@@ -323,7 +323,8 @@ MissionDetailHeader  fill_container  bg $background  border-b 1 $border (inner) 
 - `populated` (default).
 - `all-done`: progress full `$success`, optional `COMPLETE` pill.
 - Mobile-fused variant (h9YSWg): MissionDetailHeader + MissionSummaryCard + StatTiles + ProgressBar collapse into ONE `$card` block — name (DM Sans 17/600), `TARGET: 2026-04-27` mono 11/500, 4 inline bare stat tiles, hardcoded-width 3-segment progress. The mobile rendering uses no tile surface and packed widths.
-- Dependencies/Timeline desktop variant: adds a leading **live dot** before the title, a richer target LINE with a LOCATION suffix, title 25/600 (vs 26/700), and drops the bordered/padded wrapper. Stat values render at 22px (board) vs 30px (canonical StatTile) — three sizes for the same block exist across the system.
+- Timeline desktop variant (a3Dgz Title Row `GXK29`): adds a leading **live dot** (`Q5u0nz` `$primary` 8×8) before the title, a richer target LINE ending in a LOCATION suffix (`ph1sw` 'TANKWA KAROO, ZA'), title `KP4U1` DM Sans 25/600 (vs 26/700), and drops the bordered/padded wrapper.
+- Dependencies desktop variant (b1b079 Title Row `W3wCDA`): **no** live dot; title `K2mivY` DM Sans **24/700** (not 25/600); target `v3BA3` 'TARGET: 27 APR 2026 · 328 DAYS OUT' (a days-out suffix, NOT a location), prefixed by a lucide `flag` glyph. Stat values render at 20–22px (board) vs 30px (canonical StatTile) — three sizes for the same block exist across the system.
 
 **Reconciliation:** screens are authoritative; widen the contract: (1) optional `liveDot` before the title; (2) `target` accepts both the canonical `TARGET: 2026-04-27` and a human/location-augmented form (`Target: 27 Apr 2026 · Tankwa Karoo`) — expose `targetLabel` as free string, default to ISO; (3) `density` prop (`comfortable` desktop with border/padding, `fused-card` mobile, `bare` for the Dependencies/Timeline inline block); (4) StatTile value size normalizes to the StatTile token (30px) — flag the board 22px as drift; (5) the BLOCKED stat value uses `$destructive` per canonical, even though §9 keeps blocked muted-not-red elsewhere — note this header-stat exception. The 4 stat tiles are fixed (DONE/BLOCKED/CLOSING/TOTAL).
 
@@ -488,7 +489,7 @@ DependencyConnector  width 36  height 38  justify-center  items-center
 
 **Reconciliation:** canonical is the single neutral glyph cell. Widen with a `variant: 'default' | 'critical'` (critical = fill `$primary`) per the showcase 2-variant matrix (DEFAULT / CRITICAL·$primary). CriticalPathAccent is NOT a separate component — it is this connector recolored (showcase 'FOLDED' note). The CRITICAL PATH legend chip is a sibling label, not part of the connector.
 
-**Screen usages:** Dependencies board b1b079 (6 connectors: 3 muted-subtle normal + 3 primary critical-path; depth-2 rows prefix a 36px Indent spacer; CRITICAL PATH legend chip); Showcase RcvKu Spec·DependencyConnector (DEFAULT + CRITICAL·$primary variants); DependencyTreeNode composes it (Pjd8i ref)
+**Screen usages:** Dependencies board b1b079 (5 in-tree connectors: 3 muted-subtle normal + 2 primary critical-path — Glyph fills under tree `E3MHw`; depth-2 rows prefix a 36px Indent spacer; the 6th `corner-down-right` glyph `azaWQ` 14×14 `$primary` is the CRITICAL PATH legend chip, NOT a connector); Showcase RcvKu Spec·DependencyConnector (DEFAULT + CRITICAL·$primary variants); DependencyTreeNode composes it (Pjd8i ref)
 
 **Reconciliation (screen ← library):** Canonical single-glyph widened to default/critical per showcase. Depth indentation on the board uses repeated 36px Indent spacer frames before the connector; the contract models depth via DependencyTreeNode rendering (depth-1) spacers + connector, equivalent to §11's depth×36px. CriticalPathAccent is folded into this atom's critical variant, not a new component.
 
@@ -638,7 +639,7 @@ DependencyTreeNode  fill_container  (row, items-center)
 
 **Reconciliation:** screens are authoritative for the tree organism. The board renders 8 bespoke `Row · {task}` frames with a nested Left/Right structure rather than the canonical Connector+TaskCard pair, and encodes depth as literal Indent spacers. Build to the canonical composition with a `depth` prop (renders depth-1 spacers + 1 connector for depth>0, none for depth 0) and a `critical` flag forwarded to the connector. Keep the StatusCycleButton inside the TaskCard always present/enabled (blocked is advisory, not gating); the triangle-alert blocked substitution seen on the board is reconciled toward the window-state BLOCKED pill + advisory treatment, not a replacement of the cycle button.
 
-**Screen usages:** Dependencies board b1b079 (8 tree rows incl. depth-2 with Indent spacer; 3 normal + 3 critical connectors; blocked-glyph substitution; CRITICAL PATH legend); Showcase RcvKu Spec·DependencyTreeNode (canonical: Connector ref + TaskCard ref)
+**Screen usages:** Dependencies board b1b079 (8 tree rows incl. depth-2 with Indent spacer; 5 in-tree connectors = 3 normal + 2 critical (the 2 critical on the 'Submit visa application' + 'Collect passport' rows); blocked-glyph substitution; CRITICAL PATH legend); Showcase RcvKu Spec·DependencyTreeNode (canonical: Connector ref + TaskCard ref)
 
 **Reconciliation (screen ← library):** Canonical (Connector + TaskCard) widened with `depth` (controls spacer count + connector presence), `critical` (forwarded to connector $primary), and `isBackEdge` (cycle-safety). The board's literal Indent-spacer depth encoding is modeled by depth→(depth-1) spacers, equivalent to §11's depth×36px. The board's triangle-alert-replaces-status-button on blocked rows is reconciled toward §10 (button always present/enabled; blocked is advisory via the window-state treatment), per the LOCKED status guard rule.
 

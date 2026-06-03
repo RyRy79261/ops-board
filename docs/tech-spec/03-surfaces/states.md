@@ -168,6 +168,8 @@ These are required by the brief / canonical kit but are **absent from this speci
 ### 7. Divergence from canonical components (screens are authoritative; this is the reconciliation ledger)
 
 > **Source-of-truth rule:** where the screen diverges from the canonical component def, **the screen wins** and the canonical contract must be widened. Each row below records how the *as-rendered* panel diverges; the resolution column states the screen-led decision.
+>
+> **Node-id sourcing (evidence trail):** the board (authoritative) ids cited here — `Vpw7Y`, `IsIcL`, `H2083`, `skCard1/2/3` and their children — live in **this** board (`boards/TvXzz__*.json`). The canonical-def ids — EmptyState `Ie7mv`, Skeleton `HLa60`, LoadingScreen `lLfcN`, ErrorBoundaryFallback `d4KRE9`, Button `AtbGz`, ErrorStateCard `d2mdF`, Spinner `db8Tm` — are **not** on TvXzz; they are the kit definitions drawn in the component library (`boards/RcvKu__component-library.json`) / component batches (`components/components-batch2.json` for `Ie7mv`/`HLa60`/`db8Tm`/`d2mdF`, `components-batch4.json` for `d4KRE9`/`lLfcN`, `components-batch1/4.json` for `AtbGz`), and their property values below are verified against those extracts. The ledger reconciles the TvXzz panels against those canonical defs.
 
 **EmptyState (board `Vpw7Y` vs canonical `Ie7mv`):**
 | Aspect | Board (authoritative) | Canonical def | Resolution |
@@ -253,7 +255,7 @@ These are required by the brief / canonical kit but are **absent from this speci
 - [ ] Skeleton loading taxonomy table: list skeleton (this board) vs LoadingScreen (app-shell, sidebar+main) vs Spinner (voice processing) — all three idioms enumerated with composition.
 - [ ] ErrorState (H2083): container ($background, $border 1px inner, no accent bar, gap 16, padding 32, centered), 48x48 triangle-alert $destructive, 'SOMETHING BROKE' (mono 15/700 ls1.5 $foreground), DM Sans 14 body (lineHeight 1.45, centered, fill_container), inline $primary RETRY frame (padding [10,18], gap 8) with rotate-cw 14px + 'RETRY' (mono 12/700 ls1 $primary-foreground).
 - [ ] RETRY interaction (reset boundary / re-fetch, hover $primary-hover, focus $ring) and role=alert accessibility semantics documented.
-- [ ] Full divergence ledger vs canonical defs: EmptyState (Ie7mv), Skeleton (HLa60), LoadingScreen (lLfcN), ErrorBoundaryFallback (d4KRE9 — accent bar/ERR code/trace/Reload+Report), Button (AtbGz inline-vs-ref), Spinner (db8Tm), with screen-wins resolutions per row.
+- [ ] Full divergence ledger vs canonical defs (canonical ids live in the component library / component batches, NOT on TvXzz; values verified there): EmptyState (Ie7mv, components-batch2), Skeleton (HLa60, components-batch2), LoadingScreen (lLfcN, components-batch4), ErrorBoundaryFallback (d4KRE9, components-batch4 — accent bar/ERR code/trace/Reload+Report), Button (AtbGz inline-vs-ref), Spinner (db8Tm, components-batch2), with screen-wins resolutions per row.
 - [ ] Distinction between ErrorBoundaryFallback (this board) and ErrorStateCard (search/voice no-results card) called out.
 - [ ] Data/logic contracts: render triggers (empty query / pending query / thrown subtree / voice processing), props per component, ErrorBoundary reset + onReport flow, role=alert, no window/status logic in scope.
 - [ ] All tokens resolved to hex, fonts (JetBrains Mono vs DM Sans) and global radius 0 noted.
