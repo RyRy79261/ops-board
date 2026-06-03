@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     "./styles.css": "./src/styles/globals.css",
     "./components/*": "./src/components/*.tsx",
@@ -13,7 +15,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build"

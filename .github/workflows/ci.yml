@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · lint · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  # Window-state logic is timezone-sensitive (the "closed" cliff is local
+  # end-of-day). Run @opsboard/core's suite under several zones. No-op until
+  # S3 adds the core tests (passWithNoTests); becomes meaningful from S3 on.
+  tz-matrix:
+    name: core tests · TZ
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tz: ["Africa/Johannesburg", "Europe/Berlin", "UTC"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @opsboard/core test
+        env:
+          TZ: ${{ matrix.tz }}
