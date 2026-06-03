@@ -1,5 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { createHttpDb } from "./index";
+import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
 import type { Mission, Task } from "./schema";
 
@@ -34,8 +35,9 @@ function toMissionView(row: Mission): MissionView {
 }
 
 /** All missions, alphabetically by name. */
-export async function getMissions(): Promise<MissionView[]> {
-  const db = createHttpDb();
+export async function getMissions(
+  db: OpsboardDb = createHttpDb(),
+): Promise<MissionView[]> {
   const rows = await db
     .select()
     .from(schema.missions)
@@ -44,8 +46,10 @@ export async function getMissions(): Promise<MissionView[]> {
 }
 
 /** One mission by id, or null if it doesn't exist. */
-export async function getMission(id: string): Promise<MissionView | null> {
-  const db = createHttpDb();
+export async function getMission(
+  id: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<MissionView | null> {
   const [row] = await db
     .select()
     .from(schema.missions)
@@ -62,8 +66,8 @@ export async function getMission(id: string): Promise<MissionView | null> {
  */
 export async function getMissionWithTasks(
   id: string,
+  db: OpsboardDb = createHttpDb(),
 ): Promise<MissionWithTasks | null> {
-  const db = createHttpDb();
   const [mission] = await db
     .select()
     .from(schema.missions)

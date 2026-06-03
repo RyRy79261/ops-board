@@ -15,7 +15,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:tz:sa": "TZ=Africa/Johannesburg vitest run",
-    "test:tz:de": "TZ=Europe/Berlin vitest run"
+    "test:tz:de": "TZ=Europe/Berlin vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@opsboard/types": "workspace:*",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
     "@opsboard/typescript-config": "workspace:*",
+    "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^10.4.0",
     "fast-check": "^3.23.0",
     "typescript": "^6.0.3",

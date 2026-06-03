@@ -5,11 +5,12 @@ on:
     branches: [main]
   pull_request:
 
-# Cancel superseded runs on the same ref.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Reusable toolchain setup is repeated per job (composite action would be nicer,
+# but keeping it inline keeps this single-file + reviewable).
 jobs:
   verify:
     name: typecheck · lint · test · build
@@ -27,9 +28,23 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
-  # Window-state logic is timezone-sensitive (the "closed" cliff is local
-  # end-of-day). Run @opsboard/core's suite under several zones. No-op until
-  # S3 adds the core tests (passWithNoTests); becomes meaningful from S3 on.
+  coverage:
+    name: core · coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Thresholds (lines/functions/branches/statements >= 90) live in
+      # packages/core/vitest.config.ts; this fails the PR if coverage drops.
+      - run: pnpm --filter @opsboard/core test:coverage
+
+  # @opsboard/core's window-state "closed" cliff is local-end-of-day in the
+  # user's tz — run the suite under several zones to catch tz-offset bugs.
   tz-matrix:
     name: core tests · TZ
     runs-on: ubuntu-latest
@@ -48,3 +63,57 @@ jobs:
       - run: pnpm --filter @opsboard/core test
         env:
           TZ: ${{ matrix.tz }}
+
+  # Real Postgres: the db suite self-migrates (drizzle migrator) + seeds, then
+  # exercises the query services and asserts every schema constraint.
+  db-integration:
+    name: db · integration (postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: opsboard
+          POSTGRES_PASSWORD: opsboard
+          POSTGRES_DB: opsboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U opsboard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @opsboard/db test
+        env:
+          DATABASE_URL: postgres://opsboard:opsboard@localhost:5432/opsboard_test
+
+  # Fail if schema.ts changed without regenerating the committed migration.
+  migration-drift:
+    name: db · migration drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @opsboard/db db:generate
+      - name: assert migrations are in sync with schema.ts
+        run: |
+          if [ -n "$(git status --porcelain packages/db/migrations)" ]; then
+            echo "::error::Migration drift — schema.ts changed without regenerating. Run 'pnpm --filter @opsboard/db db:generate' and commit packages/db/migrations."
+            git status --porcelain packages/db/migrations
+            git --no-pager diff -- packages/db/migrations
+            exit 1
+          fi
+          echo "migrations in sync with schema.ts"
