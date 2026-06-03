@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+dist
+build
+.turbo
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+packages/db/migrations
+design/app.pen
+docs/design-extract

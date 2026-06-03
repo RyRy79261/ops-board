@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Tailwind v4 must scan this package's own components so CVA classes
+   (bg-primary, text-muted-foreground, …) are not purged. Do NOT remove. */
+@source "../components/**/*.{ts,tsx}";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   S0 PLACEHOLDER token set. The COMPLETE system — the full OKLCH palette,
+   the 19-step --text-* scale with paired --line-height/--letter-spacing,
+   category hues, status/warning tokens, tint conventions, and elevation —
+   is authored in S1 directly from docs/tech-spec/01-foundations.md (the
+   verified foundations spec). Values below are the confirmed core tokens
+   (hex mirror from docs/design-extract/00-variables.json) so the shell
+   renders during S0; S1 converts to OKLCH and completes the scale.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-background: #0a0a0c;
+  --color-foreground: #e8e8f0;
+  --color-muted: #131318;
+  --color-muted-foreground: #7a7a8e;
+  --color-muted-foreground-subtle: #4a4a5e;
+  --color-card: #1a1a22;
+  --color-card-elevated: #22222e;
+  --color-border: #2a2a38;
+  --color-border-hover: #3a3a4a;
+  --color-input: #2a2a38;
+  --color-primary: #ff6b35;
+  --color-primary-foreground: #0a0a0c;
+  --color-ring: #ff6b35;
+
+  --radius: 0;
+
+  --font-dm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "extends": "@opsboard/typescript-config/base.json",
+  "include": ["src/**/*.ts", "drizzle.config.ts"],
+  "compilerOptions": {
+    "outDir": "dist"
+  }
+}

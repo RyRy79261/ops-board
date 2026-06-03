@@ -1,0 +1,6 @@
+/* App CSS entry. Brings in the @opsboard/ui token system (which itself
+   @imports tailwindcss + @sources the ui components), then registers the
+   app's own files so Tailwind v4 scans them for utility classes. */
+@import "@opsboard/ui/styles.css";
+
+@source "../**/*.{ts,tsx}";

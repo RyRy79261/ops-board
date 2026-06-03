@@ -1,0 +1,7 @@
+{
+  "extends": "@opsboard/typescript-config/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "outDir": "dist"
+  }
+}

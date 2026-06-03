@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+.turbo/
+dist/
+build/
+
+# storybook
+storybook-static/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# test artefacts
+coverage/
+playwright-report/
+test-results/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# pencil extraction scratch (regenerate via scripts/extract-design.sh)
+/tmp/pencil-*

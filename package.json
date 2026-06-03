@@ -1,0 +1,24 @@
+{
+  "name": "ops-board",
+  "private": true,
+  "version": "0.0.0",
+  "description": "OpsBoard — voice-first, read-only personal mission planner with dependency-aware task orchestration",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "design:extract": "bash scripts/extract-design.sh"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.14",
+    "typescript": "^6.0.3"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

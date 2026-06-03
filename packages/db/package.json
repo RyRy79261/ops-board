@@ -1,0 +1,33 @@
+{
+  "name": "@opsboard/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./mcp": "./src/mcp.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@opsboard/types": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@opsboard/eslint-config": "workspace:*",
+    "@opsboard/typescript-config": "workspace:*",
+    "drizzle-kit": "^0.31.0",
+    "eslint": "^10.4.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  }
+}
