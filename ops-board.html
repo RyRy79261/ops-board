@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPS BOARD</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --surface: #131318;
+  --surface-2: #1a1a22;
+  --surface-3: #22222e;
+  --border: #2a2a38;
+  --border-hover: #3a3a4a;
+  --text: #e8e8f0;
+  --text-muted: #7a7a8e;
+  --text-dim: #4a4a5e;
+  --accent: #ff6b35;
+  --accent-dim: rgba(255,107,53,0.12);
+  --medical: #e05a9f;
+  --medical-dim: rgba(224,90,159,0.12);
+  --bureaucratic: #5aa0e0;
+  --bureaucratic-dim: rgba(90,160,224,0.12);
+  --travel: #5ae0a0;
+  --travel-dim: rgba(90,224,160,0.12);
+  --gear: #e0c05a;
+  --gear-dim: rgba(224,192,90,0.12);
+  --tech: #a05ae0;
+  --tech-dim: rgba(160,90,224,0.12);
+  --danger: #e05a5a;
+  --success: #5ae07a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* HEADER */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.logo span {
+  color: var(--text-dim);
+  font-weight: 300;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* BUTTONS */
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0a0c;
+}
+
+.btn-primary:hover {
+  background: #ff8555;
+  border-color: #ff8555;
+  color: #0a0a0c;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+/* LAYOUT */
+.app {
+  display: flex;
+  height: calc(100vh - 61px);
+}
+
+.sidebar {
+  width: 280px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.mission-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.mission-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+}
+
+.mission-item:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.mission-item.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.mission-item .name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.mission-item .meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+}
+
+.mission-item .countdown {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mission-item .countdown.overdue {
+  color: var(--danger);
+}
+
+.mission-item .countdown.done {
+  color: var(--success);
+}
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  gap: 16px;
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+/* MISSION VIEW */
+.mission-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mission-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mission-title .edit-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.mission-title:hover .edit-btn {
+  opacity: 1;
+}
+
+.mission-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.stat-value.accent { color: var(--accent); }
+.stat-value.danger { color: var(--danger); }
+.stat-value.success { color: var(--success); }
+
+/* PROGRESS BAR */
+.progress-bar {
+  height: 4px;
+  background: var(--surface-3);
+  margin-top: 16px;
+  display: flex;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--success);
+  transition: width 0.3s;
+}
+
+.progress-blocked {
+  height: 100%;
+  background: var(--danger);
+  transition: width 0.3s;
+}
+
+/* VIEW TABS */
+.view-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.view-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.view-tab:hover { color: var(--text); }
+.view-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* TASK LIST */
+.task-area {
+  flex: 1;
+  padding: 20px 32px;
+}
+
+.task-group {
+  margin-bottom: 24px;
+}
+
+.task-group-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.task-group-header .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.15s;
+  cursor: default;
+}
+
+.task-card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-2);
+}
+
+.task-card.blocked {
+  opacity: 0.6;
+  border-left: 3px solid var(--danger);
+}
+
+.task-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: all 0.15s;
+  margin-top: 1px;
+  background: transparent;
+  color: transparent;
+}
+
+.task-check:hover {
+  border-color: var(--success);
+}
+
+.task-check.done {
+  border-color: var(--success);
+  background: var(--success);
+  color: #0a0a0c;
+}
+
+.task-check.in-progress {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.task-body { flex: 1; min-width: 0; }
+
+.task-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.task-name.done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.task-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.task-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.task-dep {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.task-dep.blocked-by {
+  color: var(--danger);
+}
+
+.task-deadline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.task-deadline.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.task-card:hover .task-actions {
+  opacity: 1;
+}
+
+/* CATEGORY COLORS */
+.cat-medical { color: var(--medical); }
+.cat-medical-bg { background: var(--medical-dim); color: var(--medical); }
+.cat-bureaucratic { color: var(--bureaucratic); }
+.cat-bureaucratic-bg { background: var(--bureaucratic-dim); color: var(--bureaucratic); }
+.cat-travel { color: var(--travel); }
+.cat-travel-bg { background: var(--travel-dim); color: var(--travel); }
+.cat-gear { color: var(--gear); }
+.cat-gear-bg { background: var(--gear-dim); color: var(--gear); }
+.cat-tech { color: var(--tech); }
+.cat-tech-bg { background: var(--tech-dim); color: var(--tech); }
+
+/* STATUS */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-not-started { background: var(--text-dim); }
+.status-in-progress { background: var(--accent); }
+.status-blocked { background: var(--danger); }
+.status-done { background: var(--success); }
+
+/* TIMELINE VIEW */
+.timeline {
+  padding: 20px 32px;
+}
+
+.timeline-week {
+  margin-bottom: 32px;
+}
+
+.timeline-week-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.timeline-week-label .days-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.timeline-week-label .days-label.past {
+  color: var(--danger);
+}
+
+/* DEPENDENCY VIEW */
+.dep-chain {
+  padding: 20px 32px;
+}
+
+.dep-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.dep-connector {
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.dep-line {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 480px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+}
+
+.form-input::placeholder {
+  color: var(--text-dim);
+}
+
+select.form-input {
+  cursor: pointer;
+}
+
+select.form-input option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.delete-zone {
+  margin-right: auto;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sidebar { width: 220px; }
+  .mission-stats { flex-wrap: wrap; gap: 16px; }
+  .task-area, .timeline, .dep-chain { padding: 16px; }
+  .mission-header { padding: 16px; }
+  .view-tabs { padding: 0 16px; }
+}
+
+@media (max-width: 600px) {
+  .app { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">OPS<span>BOARD</span></div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="openMissionModal()">+ MISSION</button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-label">Missions</span>
+    </div>
+    <div class="mission-list" id="missionList"></div>
+  </div>
+  <div class="main" id="mainContent">
+    <div class="empty-state">
+      <div class="icon">⬡</div>
+      <p>Create a mission to begin</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+
+const CATEGORIES = ['medical','bureaucratic','travel','gear','tech'];
+const STATUSES = ['not-started','in-progress','blocked','done'];
+const CAT_LABELS = {medical:'Medical',bureaucratic:'Bureaucratic',travel:'Travel',gear:'Gear',tech:'Tech'};
+
+let state = {
+  missions: [],
+  activeMissionId: null,
+  activeView: 'tasks' // tasks | timeline | deps
+};
+
+// Seed demo data
+function seedDemo() {
+  const m = createMission('AfrikaBurn 2026', '2026-04-20');
+  const t1 = addTask(m.id, 'Book cardiology follow-up', 'medical', '2026-03-15');
+  const t2 = addTask(m.id, 'Get fitness-to-travel cert (Dr. Ruf)', 'medical', '2026-04-01', [t1.id]);
+  const t3 = addTask(m.id, 'Get GP cert (Dr. Schmickaly)', 'medical', '2026-04-01');
+  const t4 = addTask(m.id, 'Submit Envivas documentation', 'bureaucratic', '2026-04-05', [t2.id, t3.id]);
+  const t5 = addTask(m.id, 'Confirm TK §18 SGB V coverage', 'bureaucratic', '2026-04-05');
+  const t6 = addTask(m.id, 'Book TK0044 IST→CPT', 'travel', '2026-03-20');
+  const t7 = addTask(m.id, 'Check carry-on rules for Withings/BPM', 'travel', '2026-04-10', [t6.id]);
+  const t8 = addTask(m.id, 'Design MOLLE scabbard for iso batons', 'gear', '2026-03-25');
+  const t9 = addTask(m.id, 'Pack medical devices', 'gear', '2026-04-15', [t7.id]);
+  const t10 = addTask(m.id, 'Brief AB medical team', 'medical', '2026-04-10', [t2.id]);
+  const t11 = addTask(m.id, 'Research VFS Global visa extension', 'bureaucratic', '2026-04-01');
+
+  // Set some statuses for realism
+  t1.status = 'done';
+  t6.status = 'done';
+  t3.status = 'done';
+  t8.status = 'in-progress';
+
+  state.activeMissionId = m.id;
+  render();
+}
+
+// ═══════════════════════════════════════
+// DATA HELPERS
+// ═══════════════════════════════════════
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function createMission(name, targetDate) {
+  const m = { id: uid(), name, targetDate, tasks: [], created: new Date().toISOString() };
+  state.missions.push(m);
+  return m;
+}
+
+function getMission(id) { return state.missions.find(m => m.id === id); }
+
+function getActiveMission() { return getMission(state.activeMissionId); }
+
+function addTask(missionId, name, category, deadline, deps=[]) {
+  const m = getMission(missionId);
+  const t = { id: uid(), name, category, deadline: deadline||'', deps, status: 'not-started' };
+  m.tasks.push(t);
+  return t;
+}
+
+function getTask(missionId, taskId) {
+  const m = getMission(missionId);
+  return m ? m.tasks.find(t => t.id === taskId) : null;
+}
+
+function isBlocked(mission, task) {
+  if (!task.deps.length) return false;
+  return task.deps.some(depId => {
+    const dep = mission.tasks.find(t => t.id === depId);
+    return dep && dep.status !== 'done';
+  });
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return Infinity;
+  const target = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.ceil((target - now) / (1000*60*60*24));
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+
+// ═══════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════
+
+function render() {
+  renderSidebar();
+  renderMain();
+}
+
+function renderSidebar() {
+  const el = document.getElementById('missionList');
+  if (!state.missions.length) {
+    el.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-size:13px;">No missions yet</div>';
+    return;
+  }
+  el.innerHTML = state.missions.map(m => {
+    const days = daysUntil(m.targetDate);
+    const done = m.tasks.filter(t => t.status === 'done').length;
+    const total = m.tasks.length;
+    let countdownClass = 'countdown';
+    let countdownText = '';
+    if (days < 0) { countdownClass += ' overdue'; countdownText = `${Math.abs(days)}d overdue`; }
+    else if (days === 0) { countdownText = 'TODAY'; }
+    else { countdownText = `T-${days}d`; }
+    if (total > 0 && done === total) { countdownClass = 'countdown done'; countdownText = 'COMPLETE'; }
+
+    return `<div class="mission-item ${m.id === state.activeMissionId ? 'active' : ''}" onclick="selectMission('${m.id}')">
+      <div class="name">${esc(m.name)}</div>
+      <div class="meta">
+        <span class="${countdownClass}">${countdownText}</span>
+        <span>${done}/${total} tasks</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMain() {
+  const el = document.getElementById('mainContent');
+  const m = getActiveMission();
+  if (!m) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">⬡</div><p>Create a mission to begin</p></div>';
+    return;
+  }
+
+  const done = m.tasks.filter(t => t.status === 'done').length;
+  const blocked = m.tasks.filter(t => isBlocked(m, t) && t.status !== 'done').length;
+  const total = m.tasks.length;
+  const days = daysUntil(m.targetDate);
+  const pctDone = total ? (done/total*100) : 0;
+  const pctBlocked = total ? (blocked/total*100) : 0;
+
+  let daysDisplay = '';
+  let daysClass = 'stat-value accent';
+  if (days < 0) { daysDisplay = Math.abs(days); daysClass = 'stat-value danger'; }
+  else if (days === 0) { daysDisplay = '0'; }
+  else { daysDisplay = days; }
+
+  el.innerHTML = `
+    <div class="mission-header">
+      <div class="mission-title">
+        ${esc(m.name)}
+        <button class="btn btn-sm edit-btn" onclick="openEditMissionModal('${m.id}')">edit</button>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);">
+        Target: ${formatDate(m.targetDate) || 'No date set'}
+      </div>
+      <div class="mission-stats">
+        <div class="stat">
+          <div class="${daysClass} mono">${daysDisplay}</div>
+          <div class="stat-label">${days < 0 ? 'Days overdue' : 'Days left'}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value success mono">${done}</div>
+          <div class="stat-label">Done</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value danger mono">${blocked}</div>
+          <div class="stat-label">Blocked</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value mono">${total}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pctDone}%"></div>
+        <div class="progress-blocked" style="width:${pctBlocked}%"></div>
+      </div>
+    </div>
+    <div class="view-tabs">
+      <button class="view-tab ${state.activeView==='tasks'?'active':''}" onclick="switchView('tasks')">By Category</button>
+      <button class="view-tab ${state.activeView==='timeline'?'active':''}" onclick="switchView('timeline')">Timeline</button>
+      <button class="view-tab ${state.activeView==='deps'?'active':''}" onclick="switchView('deps')">Dependencies</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" style="align-self:center;margin:8px 0" onclick="openTaskModal('${m.id}')">+ Task</button>
+    </div>
+    <div id="viewContent"></div>
+  `;
+
+  if (state.activeView === 'tasks') renderTaskView(m);
+  else if (state.activeView === 'timeline') renderTimelineView(m);
+  else if (state.activeView === 'deps') renderDepsView(m);
+}
+
+function renderTaskView(m) {
+  const el = document.getElementById('viewContent');
+  const groups = {};
+  CATEGORIES.forEach(c => { groups[c] = []; });
+  m.tasks.forEach(t => {
+    if (groups[t.category]) groups[t.category].push(t);
+  });
+
+  let html = '<div class="task-area">';
+  CATEGORIES.forEach(cat => {
+    const tasks = groups[cat];
+    if (!tasks.length) return;
+    html += `<div class="task-group">
+      <div class="task-group-header">
+        <span class="dot" style="background:var(--${cat})"></span>
+        <span class="cat-${cat}">${CAT_LABELS[cat]}</span>
+        <span style="color:var(--text-dim)">${tasks.filter(t=>t.status==='done').length}/${tasks.length}</span>
+      </div>
+      ${tasks.map(t => renderTaskCard(m, t)).join('')}
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderTimelineView(m) {
+  const el = document.getElementById('viewContent');
+  const tasks = [...m.tasks].filter(t => t.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline));
+  const noDate = m.tasks.filter(t => !t.deadline);
+
+  // Group by week
+  const weeks = {};
+  tasks.forEach(t => {
+    const d = new Date(t.deadline + 'T00:00:00');
+    const weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay() + 1);
+    const key = weekStart.toISOString().slice(0,10);
+    if (!weeks[key]) weeks[key] = { start: weekStart, tasks: [] };
+    weeks[key].tasks.push(t);
+  });
+
+  let html = '<div class="timeline">';
+  Object.keys(weeks).sort().forEach(key => {
+    const w = weeks[key];
+    const endOfWeek = new Date(w.start);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    const days = daysUntil(key);
+    const daysLabel = days < 0 ? `${Math.abs(days)}d ago` : days === 0 ? 'This week' : `In ${days}d`;
+    const daysClass = days < 0 ? 'days-label past' : 'days-label';
+
+    html += `<div class="timeline-week">
+      <div class="timeline-week-label">
+        <span>${formatDate(key)} — ${formatDate(endOfWeek.toISOString().slice(0,10))}</span>
+        <span class="${daysClass}">${daysLabel}</span>
+      </div>
+      ${w.tasks.map(t => renderTaskCard(m, t)).join('')}
+    </div>`;
+  });
+
+  if (noDate.length) {
+    html += `<div class="timeline-week">
+      <div class="timeline-week-label"><span>No deadline</span></div>
+      ${noDate.map(t => renderTaskCard(m, t)).join('')}
+    </div>`;
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderDepsView(m) {
+  const el = document.getElementById('viewContent');
+  // Find root tasks (no deps) and build chains
+  const roots = m.tasks.filter(t => !t.deps.length);
+  const dependents = {};
+  m.tasks.forEach(t => {
+    t.deps.forEach(depId => {
+      if (!dependents[depId]) dependents[depId] = [];
+      dependents[depId].push(t.id);
+    });
+  });
+
+  function renderChain(taskId, depth=0) {
+    const t = m.tasks.find(x => x.id === taskId);
+    if (!t) return '';
+    const blocked = isBlocked(m, t);
+    const children = dependents[taskId] || [];
+    let html = `<div class="dep-node" style="padding-left:${depth*36}px">
+      ${depth > 0 ? '<div class="dep-connector"><div class="dep-line"></div>↓</div>' : '<div style="width:24px"></div>'}
+      <div style="flex:1">${renderTaskCard(m, t)}</div>
+    </div>`;
+    children.forEach(childId => {
+      html += renderChain(childId, depth+1);
+    });
+    return html;
+  }
+
+  let html = '<div class="dep-chain">';
+  const visited = new Set();
+  roots.forEach(r => {
+    html += renderChain(r.id, 0);
+  });
+  // Also show orphan tasks not in any chain
+  const inChain = new Set();
+  function collectChain(id) { inChain.add(id); (dependents[id]||[]).forEach(collectChain); }
+  roots.forEach(r => collectChain(r.id));
+  const orphans = m.tasks.filter(t => !inChain.has(t.id));
+  if (orphans.length) {
+    html += `<div style="margin-top:24px">
+      <div class="task-group-header"><span style="color:var(--text-dim)">Unlinked tasks</span></div>
+      ${orphans.map(t => renderTaskCard(m, t)).join('')}
+    </div>`;
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderTaskCard(m, t) {
+  const blocked = isBlocked(m, t);
+  const dl = daysUntil(t.deadline);
+  let dlClass = 'task-deadline';
+  if (t.status !== 'done' && dl < 0) dlClass += ' overdue';
+
+  let checkClass = 'task-check';
+  if (t.status === 'done') checkClass += ' done';
+  else if (t.status === 'in-progress') checkClass += ' in-progress';
+
+  const depNames = t.deps.map(depId => {
+    const dep = m.tasks.find(x => x.id === depId);
+    return dep ? dep.name : '?';
+  });
+
+  const blockedDeps = t.deps.filter(depId => {
+    const dep = m.tasks.find(x => x.id === depId);
+    return dep && dep.status !== 'done';
+  }).map(depId => {
+    const dep = m.tasks.find(x => x.id === depId);
+    return dep ? dep.name : '?';
+  });
+
+  return `<div class="task-card ${blocked && t.status !== 'done' ? 'blocked' : ''}">
+    <button class="${checkClass}" onclick="cycleStatus('${m.id}','${t.id}')" title="Cycle status">${t.status==='done'?'✓':t.status==='in-progress'?'◼':''}</button>
+    <div class="task-body">
+      <div class="task-name ${t.status==='done'?'done':''}">${esc(t.name)}</div>
+      <div class="task-meta">
+        <span class="task-tag cat-${t.category}-bg">${CAT_LABELS[t.category]}</span>
+        ${t.deadline ? `<span class="${dlClass}">${formatDate(t.deadline)}${t.status!=='done' && dl < 0 ? ' (overdue)' : ''}</span>` : ''}
+        ${blocked && t.status !== 'done' ? `<span class="task-dep blocked-by">⚠ blocked by: ${blockedDeps.join(', ')}</span>` : ''}
+        ${!blocked && depNames.length ? `<span class="task-dep">← ${depNames.join(', ')}</span>` : ''}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="btn btn-sm btn-icon" onclick="openEditTaskModal('${m.id}','${t.id}')" title="Edit">✎</button>
+      <button class="btn btn-sm btn-icon" onclick="deleteTask('${m.id}','${t.id}')" title="Delete">×</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════
+
+function selectMission(id) {
+  state.activeMissionId = id;
+  render();
+}
+
+function switchView(v) {
+  state.activeView = v;
+  renderMain();
+}
+
+function cycleStatus(missionId, taskId) {
+  const t = getTask(missionId, taskId);
+  if (!t) return;
+  const order = ['not-started','in-progress','done'];
+  const i = order.indexOf(t.status);
+  t.status = order[(i+1) % order.length];
+  render();
+}
+
+function deleteTask(missionId, taskId) {
+  const m = getMission(missionId);
+  if (!m) return;
+  m.tasks = m.tasks.filter(t => t.id !== taskId);
+  // Remove from deps
+  m.tasks.forEach(t => { t.deps = t.deps.filter(d => d !== taskId); });
+  render();
+}
+
+function deleteMission(id) {
+  state.missions = state.missions.filter(m => m.id !== id);
+  if (state.activeMissionId === id) {
+    state.activeMissionId = state.missions.length ? state.missions[0].id : null;
+  }
+  closeModalDirect();
+  render();
+}
+
+// ═══════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════
+
+function openMissionModal() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">New Mission</div>
+    <div class="form-group">
+      <label class="form-label">Mission Name</label>
+      <input class="form-input" id="mName" placeholder="e.g. AfrikaBurn 2026" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Date</label>
+      <input class="form-input" id="mDate" type="date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModalDirect()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMission()">Create</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('mName')?.focus(), 100);
+}
+
+function openEditMissionModal(id) {
+  const m = getMission(id);
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">Edit Mission</div>
+    <div class="form-group">
+      <label class="form-label">Mission Name</label>
+      <input class="form-input" id="mName" value="${esc(m.name)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Date</label>
+      <input class="form-input" id="mDate" type="date" value="${m.targetDate}">
+    </div>
+    <div class="modal-actions">
+      <div class="delete-zone">
+        <button class="btn" style="border-color:var(--danger);color:var(--danger)" onclick="if(confirm('Delete this mission and all tasks?'))deleteMission('${id}')">Delete</button>
+      </div>
+      <button class="btn" onclick="closeModalDirect()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateMission('${id}')">Save</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function saveMission() {
+  const name = document.getElementById('mName').value.trim();
+  const date = document.getElementById('mDate').value;
+  if (!name) return;
+  const m = createMission(name, date);
+  state.activeMissionId = m.id;
+  closeModalDirect();
+  render();
+}
+
+function updateMission(id) {
+  const m = getMission(id);
+  m.name = document.getElementById('mName').value.trim() || m.name;
+  m.targetDate = document.getElementById('mDate').value;
+  closeModalDirect();
+  render();
+}
+
+function openTaskModal(missionId) {
+  const m = getMission(missionId);
+  const depOptions = m.tasks.map(t =>
+    `<option value="${t.id}">${esc(t.name)}</option>`
+  ).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">New Task</div>
+    <div class="form-group">
+      <label class="form-label">Task Name</label>
+      <input class="form-input" id="tName" placeholder="e.g. Book cardiology follow-up" autofocus>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="tCat">
+          ${CATEGORIES.map(c => `<option value="${c}">${CAT_LABELS[c]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <input class="form-input" id="tDeadline" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Depends on (hold Ctrl/Cmd for multiple)</label>
+      <select class="form-input" id="tDeps" multiple style="height:100px">
+        ${depOptions}
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModalDirect()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask('${missionId}')">Add Task</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('tName')?.focus(), 100);
+}
+
+function openEditTaskModal(missionId, taskId) {
+  const m = getMission(missionId);
+  const t = getTask(missionId, taskId);
+  const depOptions = m.tasks.filter(x => x.id !== taskId).map(x =>
+    `<option value="${x.id}" ${t.deps.includes(x.id)?'selected':''}>${esc(x.name)}</option>`
+  ).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">Edit Task</div>
+    <div class="form-group">
+      <label class="form-label">Task Name</label>
+      <input class="form-input" id="tName" value="${esc(t.name)}">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="tCat">
+          ${CATEGORIES.map(c => `<option value="${c}" ${t.category===c?'selected':''}>${CAT_LABELS[c]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <input class="form-input" id="tDeadline" type="date" value="${t.deadline}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="tStatus">
+        ${STATUSES.map(s => `<option value="${s}" ${t.status===s?'selected':''}>${s.replace('-',' ')}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Depends on</label>
+      <select class="form-input" id="tDeps" multiple style="height:100px">
+        ${depOptions}
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModalDirect()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateTask('${missionId}','${taskId}')">Save</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function saveTask(missionId) {
+  const name = document.getElementById('tName').value.trim();
+  if (!name) return;
+  const cat = document.getElementById('tCat').value;
+  const deadline = document.getElementById('tDeadline').value;
+  const deps = Array.from(document.getElementById('tDeps').selectedOptions).map(o => o.value);
+  addTask(missionId, name, cat, deadline, deps);
+  closeModalDirect();
+  render();
+}
+
+function updateTask(missionId, taskId) {
+  const t = getTask(missionId, taskId);
+  t.name = document.getElementById('tName').value.trim() || t.name;
+  t.category = document.getElementById('tCat').value;
+  t.deadline = document.getElementById('tDeadline').value;
+  t.status = document.getElementById('tStatus').value;
+  t.deps = Array.from(document.getElementById('tDeps').selectedOptions).map(o => o.value);
+  closeModalDirect();
+  render();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+});
+
+// INIT
+seedDemo();
+</script>
+
+</body>
+</html>
