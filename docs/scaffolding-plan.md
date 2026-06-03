@@ -99,12 +99,12 @@ Hard ordering constraints surfaced by research:
 - Optional `crt-bg.glsl` re-defaulted to orange/near-black as a restrained flourish.
 
 ## S8 — Polish + optional reminders
-**Goal:** prompt tuning, edge cases, optional cron, deferred mobile.
+**Goal:** prompt tuning, edge cases, optional cron, and the later native-mobile wrap (web-first; Capacitor when store-ready — see below).
 **Sources:** camp-404 cron gating; intake-tracker `medication-notification-service.ts` (dedupe), `TESTING_STRATEGY.md`.
 - Intent-prompt tuning + adversarial-JSON boundary tests (truncated/null/out-of-range/prompt-echo → typed error, never a wrong mutation).
 - Optional `/api/cron/closing-windows` behind `Authorization: Bearer ${CRON_SECRET}`; days-until-threshold + a persisted dedupe-set (notified key `${date}-${taskId}`).
 - axe-core a11y on the dashboard E2E; a redundant-channel audit (no color-only signals).
-- **Defer mobile** (Capacitor `output: "export"` breaks on Server Actions/cookies/rewrites — all used here); plan client-only screens + a separate API as a later phase, not MVP.
+- **Mobile strategy (decided 2026-06-03): web-app-first, native later.** Mobile-first *responsive web* is **first-class / MVP** — the design's Mobile screens board (`h9YSWg`) + `docs/tech-spec/03-surfaces/mobile.md` are built in S1 (components must work at ~430px) and S4 (single-column ↔ 3-pane responsive). A native **Capacitor** app ships **later, once store-ready**, via **`server.url` WebView wrap of the hosted web app** (NOT static export) — so it requires **no rework**: keep the server-first RSC + Server Actions + cookies + rewrites untouched, and DO NOT add `output: "export"` / a `MOBILE_BUILD` branch to `next.config.ts` (already omitted in S0). When wrapping: add `apps/mobile` (Capacitor) + native plugins (mic-permission, push, haptics, safe-area) + an optional PWA manifest/service-worker shell. The old "static-export + separate API" path is rejected (it would abandon the server-first model).
 
 ---
 
