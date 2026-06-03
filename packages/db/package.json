@@ -10,6 +10,7 @@
     "./schema": "./src/schema.ts",
     "./mcp": "./src/mcp.ts",
     "./missions": "./src/missions.ts",
+    "./mutations": "./src/mutations.ts",
     "./tasks": "./src/tasks.ts"
   },
   "scripts": {
