@@ -213,7 +213,7 @@ Always an 18×18 frame, first child of the card. Four bespoke appearances encode
 | Appearance | Status meaning | Fill | Stroke | Inner child | Instances |
 |---|---|---|---|---|---|
 | **Empty + subtle stroke** | not-started, on a window-closed/dimmed card | `$background` | `$muted-foreground-subtle` `1.5` inner | none | 1 (Yellow fever) |
-| **Empty + border-hover stroke** | not-started (active/openable) incl. blocked & not-yet | `$background` | `$border-hover` `1.5` inner | none | 6 |
+| **Empty + border-hover stroke** | not-started (active/openable) incl. blocked & not-yet | `$background` | `$border-hover` `1.5` inner | none | 7 |
 | **Primary ring + inner square** | **in-progress** | `$background` | `$primary` `1.5` inner | 8×8 rectangle `fill: $primary` (`justify/align: center`) | 1 (Fill malaria) |
 | **Success fill + check** | **done** | `$success` | none | lucide `check` 12×12 `fill: $success-foreground` (`justify/align: center`) | 2 (Renew passport, Confirm ticket) |
 

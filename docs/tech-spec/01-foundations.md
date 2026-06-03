@@ -139,7 +139,7 @@ Rendered radius samples on the screen:
 > **Build rule:** `--radius: 0`. The only `rounded-full` (999px) exceptions are status dots, category dots, pill badges, avatars, and the circular voice FAB. (Brief §5 additionally notes the StatusCycleButton is an 18px **square** — i.e. NOT rounded; consistent with radius-0.)
 
 ### Elevation ladder (3 tiers — from the **Elevation & Radius Block**)
-Tiers are distinguished by **surface fill + hairline `$border` stroke (1px)** — no drop shadows. Each tier row carries `stroke: $border, strokeWidth: 1`.
+Tiers are distinguished by **surface fill + hairline `$border` stroke (1px)** AND **outer drop shadows on the elevated tiers** (E0/background carries none). Each tier row carries `stroke: $border, strokeWidth: 1`; additionally **E1 (`$card`, node `d4Uy0`)** carries `box-shadow: 0 4px 12px #00000059` (~35% black) and **E2 (`$card-elevated`, node `iP0k6`)** carries `box-shadow: 0 10px 24px #00000080` (~50% black). *(Corrects an earlier "no drop shadows" reading — the Design System screen renders elevation shadows; verified against `WCTkf` nodes `d4Uy0`/`iP0k6`.)*
 
 | Tier | Token | Surface fill | Role (verbatim) |
 |---|---|---|---|
@@ -209,7 +209,7 @@ These are the non-component **layout/documentation atoms** the Foundations colum
 - ✅ **Font families** — DM Sans + JetBrains Mono roles, specimen weights, sample sentences, build `--font-*` tokens.
 - ✅ **Colour tokens** — all 6 swatch groups (SURFACES/TEXT/BRAND/BORDERS/STATUS/CATEGORIES) with name + hex + role, every hex verified against `00-variables.json`, OKLCH as-built values, the 5 category hues+tints+icons+labels, undocumented-but-present tokens enumerated, and the missing `--overlay` flagged.
 - ✅ **Radius** — `--radius: 0` confirmed in variables + screen; rounded-full(999) exceptions enumerated; the 4 rendered radius samples.
-- ✅ **Elevation** — 3-tier ladder (E0/E1/E2) with surface fills + roles; hairline-border (no shadow) convention; 4-vs-3-tier divergence vs brief noted.
+- ✅ **Elevation** — 3-tier ladder (E0/E1/E2) with surface fills + roles; hairline-border **+ elevated-tier drop-shadow** convention (E1 `0 4 12 #00000059`, E2 `0 10 24 #00000080`); 4-vs-3-tier divergence vs brief noted.
 - ✅ **Tint/alpha convention** — 12% fill / 18% hover-lift with exact 8-digit-hex encodings (`1f`/`2e`) across primary/warning/category; solid-token rule; camp-404 `/15`→`/12` normalization.
 - ✅ **Spacing scale** — 4px base grid, all 8 documented steps (4–48), Tailwind mapping, skipped-40 note.
 - ✅ **Foundational primitives** — 8 documentation/chrome atoms the board is built from (SectionHead, CrossRef, Eyebrow, Swatch, Specimen, Divider, Dot, Pill).

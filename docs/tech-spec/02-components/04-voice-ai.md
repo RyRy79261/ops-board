@@ -74,7 +74,7 @@ State-reflecting `aria-label`; `role="alert"` on error; decorative ring/waveform
 **Kind:** organism  ·  **maps_to (camp-404):** LIFT `apps/web/components/voice/waveform.tsx` (auto-themes orange) + LIFT `use-voice-recorder.ts` (timer/cleanup/iOS fallback); shell is a shadcn Card.  ·  **maps_to (shadcn):** shadcn Card shell + lucide-driven live Waveform + mono mm:ss. (Showcase caption: 'RecordingPanel · shadcn Card + live waveform + mm:ss'.)
   ·  **composes:** Waveform (camp LIFT), Spinner (parsing chip dot/loader), ScopeChip + ParsedIntentPanel (the surfaces it precedes in the GZ7xA flow)
 
-**Anatomy:** frame[card/border, vertical, gap14, pad16] (id R6D1f3) → { Top (horizontal, space-between, center) → [ Status (gap7, center) → Dot (ellipse 8×8 $destructive) + L (mono 11/700, ls1.5, $destructive, 'RECORDING') ; Timer (mono 13/600, ls1, $foreground, '00:07') ] ; Waveform (frame fill, h40, gap3, center) → 40× Bar (rectangle, w4, fill $primary, heights 8–34 varying) }. On GZ7xA 'Voice Capture' the panel is WIDENED: a $primary 3px left-accent wrapper, VHead (Mic icon + 'VOICE CAPTURE' label + LiveCue {8-bar waveform h24 w3 + REC dot/label + timer}), a 'TRANSCRIPT' eyebrow, the transcript text (DM Sans 16), and a 'PARSING INTENT…' processing chip ($muted, primary dot).
+**Anatomy:** frame[card/border, vertical, gap14, pad16] (id R6D1f3) → { Top (horizontal, space-between, center) → [ Status (gap7, center) → Dot (ellipse 8×8 $destructive) + L (mono 11/700, ls1.5, $destructive, 'RECORDING') ; Timer (mono 13/600, ls1, $foreground, '00:07') ] ; Waveform (frame fill, h40, gap3, center) → 40× Bar (rectangle, w4, fill $primary, heights 8–34 varying) }. On GZ7xA 'Voice Capture' the panel is WIDENED: a $primary 3px left-accent wrapper, VHead (Mic icon + 'VOICE CAPTURE' label + LiveCue {8-bar waveform h24 w3 + REC dot/label + timer}), a 'TRANSCRIPT' eyebrow, the transcript text (JetBrains Mono 16), and a 'PARSING INTENT…' processing chip ($muted, primary dot).
 
 **Props:**
 
@@ -83,10 +83,10 @@ State-reflecting `aria-label`; `role="alert"` on error; decorative ring/waveform
 | `state` | 'recording' | 'transcribing' | 'parsing' | ✓ | 'recording' | recording → $destructive dot/'RECORDING'; transcribing → $warning dot/'TRANSCRIBING' (showcase variant); parsing → 'PARSING INTENT…' processing chip (GZ7xA). |
 | `elapsedLabel` | string (mm:ss) | ✓ | '00:07' | Mono timer; showcase recording=00:07, transcribing=00:12, GZ7xA=00:09. |
 | `amplitudes` | number[] |  |  | Live bar heights for the Waveform (canonical 40 bars @4px; GZ7xA inline 8 bars @3px h24). |
-| `transcript` | string |  |  | GZ7xA-only: the live transcript text (DM Sans 16) shown under a 'TRANSCRIPT' eyebrow. |
+| `transcript` | string |  |  | GZ7xA-only: the live transcript text (JetBrains Mono 16) shown under a 'TRANSCRIPT' eyebrow. |
 | `showTranscript` | boolean |  | false | Toggles the transcript + processing-chip block (the screen Voice Capture variant). |
 
-**Variants:** `recording (canonical): $destructive dot + 'RECORDING' label, $primary 40-bar waveform`, `transcribing (showcase ref AHaAj): dot+label recolored $warning, label 'TRANSCRIBING', timer 00:12`, `Voice Capture (GZ7xA): + left $primary 3px accent, header Mic+'VOICE CAPTURE', inline 8-bar waveform, 'TRANSCRIPT' eyebrow + DM Sans 16 transcript, 'PARSING INTENT…' chip ($muted, $primary dot, mono 11 ls1.5)`
+**Variants:** `recording (canonical): $destructive dot + 'RECORDING' label, $primary 40-bar waveform`, `transcribing (showcase ref AHaAj): dot+label recolored $warning, label 'TRANSCRIBING', timer 00:12`, `Voice Capture (GZ7xA): + left $primary 3px accent, header Mic+'VOICE CAPTURE', inline 8-bar waveform, 'TRANSCRIPT' eyebrow + JetBrains Mono 16 transcript, 'PARSING INTENT…' chip ($muted, $primary dot, mono 11 ls1.5)`
 
 **States:** `recording (active capture)`, `transcribing`, `parsing-intent (post-capture, screen variant)`
 
@@ -115,7 +115,7 @@ frame [$primary fill, pad-left 3 → left accent]
 └─ Inner [Card, pad18, gap12]
    ├─ VHead: Mic + 'VOICE CAPTURE' (mono 12 ls1.5) | LiveCue {8-bar waveform h24 w3 · REC dot+label $destructive · timer}
    ├─ 'TRANSCRIPT' eyebrow (mono 11 ls1.5 $muted-foreground)
-   ├─ Transcript (DM Sans 16 $foreground)
+   ├─ Transcript (JetBrains Mono 16 $foreground)
    └─ Processing chip [$muted, pad7/11]: $primary dot + 'PARSING INTENT…' (mono 11 ls1.5 $primary)
 ```
 
@@ -133,7 +133,7 @@ Screens win → canonical record-only header is **widened** to combine transcrip
 
 **Screen usages:** GZ7xA §01 'Voice Capture' (id ~V0T0A) — the record+transcript+parsing combined panel with $primary left accent; RcvKu showcase 'Spec · RecordingPanel' — canonical R6D1f3 + 'transcribing' ref (AHaAj); T2BChB recording FAB cell flattens an inline waveform+timer instead of using this panel
 
-**Reconciliation (screen ← library):** Canonical R6D1f3 is record-ONLY (40-bar waveform, status header, timer). The GZ7xA screen (authoritative) CONFLATES record + transcript + intent-parsing into one $primary-left-accent panel with a richer header (Mic + 'VOICE CAPTURE'), an 8-bar (not 40) inline waveform at h24/w3, a transcript paragraph (DM Sans 16), and a 'PARSING INTENT…' processing chip. Contract is WIDENED with `transcript`/`showTranscript`/`parsing` so one component serves both the bare recording header and the screen's combined capture surface. Waveform bar count/size is data-driven (40@4 default; 8@3 compact). The showcase 'transcribing' variant recolors the status to $warning — kept as a state. Triage flags the 8 hand-placed Bar0..Bar7 rects vs a Waveform component and the $primary 3px left-accent-via-padding hack: build with the camp `waveform.tsx` and a real `border-l-[3px]`.
+**Reconciliation (screen ← library):** Canonical R6D1f3 is record-ONLY (40-bar waveform, status header, timer). The GZ7xA screen (authoritative) CONFLATES record + transcript + intent-parsing into one $primary-left-accent panel with a richer header (Mic + 'VOICE CAPTURE'), an 8-bar (not 40) inline waveform at h24/w3, a transcript paragraph (**JetBrains Mono 16**, lineHeight 1.55, node `d6h84` — the DESKTOP transcript is Mono; the mobile Heard panel `gJENy` uses DM Sans 15), and a 'PARSING INTENT…' processing chip. Contract is WIDENED with `transcript`/`showTranscript`/`parsing` so one component serves both the bare recording header and the screen's combined capture surface. Waveform bar count/size is data-driven (40@4 default; 8@3 compact). The showcase 'transcribing' variant recolors the status to $warning — kept as a state. Triage flags the 8 hand-placed Bar0..Bar7 rects vs a Waveform component and the $primary 3px left-accent-via-padding hack: build with the camp `waveform.tsx` and a real `border-l-[3px]`.
 
 ---
 
