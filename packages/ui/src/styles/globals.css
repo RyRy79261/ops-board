@@ -1,42 +1,135 @@
 @import "tailwindcss";
 
-/* Tailwind v4 must scan this package's own components so CVA classes
-   (bg-primary, text-muted-foreground, …) are not purged. Do NOT remove. */
+/* Tailwind v4 only scans the *consuming* project by default, so the web app
+   would miss the `bg-primary` / `text-muted-foreground` etc. classes baked
+   into this package's CVA variants. Point at the components dir explicitly. */
 @source "../components/**/*.{ts,tsx}";
 
-/* ─────────────────────────────────────────────────────────────────────────
-   S0 PLACEHOLDER token set. The COMPLETE system — the full OKLCH palette,
-   the 19-step --text-* scale with paired --line-height/--letter-spacing,
-   category hues, status/warning tokens, tint conventions, and elevation —
-   is authored in S1 directly from docs/tech-spec/01-foundations.md (the
-   verified foundations spec). Values below are the confirmed core tokens
-   (hex mirror from docs/design-extract/00-variables.json) so the shell
-   renders during S0; S1 converts to OKLCH and completes the scale.
-   ───────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   OpsBoard token system — authoritative source: docs/tech-spec/01-foundations.md
+   (the Pencil Design System screen, reconciled against design-extract/00-variables.json).
+   OKLCH palette per design-brief §3; the hex mirror lives in the spec only.
+   Architecture mirrors camp-404 packages/ui/src/styles/globals.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
 @theme {
-  --color-background: #0a0a0c;
-  --color-foreground: #e8e8f0;
-  --color-muted: #131318;
-  --color-muted-foreground: #7a7a8e;
-  --color-muted-foreground-subtle: #4a4a5e;
-  --color-card: #1a1a22;
-  --color-card-elevated: #22222e;
-  --color-border: #2a2a38;
-  --color-border-hover: #3a3a4a;
-  --color-input: #2a2a38;
-  --color-primary: #ff6b35;
-  --color-primary-foreground: #0a0a0c;
-  --color-ring: #ff6b35;
+  /* ── SURFACES (3-tier elevation: background → card → card-elevated;
+        `muted` is the header/sidebar chrome surface, not an elevation step) ── */
+  --color-background: oklch(0.146 0.004 286); /* #0a0a0c near-black canvas */
+  --color-muted: oklch(0.189 0.01 285); /* #131318 header / sidebar */
+  --color-card: oklch(0.221 0.016 285); /* #1a1a22 cards / panels / rows / popover */
+  --color-card-elevated: oklch(0.257 0.022 285); /* #22222e deepest panel / progress track */
 
+  /* ── TEXT ── */
+  --color-foreground: oklch(0.933 0.011 286); /* #e8e8f0 warm white */
+  --color-muted-foreground: oklch(0.586 0.03 285); /* #7a7a8e secondary */
+  --color-muted-foreground-subtle: oklch(0.417 0.033 285); /* #4a4a5e 3rd-tier dim */
+
+  /* ── BRAND ── */
+  --color-primary: oklch(0.705 0.193 39); /* #ff6b35 tactical orange */
+  --color-primary-hover: #ff8555; /* lighter orange (derived) */
+  --color-primary-foreground: oklch(0.146 0.004 286); /* #0a0a0c near-black on orange */
+  --color-ring: oklch(0.705 0.193 39); /* focus ring = primary */
+
+  /* ── card / popover / secondary / accent foregrounds + surfaces
+        (present in 00-variables.json; accent = card, orange wash is bg-primary/12) ── */
+  --color-card-foreground: oklch(0.933 0.011 286);
+  --color-popover: oklch(0.221 0.016 285);
+  --color-popover-foreground: oklch(0.933 0.011 286);
+  --color-secondary: oklch(0.221 0.016 285);
+  --color-secondary-foreground: oklch(0.933 0.011 286);
+  --color-accent: oklch(0.221 0.016 285);
+  --color-accent-foreground: oklch(0.933 0.011 286);
+
+  /* ── BORDERS ── */
+  --color-border: oklch(0.291 0.025 285); /* #2a2a38 hairline */
+  --color-border-hover: oklch(0.355 0.025 285); /* #3a3a4a hover */
+  --color-input: oklch(0.291 0.025 285); /* = border */
+
+  /* ── STATUS ── */
+  --color-success: oklch(0.809 0.184 149); /* #5ae07a done / healthy */
+  --color-success-foreground: oklch(0.18 0.03 149); /* #0a1f12 */
+  --color-warning: oklch(0.8 0.16 80); /* #d9a73e amber "closing" advisory */
+  --color-warning-foreground: oklch(0.2 0.04 80); /* #251a05 */
+  --color-destructive: oklch(0.641 0.168 23); /* #e05a5a genuine danger only */
+  --color-destructive-foreground: oklch(0.98 0 0); /* #fafafa */
+  --color-info: var(--color-primary); /* info aliases orange */
+  --color-info-foreground: var(--color-primary-foreground);
+
+  /* ── CATEGORIES (5 seeded — hue + Lucide icon + label; consumed at /12) ── */
+  --color-cat-medical: oklch(0.659 0.181 351); /* #e05a9f Stethoscope */
+  --color-cat-bureaucratic: oklch(0.687 0.119 248); /* #5aa0e0 FileText */
+  --color-cat-travel: oklch(0.816 0.15 160); /* #5ae0a0 Plane */
+  --color-cat-gear: oklch(0.816 0.126 92); /* #e0c05a Backpack */
+  --color-cat-tech: oklch(0.609 0.199 305); /* #a05ae0 Cpu */
+
+  /* ── Radius — sharp everywhere (LOCKED). rounded-full(999) only for status/
+        category dots, pill badges, avatars, the voice FAB. ── */
   --radius: 0;
 
+  /* ── Modal / scrim dim. Brief §3 token, missing from 00-variables.json —
+        added here per the foundations open item. Consume as bg-[var(--overlay)]. ── */
+  --overlay: oklch(from var(--color-background) l c h / 0.7);
+
+  /* ── Elevation drop shadows (Design System screen, nodes d4Uy0/iP0k6).
+        E0/background carries none. ── */
+  --shadow-e1: 0 4px 12px #00000059; /* card (~35% black) */
+  --shadow-e2: 0 10px 24px #00000080; /* card-elevated (~50% black) */
+
+  /* ── Brand faces. DM Sans = human text; JetBrains Mono = chrome/data/labels.
+        next/font (S4) injects the loaded faces via these vars. ── */
   --font-dm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, monospace;
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains-mono);
+
+  /* ── Named type-scale (19 steps, mirrored from camp-404; sizes/line-heights
+        are font-agnostic). The token fixes size + paired line-height (+ tracking
+        where noted); weight/case stay per-component. Do NOT add ad-hoc px sizes.
+        OpsBoard's Design System screen specimens 11 of these; all 19 still ship. ── */
+  --text-brand-glyph: clamp(7rem, 30vw, 14rem);
+  --text-brand-glyph--line-height: 0.9;
+  --text-brand-glyph--letter-spacing: -0.05em;
+  --text-display: 2rem; /* 32 — hero */
+  --text-display--line-height: 1.1;
+  --text-title: 1.625rem; /* 26 — page title */
+  --text-title--line-height: 1.2;
+  --text-title-wizard: 1.5rem; /* 24 — interstitial */
+  --text-title-compact: 1.375rem; /* 22 — overlays / notifications / complete */
+  --text-section: 1.25rem; /* 20 — sub-section headings */
+  --text-section--line-height: 1.3;
+  --text-subtitle: 1rem; /* 16 — DEFAULT card title / mission name */
+  --text-subtitle--line-height: 1.3;
+  --text-subtitle-hero: 1.125rem; /* 18 — hero card header */
+  --text-subtitle-dense: 0.9375rem; /* 15 — dense list rows */
+  --text-body: 0.875rem; /* 14 — DEFAULT body (task names, notes) */
+  --text-body--line-height: 1.45;
+  --text-body-long: 0.9375rem; /* 15 — long-read */
+  --text-label: 0.8125rem; /* 13 — labels / links / chips */
+  --text-label--line-height: 1.4;
+  --text-caption: 0.75rem; /* 12 — meta / counts */
+  --text-caption--line-height: 1.4;
+  --text-micro: 0.6875rem; /* 11 — pills */
+  --text-micro--line-height: 1.2;
+  --text-micro-xs: 0.625rem; /* 10 — "new" pill / annotations */
+  --text-brand-label: 0.6875rem; /* 11 mono — wordmark / wide-tracked caps */
+  --text-eyebrow: 0.6875rem; /* 11 mono — uppercase 2px-tracked */
+  --text-eyebrow--letter-spacing: 0.125em;
+  --text-mono: 0.8125rem; /* 13 mono — data / console rows / counts / countdown */
+  --text-mono--line-height: 1.5;
+  --text-mono-caption: 0.75rem; /* 12 mono — tags / dep hints / field captions */
+  --text-mono-caption--line-height: 1.4;
 }
 
 @layer base {
+  * {
+    @apply border-[color:var(--color-border)];
+  }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    @apply bg-[color:var(--color-background)] text-[color:var(--color-foreground)];
+    font-family: var(--font-dm-sans);
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
