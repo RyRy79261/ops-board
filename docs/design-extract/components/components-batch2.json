@@ -1,0 +1,2515 @@
+{
+  "nodes": [
+    {
+      "type": "frame",
+      "id": "QfQXv",
+      "name": "TaskCard",
+      "reusable": true,
+      "clip": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 12,
+      "padding": 14,
+      "children": [
+        {
+          "type": "frame",
+          "id": "SviOa",
+          "name": "Touch44",
+          "width": 44,
+          "height": 44,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "G4HaBZ",
+              "name": "Cycle",
+              "width": 18,
+              "height": 18,
+              "fill": "#ff6b351f",
+              "stroke": "$primary",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "buQhp",
+                  "name": "Fill",
+                  "fill": "$primary",
+                  "width": 8,
+                  "height": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "exiZG",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "GP0kt",
+              "name": "Name",
+              "fill": "$foreground",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Refill antimalarial prescription",
+              "fontFamily": "DM Sans",
+              "fontSize": 15,
+              "fontWeight": "500"
+            },
+            {
+              "type": "frame",
+              "id": "I9INh7",
+              "name": "Meta",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ApjIT",
+                  "name": "Tag",
+                  "fill": "#e05a9f1f",
+                  "cornerRadius": 999,
+                  "gap": 4,
+                  "padding": [
+                    3,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "H63BE",
+                      "name": "i",
+                      "width": 12,
+                      "height": 12,
+                      "icon": "stethoscope",
+                      "library": "lucide",
+                      "fill": "$cat-medical"
+                    },
+                    {
+                      "type": "text",
+                      "id": "E5b0md",
+                      "name": "l",
+                      "fill": "$cat-medical",
+                      "content": "MEDICAL",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "k2HR3C",
+                  "name": "Win",
+                  "cornerRadius": 999,
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PAJ2H",
+                      "name": "l",
+                      "fill": "$muted-foreground",
+                      "content": "OPEN",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Dc4bO",
+      "name": "MissionSummaryCard",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "aU36B",
+          "name": "Name",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "AfrikaBurn 2026 · Tankwa Karoo",
+          "fontFamily": "DM Sans",
+          "fontSize": 17,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "eiIdK",
+          "name": "Target",
+          "fill": "$muted-foreground",
+          "content": "TARGET: 2026-04-27",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "500",
+          "letterSpacing": 1
+        },
+        {
+          "type": "frame",
+          "id": "i7vC67",
+          "name": "Stats",
+          "width": "fill_container",
+          "gap": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XDHF6",
+              "name": "DONE",
+              "layout": "vertical",
+              "gap": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "doS0Z",
+                  "name": "V",
+                  "fill": "$success",
+                  "content": "3",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "UXLDo",
+                  "name": "L",
+                  "fill": "$muted-foreground-subtle",
+                  "content": "DONE",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GVWxJ",
+              "name": "BLOCKED",
+              "layout": "vertical",
+              "gap": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Twnon",
+                  "name": "V",
+                  "fill": "$destructive",
+                  "content": "3",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "OHM3f",
+                  "name": "L",
+                  "fill": "$muted-foreground-subtle",
+                  "content": "BLOCKED",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "V28YSO",
+              "name": "CLOSING",
+              "layout": "vertical",
+              "gap": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bzQUB",
+                  "name": "V",
+                  "fill": "$warning",
+                  "content": "2",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fNQeu",
+                  "name": "L",
+                  "fill": "$muted-foreground-subtle",
+                  "content": "CLOSING",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u9Fmk",
+              "name": "TOTAL",
+              "layout": "vertical",
+              "gap": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "u0WI8M",
+                  "name": "V",
+                  "fill": "$foreground",
+                  "content": "11",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "v7nvK",
+                  "name": "L",
+                  "fill": "$muted-foreground-subtle",
+                  "content": "TOTAL",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ZvhBb",
+          "name": "Progress",
+          "clip": true,
+          "width": "fill_container",
+          "height": 4,
+          "fill": "$card-elevated",
+          "gap": 2,
+          "children": [
+            {
+              "type": "frame",
+              "id": "BbwwR",
+              "name": "Done",
+              "width": 120,
+              "height": "fill_container",
+              "fill": "$success"
+            },
+            {
+              "type": "frame",
+              "id": "r8NUrq",
+              "name": "Closing",
+              "width": 70,
+              "height": "fill_container",
+              "fill": "$warning"
+            },
+            {
+              "type": "frame",
+              "id": "o1m89",
+              "name": "Blocked",
+              "width": 90,
+              "height": "fill_container",
+              "fill": "$destructive"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "R6D1f3",
+      "name": "RecordingPanel",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "Wr3KE",
+          "name": "Top",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "VhPle",
+              "name": "Status",
+              "gap": 7,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "VJs1c",
+                  "name": "Dot",
+                  "fill": "$destructive",
+                  "width": 8,
+                  "height": 8
+                },
+                {
+                  "type": "text",
+                  "id": "P22jw",
+                  "name": "L",
+                  "fill": "$destructive",
+                  "content": "RECORDING",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.5
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Ad3pN",
+              "name": "Timer",
+              "fill": "$foreground",
+              "content": "00:07",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vbdqN",
+          "name": "Waveform",
+          "width": "fill_container",
+          "height": 40,
+          "gap": 3,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "MtMpU",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 8
+            },
+            {
+              "type": "rectangle",
+              "id": "c6qk27",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 14
+            },
+            {
+              "type": "rectangle",
+              "id": "WFbES",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 22
+            },
+            {
+              "type": "rectangle",
+              "id": "Flu5r",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 30
+            },
+            {
+              "type": "rectangle",
+              "id": "U7G2hN",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 18
+            },
+            {
+              "type": "rectangle",
+              "id": "PwL2B",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 26
+            },
+            {
+              "type": "rectangle",
+              "id": "TbEWg",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 12
+            },
+            {
+              "type": "rectangle",
+              "id": "ttNZs",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 34
+            },
+            {
+              "type": "rectangle",
+              "id": "v4qwH",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 20
+            },
+            {
+              "type": "rectangle",
+              "id": "ESsXL",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 28
+            },
+            {
+              "type": "rectangle",
+              "id": "YJvMt",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 16
+            },
+            {
+              "type": "rectangle",
+              "id": "es6Hk",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 24
+            },
+            {
+              "type": "rectangle",
+              "id": "d6xAy",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 10
+            },
+            {
+              "type": "rectangle",
+              "id": "zZ0bR",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 32
+            },
+            {
+              "type": "rectangle",
+              "id": "wawyZ",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 22
+            },
+            {
+              "type": "rectangle",
+              "id": "ji0ru",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 14
+            },
+            {
+              "type": "rectangle",
+              "id": "C3im6z",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 26
+            },
+            {
+              "type": "rectangle",
+              "id": "Mt9Gv",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 18
+            },
+            {
+              "type": "rectangle",
+              "id": "op3WF",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 30
+            },
+            {
+              "type": "rectangle",
+              "id": "M3XKi",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 12
+            },
+            {
+              "type": "rectangle",
+              "id": "SW3Lu",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 24
+            },
+            {
+              "type": "rectangle",
+              "id": "h9PTE",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 16
+            },
+            {
+              "type": "rectangle",
+              "id": "Mp6Kf",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 28
+            },
+            {
+              "type": "rectangle",
+              "id": "mWy4K",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 20
+            },
+            {
+              "type": "rectangle",
+              "id": "vZuD5",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 10
+            },
+            {
+              "type": "rectangle",
+              "id": "LZlsH",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 22
+            },
+            {
+              "type": "rectangle",
+              "id": "hv40f",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 14
+            },
+            {
+              "type": "rectangle",
+              "id": "Sf5pT",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 8
+            },
+            {
+              "type": "rectangle",
+              "id": "ZPiB1",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 18
+            },
+            {
+              "type": "rectangle",
+              "id": "EZQcd",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 26
+            },
+            {
+              "type": "rectangle",
+              "id": "ahm2u",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 12
+            },
+            {
+              "type": "rectangle",
+              "id": "DyyeG",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 30
+            },
+            {
+              "type": "rectangle",
+              "id": "GHW0f",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 20
+            },
+            {
+              "type": "rectangle",
+              "id": "O8hpyF",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 16
+            },
+            {
+              "type": "rectangle",
+              "id": "sWVKp",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 24
+            },
+            {
+              "type": "rectangle",
+              "id": "p8M8a",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 14
+            },
+            {
+              "type": "rectangle",
+              "id": "nagKJ",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 28
+            },
+            {
+              "type": "rectangle",
+              "id": "IPuAW",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 10
+            },
+            {
+              "type": "rectangle",
+              "id": "k0hrmZ",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 22
+            },
+            {
+              "type": "rectangle",
+              "id": "w0p69K",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 4,
+              "height": 18
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "kTqS3",
+      "name": "Toast",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "F9nt0g",
+          "name": "Accent",
+          "width": "fill_container",
+          "height": 2,
+          "fill": "$success"
+        },
+        {
+          "type": "frame",
+          "id": "n4T5Iu",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "swam9",
+              "name": "Header",
+              "fill": "$success",
+              "content": "✓ MARKED DONE",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            },
+            {
+              "type": "text",
+              "id": "ZWDOu",
+              "name": "Text",
+              "fill": "$foreground",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Build burn platform — structural pass",
+              "lineHeight": 1.4,
+              "fontFamily": "DM Sans",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "h7f1Fu",
+              "name": "Meta",
+              "fill": "$muted-foreground-subtle",
+              "content": "AUTO-DISMISS · 4S",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 10,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "K4DDI7",
+      "name": "Alert",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "#ff6b351f",
+      "stroke": "$info",
+      "strokeWidth": {
+        "left": 2
+      },
+      "strokeAlignment": "inner",
+      "gap": 12,
+      "padding": 14,
+      "children": [
+        {
+          "type": "icon",
+          "id": "Ak7iG",
+          "name": "Icon",
+          "width": 18,
+          "height": 18,
+          "icon": "info",
+          "library": "lucide",
+          "fill": "$info"
+        },
+        {
+          "type": "frame",
+          "id": "S2Jr0Q",
+          "name": "Col",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 5,
+          "children": [
+            {
+              "type": "text",
+              "id": "A98eus",
+              "name": "Title",
+              "fill": "$info",
+              "content": "HEADS UP",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "letterSpacing": 1
+            },
+            {
+              "type": "text",
+              "id": "QTfzL",
+              "name": "Body",
+              "fill": "$foreground",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "3 tasks close before the gates open — review the timeline.",
+              "lineHeight": 1.4,
+              "fontFamily": "DM Sans",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Ie7mv",
+      "name": "EmptyState",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 16,
+      "padding": [
+        48,
+        24
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "bIFtR",
+          "name": "Hex",
+          "width": 60,
+          "height": 60,
+          "layout": "none",
+          "children": [
+            {
+              "type": "polygon",
+              "polygonCount": 6,
+              "id": "FyK5D",
+              "x": 0,
+              "y": 0,
+              "name": "Hexagon",
+              "width": 60,
+              "height": 60,
+              "stroke": "$muted-foreground-subtle",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner"
+            },
+            {
+              "type": "icon",
+              "id": "rcjEU",
+              "x": 19,
+              "y": 19,
+              "name": "Mic",
+              "width": 22,
+              "height": 22,
+              "icon": "mic",
+              "library": "lucide",
+              "fill": "$muted-foreground-subtle"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k6lC3",
+          "name": "Text",
+          "layout": "vertical",
+          "gap": 6,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "O2XiGk",
+              "name": "Msg",
+              "fill": "$foreground",
+              "content": "NO MISSIONS YET",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 13,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "text",
+              "id": "W9ot4",
+              "name": "Hint",
+              "fill": "$muted-foreground",
+              "content": "Say “create a mission” to get started.",
+              "fontFamily": "DM Sans",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HLa60",
+      "name": "Skeleton",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 12,
+      "padding": 14,
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ihWhU",
+          "name": "Box",
+          "fill": "$card-elevated",
+          "width": 18,
+          "height": 18
+        },
+        {
+          "type": "frame",
+          "id": "cSCqg",
+          "name": "Col",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 9,
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "AvTCg",
+              "name": "Bar",
+              "fill": "$card-elevated",
+              "width": "fill_container",
+              "height": 14
+            },
+            {
+              "type": "frame",
+              "id": "N3dYQ",
+              "name": "Tags",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "CFPbw",
+                  "name": "Bar",
+                  "fill": "$card-elevated",
+                  "width": 70,
+                  "height": 12
+                },
+                {
+                  "type": "rectangle",
+                  "id": "X3AoP",
+                  "name": "Bar",
+                  "fill": "$card-elevated",
+                  "width": 90,
+                  "height": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "db8Tm",
+      "name": "Spinner",
+      "reusable": true,
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "CAWSn",
+          "name": "Loader",
+          "width": 20,
+          "height": 20,
+          "icon": "loader-circle",
+          "library": "lucide",
+          "fill": "$primary"
+        },
+        {
+          "type": "text",
+          "id": "FxPmj",
+          "name": "L",
+          "fill": "$muted-foreground",
+          "content": "PROCESSING COMMAND…",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12,
+          "fontWeight": "normal",
+          "letterSpacing": 1
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "F36g7L",
+      "name": "VoiceFAB",
+      "reusable": true,
+      "width": 96,
+      "height": 96,
+      "layout": "none",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "OUWxi",
+          "x": 0,
+          "y": 0,
+          "name": "Pulse Ring",
+          "width": 96,
+          "height": 96,
+          "stroke": "#ff6b3559",
+          "strokeWidth": 2
+        },
+        {
+          "type": "frame",
+          "id": "i2QDj",
+          "x": 12,
+          "y": 12,
+          "name": "Button",
+          "width": 72,
+          "height": 72,
+          "fill": "$primary",
+          "cornerRadius": 36,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "O4jXV",
+              "name": "Mic",
+              "width": 28,
+              "height": 28,
+              "icon": "mic",
+              "library": "lucide",
+              "fill": "$primary-foreground"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "R0QP9O",
+      "name": "ScopeChip",
+      "reusable": true,
+      "fill": "#ff6b351f",
+      "stroke": "$primary",
+      "strokeWidth": {
+        "left": 2
+      },
+      "strokeAlignment": "inner",
+      "gap": 8,
+      "padding": [
+        10,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "aYNQo",
+          "name": "Target",
+          "width": 14,
+          "height": 14,
+          "icon": "target",
+          "library": "lucide",
+          "fill": "$primary"
+        },
+        {
+          "type": "text",
+          "id": "HuN93",
+          "name": "Label",
+          "fill": "$primary",
+          "content": "SCOPE · AfrikaBurn 2026",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "700",
+          "letterSpacing": 1
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dO0U6",
+      "name": "IntentRow",
+      "reusable": true,
+      "width": "fill_container",
+      "gap": 18,
+      "children": [
+        {
+          "type": "text",
+          "id": "ptp8f",
+          "name": "Key",
+          "fill": "$muted-foreground",
+          "textGrowth": "fixed-width",
+          "width": 120,
+          "content": "INTENT",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "text",
+          "id": "D0VKV",
+          "name": "Value",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Append research notes to this task",
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "G35WX",
+      "name": "CitationChip",
+      "reusable": true,
+      "fill": "$card-elevated",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "padding": [
+        1,
+        6
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "baExr",
+          "name": "Num",
+          "fill": "$primary",
+          "content": "[1]",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 10,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ggMJH",
+      "name": "SourceRow",
+      "reusable": true,
+      "width": "fill_container",
+      "gap": 10,
+      "padding": [
+        10,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "juZv8",
+          "name": "Favicon",
+          "fill": "$cat-bureaucratic",
+          "width": 9,
+          "height": 9
+        },
+        {
+          "type": "text",
+          "id": "KKdpE",
+          "name": "Domain",
+          "fill": "$muted-foreground",
+          "content": "tankwatown.org",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "TwYB3",
+          "name": "Title",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Tankwa Town — land-use & gate permits",
+          "fontFamily": "DM Sans",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "icon",
+          "id": "nw3Vk",
+          "name": "Ext",
+          "width": 14,
+          "height": 14,
+          "icon": "external-link",
+          "library": "lucide",
+          "fill": "$muted-foreground-subtle"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hHAnh",
+      "name": "ResearchStepRow",
+      "reusable": true,
+      "width": "fill_container",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "HWmTi",
+          "name": "Glyph",
+          "width": 16,
+          "height": 16,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "xhXdf",
+              "name": "I",
+              "width": 15,
+              "height": 15,
+              "icon": "loader-circle",
+              "library": "lucide",
+              "fill": "$primary"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "G8kHdQ",
+          "name": "T",
+          "fill": "$primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Reading source 3 of 6 · tankwatown.org",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lPm1x",
+      "name": "ComeBackLaterBanner",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$muted",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 10,
+      "padding": 13,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "DSewy",
+          "name": "Bell",
+          "width": 16,
+          "height": 16,
+          "icon": "bell",
+          "library": "lucide",
+          "fill": "$muted-foreground"
+        },
+        {
+          "type": "text",
+          "id": "HMyqz",
+          "name": "T",
+          "fill": "$muted-foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Running in the background — you can leave. We’ll notify you when it’s ready.",
+          "lineHeight": 1.4,
+          "fontFamily": "DM Sans",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o2ncW",
+      "name": "MinimizedJobPill",
+      "reusable": true,
+      "fill": "$card",
+      "cornerRadius": 999,
+      "stroke": "$primary",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#00000066",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "blur": 20
+      },
+      "gap": 11,
+      "padding": [
+        11,
+        16
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Y85qJe",
+          "name": "Glyph",
+          "width": 15,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "l00WPQ",
+              "name": "PillSpin",
+              "innerRadius": 0.62,
+              "startAngle": 60,
+              "sweepAngle": 280,
+              "fill": "$primary",
+              "width": 14,
+              "height": 14
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "aj1MG",
+          "name": "PillTxt",
+          "fill": "$foreground",
+          "content": "Researching permit steps",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 13,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "JbOkL",
+          "name": "PillSep",
+          "fill": "$muted-foreground-subtle",
+          "content": "·",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "oqpGv",
+          "name": "PillTime",
+          "fill": "$primary",
+          "content": "00:42",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 13,
+          "fontWeight": "700",
+          "letterSpacing": 1
+        },
+        {
+          "type": "frame",
+          "id": "en3pY",
+          "name": "Expand",
+          "width": 24,
+          "height": 24,
+          "fill": "$card-elevated",
+          "cornerRadius": 999,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "wkH7x",
+              "name": "Up",
+              "width": 13,
+              "height": 13,
+              "icon": "chevron-up",
+              "library": "lucide",
+              "fill": "$muted-foreground"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Qi7sU",
+      "name": "ParsedIntentPanel",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "IBeN2",
+          "name": "Header",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "a3UwP",
+              "name": "L",
+              "gap": 7,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "dFUG6",
+                  "name": "Sparkles",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "sparkles",
+                  "library": "lucide",
+                  "fill": "$primary"
+                },
+                {
+                  "type": "text",
+                  "id": "actsd",
+                  "name": "T",
+                  "fill": "$primary",
+                  "content": "AGENT UNDERSTANDS",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "o9GBK",
+              "name": "ConfidenceChip",
+              "fill": "#5ae07a1f",
+              "cornerRadius": 999,
+              "gap": 4,
+              "padding": [
+                3,
+                8
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "HbOJ9",
+                  "name": "I",
+                  "width": 11,
+                  "height": 11,
+                  "icon": "circle-check",
+                  "library": "lucide",
+                  "fill": "#5ae07a"
+                },
+                {
+                  "type": "text",
+                  "id": "INNFw",
+                  "name": "L",
+                  "fill": "#5ae07a",
+                  "content": "92% MATCH",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 10,
+                  "fontWeight": "700",
+                  "letterSpacing": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HHCGm",
+          "name": "Rows",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "id": "nO7p7",
+              "type": "ref",
+              "ref": "dO0U6",
+              "name": "IntentRow · INTENT",
+              "width": "fill_container",
+              "descendants": {
+                "ptp8f": {
+                  "content": "INTENT"
+                },
+                "D0VKV": {
+                  "content": "Research"
+                }
+              }
+            },
+            {
+              "id": "jfJoz",
+              "type": "ref",
+              "ref": "dO0U6",
+              "name": "IntentRow · QUERY",
+              "width": "fill_container",
+              "descendants": {
+                "ptp8f": {
+                  "content": "QUERY"
+                },
+                "D0VKV": {
+                  "content": "How to submit the Tankwa Karoo land-use permit"
+                }
+              }
+            },
+            {
+              "id": "WIRwf",
+              "type": "ref",
+              "ref": "dO0U6",
+              "name": "IntentRow · TARGET TASK",
+              "width": "fill_container",
+              "descendants": {
+                "ptp8f": {
+                  "content": "TARGET TASK"
+                },
+                "D0VKV": {
+                  "content": "Submit Tankwa land-use permit"
+                }
+              }
+            },
+            {
+              "id": "T7TZFW",
+              "type": "ref",
+              "ref": "dO0U6",
+              "name": "IntentRow · ACTION",
+              "width": "fill_container",
+              "descendants": {
+                "ptp8f": {
+                  "content": "ACTION"
+                },
+                "D0VKV": {
+                  "content": "Append research notes to this task"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "MQL6i",
+      "name": "ResearchJobPanel",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "N7rG8",
+          "name": "Top",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "h3qcvj",
+              "name": "L",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "snX5h",
+                  "name": "I",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "loader-circle",
+                  "library": "lucide",
+                  "fill": "$primary"
+                },
+                {
+                  "type": "text",
+                  "id": "McQuo",
+                  "name": "T",
+                  "fill": "$primary",
+                  "content": "RESEARCHING…",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 12,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.5
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "UoSOC",
+              "name": "Timer",
+              "fill": "$foreground",
+              "content": "00:42",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 13,
+              "fontWeight": "700",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "aZ2eq",
+          "name": "Task",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Submit Tankwa land-use permit",
+          "fontFamily": "DM Sans",
+          "fontSize": 15,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "kjsfO",
+          "name": "Track",
+          "clip": true,
+          "width": "fill_container",
+          "height": 4,
+          "fill": "$card-elevated",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "w0Q07",
+              "name": "Bar",
+              "fill": "$primary",
+              "width": 150,
+              "height": 4
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nQ2uk",
+          "name": "Log",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 9,
+          "children": [
+            {
+              "id": "uvdoU",
+              "type": "ref",
+              "ref": "hHAnh",
+              "name": "Step · done",
+              "width": "fill_container",
+              "descendants": {
+                "xhXdf": {
+                  "icon": "circle-check",
+                  "fill": "$success"
+                },
+                "G8kHdQ": {
+                  "fill": "$foreground",
+                  "fontWeight": "500",
+                  "content": "Parsed intent · resolved target task"
+                }
+              }
+            },
+            {
+              "id": "j7aAm",
+              "type": "ref",
+              "ref": "hHAnh",
+              "name": "Step · done",
+              "width": "fill_container",
+              "descendants": {
+                "xhXdf": {
+                  "icon": "circle-check",
+                  "fill": "$success"
+                },
+                "G8kHdQ": {
+                  "fill": "$foreground",
+                  "fontWeight": "500",
+                  "content": "Searched the web · 8 results"
+                }
+              }
+            },
+            {
+              "id": "hcCkh",
+              "type": "ref",
+              "ref": "hHAnh",
+              "name": "Step · active",
+              "width": "fill_container",
+              "descendants": {
+                "G8kHdQ": {
+                  "content": "Reading source 3 of 6 · tankwatown.org"
+                }
+              }
+            },
+            {
+              "id": "u5qDE",
+              "type": "ref",
+              "ref": "hHAnh",
+              "name": "Step · pending",
+              "width": "fill_container",
+              "descendants": {
+                "xhXdf": {
+                  "type": "ellipse",
+                  "id": "V48U5",
+                  "name": "Dot",
+                  "fill": "$muted-foreground-subtle",
+                  "width": 6,
+                  "height": 6
+                },
+                "G8kHdQ": {
+                  "fill": "$muted-foreground-subtle",
+                  "fontWeight": "500",
+                  "content": "Extracting steps"
+                }
+              }
+            },
+            {
+              "id": "p6i3WN",
+              "type": "ref",
+              "ref": "hHAnh",
+              "name": "Step · pending",
+              "width": "fill_container",
+              "descendants": {
+                "xhXdf": {
+                  "type": "ellipse",
+                  "id": "iBSND",
+                  "name": "Dot",
+                  "fill": "$muted-foreground-subtle",
+                  "width": 6,
+                  "height": 6
+                },
+                "G8kHdQ": {
+                  "fill": "$muted-foreground-subtle",
+                  "fontWeight": "500",
+                  "content": "Drafting notes"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eAQ2M",
+      "name": "AINotesBlock",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$primary",
+      "strokeWidth": {
+        "left": 2
+      },
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 14,
+      "padding": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "l6LNxF",
+          "name": "Attr",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "kgoml",
+              "name": "L",
+              "gap": 7,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "TQSgL",
+                  "name": "Sparkles",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "sparkles",
+                  "library": "lucide",
+                  "fill": "$primary"
+                },
+                {
+                  "type": "text",
+                  "id": "TpX5h",
+                  "name": "Attribution",
+                  "fill": "$primary",
+                  "content": "AI RESEARCH · 5 NOTES · 2026-06-03 14:22",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "t2wYp2",
+              "name": "NEW Pill",
+              "fill": "$primary",
+              "cornerRadius": 999,
+              "padding": [
+                2,
+                7
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "D6yyC",
+                  "name": "L",
+                  "fill": "$primary-foreground",
+                  "content": "NEW",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 9,
+                  "fontWeight": "700",
+                  "letterSpacing": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "tTTi8",
+          "name": "Summary",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Tankwa land-use is issued by CapeNature. Apply at least 10 working days before arrival, settle the SARS levy, then carry the gate-access permit PDF.",
+          "lineHeight": 1.5,
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "ZXxWE",
+          "name": "Steps",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "LFEi7",
+              "name": "Step 1",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U4RrRm",
+                  "name": "Num",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$card-elevated",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FsIsw",
+                      "name": "n",
+                      "fill": "$primary",
+                      "content": "1",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XP0vT",
+                  "name": "Col",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nQNFr",
+                      "name": "Txt",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Open the CapeNature land-use application portal and select the Tankwa Karoo regional office.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FbhXq",
+                      "name": "Citations",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "Kynz5",
+                          "type": "ref",
+                          "ref": "G35WX",
+                          "name": "Cite 1",
+                          "descendants": {
+                            "baExr": {
+                              "content": "[1]"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N1NErd",
+              "name": "Step 2",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K3z5kj",
+                  "name": "Num",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$card-elevated",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "L94HCU",
+                      "name": "n",
+                      "fill": "$primary",
+                      "content": "2",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UA2vU",
+                  "name": "Col",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G0G3UR",
+                      "name": "Txt",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Attach the AfrikaBurn 2026 event authorisation letter plus the land-use motivation form.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "A2QfFV",
+                      "name": "Citations",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "Cr8uK",
+                          "type": "ref",
+                          "ref": "G35WX",
+                          "name": "Cite 1",
+                          "descendants": {
+                            "baExr": {
+                              "content": "[1]"
+                            }
+                          }
+                        },
+                        {
+                          "id": "eqR3d",
+                          "type": "ref",
+                          "ref": "G35WX",
+                          "name": "Cite 2",
+                          "descendants": {
+                            "baExr": {
+                              "content": "[2]"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GsZx0",
+              "name": "Step 3",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rfgCe",
+                  "name": "Num",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$card-elevated",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Db5t1",
+                      "name": "n",
+                      "fill": "$primary",
+                      "content": "3",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bfgfT",
+                  "name": "Col",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Pb3yu",
+                      "name": "Txt",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Pay the environmental levy via SARS eFiling and retain the payment reference (PRN).",
+                      "lineHeight": 1.5,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XJYKU",
+                      "name": "Citations",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "L0I63",
+                          "type": "ref",
+                          "ref": "G35WX",
+                          "name": "Cite 3",
+                          "descendants": {
+                            "baExr": {
+                              "content": "[3]"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fIwk5",
+              "name": "Step 4",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JBNbm",
+                  "name": "Num",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$card-elevated",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tzWHe",
+                      "name": "n",
+                      "fill": "$primary",
+                      "content": "4",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zt6sa",
+                  "name": "Col",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "E2987",
+                      "name": "Txt",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Submit at least 10 working days before the target date to clear regional review.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "S1CmO",
+                      "name": "Citations",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "N7Pkf",
+                          "type": "ref",
+                          "ref": "G35WX",
+                          "name": "Cite 2",
+                          "descendants": {
+                            "baExr": {
+                              "content": "[2]"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uuops",
+              "name": "Step 5",
+              "width": "fill_container",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NmsBB",
+                  "name": "Num",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$card-elevated",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "YG7lB",
+                      "name": "n",
+                      "fill": "$primary",
+                      "content": "5",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Wa6Dz",
+                  "name": "Col",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "q9sRt",
+                      "name": "Txt",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "On approval, download the gate-access permit and record the permit number on this task.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IMiGv",
+          "name": "Sources",
+          "width": "fill_container",
+          "stroke": "$border",
+          "strokeWidth": {
+            "top": 1
+          },
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "gap": 2,
+          "padding": [
+            16,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "a56vn6",
+              "name": "SourcesLabel",
+              "fill": "$muted-foreground-subtle",
+              "content": "SOURCES",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "frame",
+              "id": "IIkL6",
+              "name": "List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "ALEBE",
+                  "type": "ref",
+                  "ref": "ggMJH",
+                  "name": "Src capenature.co.za",
+                  "width": "fill_container",
+                  "descendants": {
+                    "juZv8": {
+                      "fill": "$cat-bureaucratic"
+                    },
+                    "KKdpE": {
+                      "content": "capenature.co.za"
+                    },
+                    "TwYB3": {
+                      "content": "Land-use permits & conservation levies"
+                    }
+                  }
+                },
+                {
+                  "id": "F8Yism",
+                  "type": "ref",
+                  "ref": "ggMJH",
+                  "name": "Src afrikaburn.org",
+                  "width": "fill_container",
+                  "descendants": {
+                    "juZv8": {
+                      "fill": "#ff6b35"
+                    },
+                    "KKdpE": {
+                      "content": "afrikaburn.org"
+                    },
+                    "TwYB3": {
+                      "content": "Tickets & Tankwa permits FAQ"
+                    }
+                  }
+                },
+                {
+                  "id": "lA3tY",
+                  "type": "ref",
+                  "ref": "ggMJH",
+                  "name": "Src tankwatown.org",
+                  "width": "fill_container",
+                  "descendants": {
+                    "juZv8": {
+                      "fill": "#e0c05a"
+                    },
+                    "KKdpE": {
+                      "content": "tankwatown.org"
+                    },
+                    "TwYB3": {
+                      "content": "Getting to the Tankwa Karoo"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "d2mdF",
+      "name": "ErrorStateCard",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$muted-foreground",
+      "strokeWidth": {
+        "left": 3
+      },
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 10,
+      "padding": 14,
+      "children": [
+        {
+          "type": "frame",
+          "id": "WR9PW",
+          "name": "Top",
+          "gap": 8,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "qd7DA",
+              "name": "Icon",
+              "width": 15,
+              "height": 15,
+              "icon": "search-x",
+              "library": "lucide",
+              "fill": "$muted-foreground"
+            },
+            {
+              "type": "text",
+              "id": "EF4Zq",
+              "name": "Header",
+              "fill": "$muted-foreground",
+              "content": "NO RESULTS FOUND",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "cfDjb",
+          "name": "Body",
+          "fill": "$muted-foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Couldn’t find reliable steps. Try rephrasing or narrowing the request.",
+          "lineHeight": 1.4,
+          "fontFamily": "DM Sans",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "Y6obb",
+          "name": "Act",
+          "width": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "gFHTf",
+              "name": "Btn",
+              "width": "fill_container",
+              "height": 40,
+              "fill": "#00000000",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "gap": 7,
+              "padding": [
+                0,
+                14
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "OkyXp",
+                  "name": "BtnIcon",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "mic",
+                  "library": "lucide",
+                  "fill": "$foreground"
+                },
+                {
+                  "type": "text",
+                  "id": "P0lCHs",
+                  "name": "BtnLabel",
+                  "fill": "$foreground",
+                  "content": "SAY IT AGAIN",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "X9ejlL",
+      "name": "Type/Display",
+      "reusable": true,
+      "fill": "$foreground",
+      "content": "Display heading",
+      "lineHeight": 1.1,
+      "fontFamily": "DM Sans",
+      "fontSize": 32,
+      "fontWeight": "700"
+    }
+  ]
+}

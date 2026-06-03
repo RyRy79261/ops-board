@@ -1,0 +1,2311 @@
+{
+  "nodes": [
+    {
+      "type": "frame",
+      "id": "D3JA0i",
+      "x": 0,
+      "y": 0,
+      "name": "OpsBoard — Category Board (desktop)",
+      "clip": true,
+      "width": 1320,
+      "height": 1640,
+      "fill": "$background",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "x4K9q",
+          "x": 0,
+          "y": 0,
+          "name": "Screen",
+          "clip": true,
+          "width": 1320,
+          "height": 1640,
+          "fill": "$background",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "eP5PE",
+              "name": "Header",
+              "width": "fill_container",
+              "fill": "$muted",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "padding": [
+                20,
+                32
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "g3lFfu",
+                  "name": "Wordmark",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "DM3Qo",
+                      "name": "OPS",
+                      "fill": "$primary",
+                      "content": "OPS",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 16,
+                      "fontWeight": "700",
+                      "letterSpacing": 4
+                    },
+                    {
+                      "type": "text",
+                      "id": "ROl5q",
+                      "name": "BOARD",
+                      "fill": "$muted-foreground",
+                      "content": "BOARD",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 16,
+                      "fontWeight": "700",
+                      "letterSpacing": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aGZhe",
+              "name": "Body",
+              "width": "fill_container",
+              "height": "fill_container",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "veqHp",
+                  "name": "Sidebar",
+                  "clip": true,
+                  "width": 280,
+                  "height": "fill_container",
+                  "fill": "$muted",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "right": 1
+                  },
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zcu5U",
+                      "name": "SidebarHeader",
+                      "width": "fill_container",
+                      "padding": 18,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pDK4v",
+                          "name": "Label",
+                          "fill": "$muted-foreground-subtle",
+                          "content": "MISSIONS",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 11,
+                          "fontWeight": "700",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "y23uJ",
+                      "name": "MissionList",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FqzB7",
+                          "name": "NavCard AfrikaBurn",
+                          "clip": true,
+                          "width": "fill_container",
+                          "fill": "#ff6b351f",
+                          "stroke": "$primary",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 14,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xxA8x",
+                              "name": "Name",
+                              "fill": "$foreground",
+                              "content": "AfrikaBurn 2026",
+                              "fontFamily": "DM Sans",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "f0938",
+                              "name": "Meta",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "eUD9e",
+                                  "name": "Chip",
+                                  "fill": "#d9a73e1f",
+                                  "cornerRadius": 999,
+                                  "gap": 4,
+                                  "padding": [
+                                    2,
+                                    7
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "iuId0",
+                                      "name": "clock",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "timer",
+                                      "library": "lucide",
+                                      "fill": "$warning"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "eCPU8",
+                                      "name": "ChipLabel",
+                                      "fill": "$warning",
+                                      "content": "T-3d",
+                                      "fontFamily": "JetBrains Mono",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZatiN",
+                                  "name": "Count",
+                                  "fill": "$muted-foreground",
+                                  "content": "3/11 tasks",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BcvHa",
+                  "name": "Main",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "C8Q90",
+                      "name": "DetailHeader",
+                      "width": "fill_container",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": [
+                        24,
+                        32
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "m2zjIf",
+                          "name": "Title",
+                          "fill": "$foreground",
+                          "content": "AfrikaBurn 2026",
+                          "fontFamily": "DM Sans",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "B8rZbe",
+                          "name": "Target",
+                          "fill": "$muted-foreground",
+                          "content": "Target: 27 Apr 2026",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "h0H6nB",
+                          "name": "Stats",
+                          "gap": 32,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "aFnL2",
+                              "name": "DONE",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Au6r1",
+                                  "name": "Val",
+                                  "fill": "$success",
+                                  "content": "3",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 22,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "c3SD2",
+                                  "name": "Lab",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "DONE",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "W7cAa",
+                              "name": "BLOCKED",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OGtWF",
+                                  "name": "Val",
+                                  "fill": "$destructive",
+                                  "content": "3",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 22,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gudNg",
+                                  "name": "Lab",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "BLOCKED",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UAoqL",
+                              "name": "CLOSING",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "BPeON",
+                                  "name": "Val",
+                                  "fill": "$warning",
+                                  "content": "2",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 22,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZTSDz",
+                                  "name": "Lab",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "CLOSING",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Z9zT1U",
+                              "name": "TOTAL",
+                              "layout": "vertical",
+                              "gap": 3,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "f5unP",
+                                  "name": "Val",
+                                  "fill": "$foreground",
+                                  "content": "11",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 22,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "qLdvc",
+                                  "name": "Lab",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "TOTAL",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.5
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t9BKJ",
+                          "name": "Progress",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 4,
+                          "fill": "$card-elevated",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "UYcRR",
+                              "name": "Done",
+                              "width": 266,
+                              "height": "fill_container",
+                              "fill": "$success"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Q3WFQ",
+                              "name": "Closing",
+                              "width": 178,
+                              "height": "fill_container",
+                              "fill": "$warning"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rFT3Y",
+                              "name": "Blocked",
+                              "width": 266,
+                              "height": "fill_container",
+                              "fill": "$destructive"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XncOx",
+                      "name": "Tabs",
+                      "width": "fill_container",
+                      "fill": "$muted",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 28,
+                      "padding": [
+                        0,
+                        32
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "z43PH",
+                          "name": "BY CATEGORY",
+                          "stroke": "$primary",
+                          "strokeWidth": {
+                            "bottom": 2
+                          },
+                          "strokeAlignment": "inner",
+                          "padding": [
+                            14,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZcsAE",
+                              "name": "L",
+                              "fill": "$primary",
+                              "content": "BY CATEGORY",
+                              "fontFamily": "JetBrains Mono",
+                              "fontSize": 12,
+                              "fontWeight": "700",
+                              "letterSpacing": 1.5
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ohVWr",
+                          "name": "TIMELINE",
+                          "stroke": "$primary",
+                          "strokeAlignment": "inner",
+                          "padding": [
+                            14,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ehATD",
+                              "name": "L",
+                              "fill": "$muted-foreground",
+                              "content": "TIMELINE",
+                              "fontFamily": "JetBrains Mono",
+                              "fontSize": 12,
+                              "fontWeight": "700",
+                              "letterSpacing": 1.5
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Qoh2k",
+                          "name": "DEPENDENCIES",
+                          "stroke": "$primary",
+                          "strokeAlignment": "inner",
+                          "padding": [
+                            14,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ovjuv",
+                              "name": "L",
+                              "fill": "$muted-foreground",
+                              "content": "DEPENDENCIES",
+                              "fontFamily": "JetBrains Mono",
+                              "fontSize": 12,
+                              "fontWeight": "700",
+                              "letterSpacing": 1.5
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oqMwf",
+                      "name": "Content",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 26,
+                      "padding": [
+                        20,
+                        32
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "iflxH",
+                          "name": "Group medical",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "KbM4g",
+                              "name": "GroupHeader",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "e7yh6z",
+                                  "name": "Dot",
+                                  "fill": "$cat-medical",
+                                  "width": 8,
+                                  "height": 8
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "h4aMOF",
+                                  "name": "GLabel",
+                                  "fill": "$cat-medical",
+                                  "content": "MEDICAL",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gKVwF",
+                                  "name": "GCount",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "2/4",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FYaXL",
+                              "name": "List",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "ykzP8",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "rvl6U",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "WNrUZ",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "$success",
+                                          "stroke": "$success",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "R5wwD0",
+                                              "name": "g",
+                                              "fill": "$background",
+                                              "content": "✓",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 11,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "DnmUe",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "P2nCV",
+                                              "name": "TaskName",
+                                              "fill": "$muted-foreground",
+                                              "content": "Book cardiology follow-up",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "AjmD3",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "U7pXyJ",
+                                                  "name": "Tag",
+                                                  "fill": "#e05a9f1f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "RH8W1",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "stethoscope",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-medical"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "qvbV2",
+                                                      "name": "l",
+                                                      "fill": "$cat-medical",
+                                                      "content": "MEDICAL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "ABZDS",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "text",
+                                                      "id": "ichXQ",
+                                                      "name": "d",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "15 Mar",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "normal"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "jehRx",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$warning",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "asX3p",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "bDnn9",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "yz1rN",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "Ku7nq",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Get fitness-to-travel cert (Dr. Ruf)",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "j659Q",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "y9b6Pz",
+                                                  "name": "Tag",
+                                                  "fill": "#e05a9f1f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "QamLS",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "stethoscope",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-medical"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "lrMu8",
+                                                      "name": "l",
+                                                      "fill": "$cat-medical",
+                                                      "content": "MEDICAL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "YOZQi",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "ORoI6",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "timer",
+                                                      "library": "lucide",
+                                                      "fill": "$warning"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "QbBm3",
+                                                      "name": "t",
+                                                      "fill": "$warning",
+                                                      "content": "CLOSING · T-5d",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "mZpx4",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "i3p1F",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "niDx1",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "$success",
+                                          "stroke": "$success",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "EjjfS",
+                                              "name": "g",
+                                              "fill": "$background",
+                                              "content": "✓",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 11,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "WApil",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "rk9QS",
+                                              "name": "TaskName",
+                                              "fill": "$muted-foreground",
+                                              "content": "Get GP cert (Dr. Schmickaly)",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "rbLcT",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "rC0xL",
+                                                  "name": "Tag",
+                                                  "fill": "#e05a9f1f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "B6v2t",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "stethoscope",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-medical"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "x6vGo",
+                                                      "name": "l",
+                                                      "fill": "$cat-medical",
+                                                      "content": "MEDICAL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "QQeO8",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "text",
+                                                      "id": "PGHEI",
+                                                      "name": "d",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "1 Apr",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "normal"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "diuMr",
+                                  "name": "Card",
+                                  "opacity": 0.6,
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$muted-foreground-subtle",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "RKSTY",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "vNCdS",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "b7OCE",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "nYqEe",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Brief AB medical team",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "JPmn6",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "hen8C",
+                                                  "name": "Tag",
+                                                  "fill": "#e05a9f1f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "b0NIde",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "stethoscope",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-medical"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "hielm",
+                                                      "name": "l",
+                                                      "fill": "$cat-medical",
+                                                      "content": "MEDICAL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "xRMsB",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "s8jDxY",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "triangle-alert",
+                                                      "library": "lucide",
+                                                      "fill": "$muted-foreground"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "FYRXY",
+                                                      "name": "t",
+                                                      "fill": "$muted-foreground",
+                                                      "content": "BLOCKED",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "jWjig",
+                                              "name": "Dep",
+                                              "fill": "$muted-foreground-subtle",
+                                              "content": "⚠ blocked by: Get fitness-to-travel cert (Dr. Ruf)",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "i99jXN",
+                          "name": "Group bureaucratic",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "z0Qj8",
+                              "name": "GroupHeader",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "cuXtE",
+                                  "name": "Dot",
+                                  "fill": "$cat-bureaucratic",
+                                  "width": 8,
+                                  "height": 8
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "iI8qv",
+                                  "name": "GLabel",
+                                  "fill": "$cat-bureaucratic",
+                                  "content": "BUREAUCRATIC",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "DmjZL",
+                                  "name": "GCount",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "0/3",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Gb3SM",
+                              "name": "List",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "V9TW1",
+                                  "name": "Card",
+                                  "opacity": 0.6,
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$muted-foreground-subtle",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "Vo97o",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "Qnuif",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "cy6dM",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "nXOrz",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Submit Envivas documentation",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "IFFXq",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "EHMCR",
+                                                  "name": "Tag",
+                                                  "fill": "#5aa0e01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "gth5A",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "file-text",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-bureaucratic"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "Mp36j",
+                                                      "name": "l",
+                                                      "fill": "$cat-bureaucratic",
+                                                      "content": "BUREAUCRATIC",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "xu20E",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "V9dnR9",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "triangle-alert",
+                                                      "library": "lucide",
+                                                      "fill": "$muted-foreground"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "d02fU",
+                                                      "name": "t",
+                                                      "fill": "$muted-foreground",
+                                                      "content": "BLOCKED",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "T853b",
+                                              "name": "Dep",
+                                              "fill": "$muted-foreground-subtle",
+                                              "content": "⚠ blocked by: Get fitness-to-travel cert (Dr. Ruf)",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "FzENH",
+                                  "name": "Card",
+                                  "opacity": 0.55,
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$muted",
+                                  "stroke": "$muted-foreground",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "lMnzD",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "UuZXL",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "Y443w",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "MH13o",
+                                              "name": "TaskName",
+                                              "fill": "$muted-foreground",
+                                              "content": "Confirm TK §18 SGB V coverage",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "RfVnz",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "WSSzQ",
+                                                  "name": "Tag",
+                                                  "fill": "#5aa0e01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "IT6bX",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "file-text",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-bureaucratic"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "DGwgT",
+                                                      "name": "l",
+                                                      "fill": "$cat-bureaucratic",
+                                                      "content": "BUREAUCRATIC",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "r5q7An",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "G3fH75",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "circle-x",
+                                                      "library": "lucide",
+                                                      "fill": "$muted-foreground"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "SrNML",
+                                                      "name": "t",
+                                                      "fill": "$muted-foreground",
+                                                      "content": "WINDOW CLOSED",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "S4HZqd",
+                                                      "name": "d",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "5 Apr",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "normal"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "W8jyx",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$warning",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "WhRTy",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "JhzBZ",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "uePUI",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "x5k00t",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Research VFS Global visa extension",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "qKIVP",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "RevLY",
+                                                  "name": "Tag",
+                                                  "fill": "#5aa0e01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "bpERv",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "file-text",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-bureaucratic"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "psv5F",
+                                                      "name": "l",
+                                                      "fill": "$cat-bureaucratic",
+                                                      "content": "BUREAUCRATIC",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "EJnP8",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "p5U5kn",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "timer",
+                                                      "library": "lucide",
+                                                      "fill": "$warning"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "YQky8",
+                                                      "name": "t",
+                                                      "fill": "$warning",
+                                                      "content": "CLOSING · T-3d",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tIkMl",
+                          "name": "Group travel",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "H771Gt",
+                              "name": "GroupHeader",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "x9d3Fc",
+                                  "name": "Dot",
+                                  "fill": "$cat-travel",
+                                  "width": 8,
+                                  "height": 8
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xOr0u",
+                                  "name": "GLabel",
+                                  "fill": "$cat-travel",
+                                  "content": "TRAVEL",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "V4z5DE",
+                                  "name": "GCount",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "1/2",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "AU318",
+                              "name": "List",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "OUyWF",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "TVQO2",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "WRNqo",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "$success",
+                                          "stroke": "$success",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "N0t6H",
+                                              "name": "g",
+                                              "fill": "$background",
+                                              "content": "✓",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 11,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "R007bk",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "oq0eG",
+                                              "name": "TaskName",
+                                              "fill": "$muted-foreground",
+                                              "content": "Book TKO044 IST→CPT",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "L0rb3Z",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "o5KeQw",
+                                                  "name": "Tag",
+                                                  "fill": "#5ae0a01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "FVLmj",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "plane",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-travel"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "nEoM9",
+                                                      "name": "l",
+                                                      "fill": "$cat-travel",
+                                                      "content": "TRAVEL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "f1gdxL",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "text",
+                                                      "id": "Ucziz",
+                                                      "name": "d",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "20 Mar",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "normal"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "S0sc3",
+                                  "name": "Card",
+                                  "opacity": 0.6,
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$muted-foreground-subtle",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "gjVQW",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "qevN2",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "U57mH",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "tgBve",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Arrange Tankwa Town transfer",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "U6twZv",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "vuwdF",
+                                                  "name": "Tag",
+                                                  "fill": "#5ae0a01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "gNYcS",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "plane",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-travel"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "YQES6",
+                                                      "name": "l",
+                                                      "fill": "$cat-travel",
+                                                      "content": "TRAVEL",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "vuJLy",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "YY84M",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "triangle-alert",
+                                                      "library": "lucide",
+                                                      "fill": "$muted-foreground"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "QCPlq",
+                                                      "name": "t",
+                                                      "fill": "$muted-foreground",
+                                                      "content": "BLOCKED",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "K8NOQr",
+                                              "name": "Dep",
+                                              "fill": "$muted-foreground-subtle",
+                                              "content": "⚠ blocked by: Research VFS Global visa extension",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nfuz0",
+                          "name": "Group gear",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "NfJYV",
+                              "name": "GroupHeader",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "g5SEN",
+                                  "name": "Dot",
+                                  "fill": "$cat-gear",
+                                  "width": 8,
+                                  "height": 8
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "E61pc8",
+                                  "name": "GLabel",
+                                  "fill": "$cat-gear",
+                                  "content": "GEAR",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "XjiEl",
+                                  "name": "GCount",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "0/1",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UYWiu",
+                              "name": "List",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "SNXYk",
+                                  "name": "Card",
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "JuLDk",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "svbZg",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "fill": "#ff6b351f",
+                                          "stroke": "$primary",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "k3GZG4",
+                                              "name": "g",
+                                              "fill": "$primary",
+                                              "content": "◼",
+                                              "fontFamily": "JetBrains Mono",
+                                              "fontSize": 9,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "r1toB",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "Jib7b",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Buy goggles & dust mask",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "v414Hf",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "GjgT0",
+                                                  "name": "Tag",
+                                                  "fill": "#e0c05a1f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "CW6HJ",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "backpack",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-gear"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "lBozc",
+                                                      "name": "l",
+                                                      "fill": "$cat-gear",
+                                                      "content": "GEAR",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o2Zaj",
+                          "name": "Group tech",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "c5olJq",
+                              "name": "GroupHeader",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "b8S5F",
+                                  "name": "Dot",
+                                  "fill": "$cat-tech",
+                                  "width": 8,
+                                  "height": 8
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "PiA6R",
+                                  "name": "GLabel",
+                                  "fill": "$cat-tech",
+                                  "content": "TECH",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 1.5
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "oNdj7",
+                                  "name": "GCount",
+                                  "fill": "$muted-foreground-subtle",
+                                  "content": "0/1",
+                                  "fontFamily": "JetBrains Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mZC4k",
+                              "name": "List",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "NV5Om",
+                                  "name": "Card",
+                                  "opacity": 0.6,
+                                  "clip": true,
+                                  "width": "fill_container",
+                                  "fill": "$card",
+                                  "stroke": "$muted-foreground-subtle",
+                                  "strokeWidth": {
+                                    "left": 2
+                                  },
+                                  "strokeAlignment": "inner",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "S1Lc2Z",
+                                      "name": "Inner",
+                                      "width": "fill_container",
+                                      "gap": 12,
+                                      "padding": 14,
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "vBpie",
+                                          "name": "Status",
+                                          "width": 18,
+                                          "height": 18,
+                                          "stroke": "$border",
+                                          "strokeWidth": 2,
+                                          "strokeAlignment": "inner",
+                                          "justifyContent": "center",
+                                          "alignItems": "center"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "pnbIQ",
+                                          "name": "Col",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "KnfMV",
+                                              "name": "TaskName",
+                                              "fill": "$foreground",
+                                              "content": "Flash LED suit firmware",
+                                              "fontFamily": "DM Sans",
+                                              "fontSize": 15,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "D9FGdd",
+                                              "name": "MetaRow",
+                                              "gap": 10,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "frame",
+                                                  "id": "Gdc3j",
+                                                  "name": "Tag",
+                                                  "fill": "#a05ae01f",
+                                                  "gap": 5,
+                                                  "padding": [
+                                                    3,
+                                                    8
+                                                  ],
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "s5Hd1",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "cpu",
+                                                      "library": "lucide",
+                                                      "fill": "$cat-tech"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "FnpC6",
+                                                      "name": "l",
+                                                      "fill": "$cat-tech",
+                                                      "content": "TECH",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "frame",
+                                                  "id": "j2qdCH",
+                                                  "name": "Pill",
+                                                  "gap": 5,
+                                                  "alignItems": "center",
+                                                  "children": [
+                                                    {
+                                                      "type": "icon",
+                                                      "id": "Ron82",
+                                                      "name": "i",
+                                                      "width": 12,
+                                                      "height": 12,
+                                                      "icon": "lock",
+                                                      "library": "lucide",
+                                                      "fill": "$muted-foreground-subtle"
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "wEGq3",
+                                                      "name": "t",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "NOT YET",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "600",
+                                                      "letterSpacing": 0.5
+                                                    },
+                                                    {
+                                                      "type": "text",
+                                                      "id": "Nvb2L",
+                                                      "name": "d",
+                                                      "fill": "$muted-foreground-subtle",
+                                                      "content": "starts 10 Jun",
+                                                      "fontFamily": "JetBrains Mono",
+                                                      "fontSize": 11,
+                                                      "fontWeight": "normal"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

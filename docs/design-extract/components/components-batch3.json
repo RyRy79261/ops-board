@@ -1,0 +1,966 @@
+{
+  "nodes": [
+    {
+      "type": "text",
+      "id": "IRZCA",
+      "name": "Type/Title",
+      "reusable": true,
+      "fill": "$foreground",
+      "content": "Page title",
+      "lineHeight": 1.2,
+      "fontFamily": "DM Sans",
+      "fontSize": 26,
+      "fontWeight": "700"
+    },
+    {
+      "type": "text",
+      "id": "r9iwu",
+      "name": "Type/Section",
+      "reusable": true,
+      "fill": "$foreground",
+      "content": "Section heading",
+      "lineHeight": 1.3,
+      "fontFamily": "DM Sans",
+      "fontSize": 20,
+      "fontWeight": "700"
+    },
+    {
+      "type": "text",
+      "id": "Z1zBb",
+      "name": "Type/Lead",
+      "reusable": true,
+      "fill": "$muted-foreground",
+      "textGrowth": "fixed-width",
+      "width": 640,
+      "content": "A leading paragraph that introduces a section with a slightly larger, calmer voice than body copy.",
+      "lineHeight": 1.55,
+      "fontFamily": "DM Sans",
+      "fontSize": 16,
+      "fontWeight": "normal"
+    },
+    {
+      "type": "text",
+      "id": "shzZl",
+      "name": "Type/Body",
+      "reusable": true,
+      "fill": "$muted-foreground",
+      "textGrowth": "fixed-width",
+      "width": 640,
+      "content": "Body copy is set in DM Sans for comfortable reading. It wraps within its column and carries the long-form legal and manual prose throughout the app.",
+      "lineHeight": 1.6,
+      "fontFamily": "DM Sans",
+      "fontSize": 15,
+      "fontWeight": "normal"
+    },
+    {
+      "type": "text",
+      "id": "qcfai",
+      "name": "Type/Caption",
+      "reusable": true,
+      "fill": "$muted-foreground-subtle",
+      "content": "Caption / meta text",
+      "lineHeight": 1.4,
+      "fontFamily": "DM Sans",
+      "fontSize": 13,
+      "fontWeight": "normal"
+    },
+    {
+      "type": "text",
+      "id": "N8Xfr2",
+      "name": "Label/Eyebrow",
+      "reusable": true,
+      "fill": "$primary",
+      "content": "SECTION EYEBROW",
+      "fontFamily": "JetBrains Mono",
+      "fontSize": 11,
+      "fontWeight": "700",
+      "letterSpacing": 2
+    },
+    {
+      "type": "text",
+      "id": "El0g7",
+      "name": "Label/Mono",
+      "reusable": true,
+      "fill": "$foreground",
+      "content": "mono · data · 2026-06-03",
+      "fontFamily": "JetBrains Mono",
+      "fontSize": 13,
+      "fontWeight": "500",
+      "letterSpacing": 0.5
+    },
+    {
+      "type": "frame",
+      "id": "FLd5C",
+      "name": "LegalSection",
+      "reusable": true,
+      "width": 600,
+      "layout": "vertical",
+      "gap": 10,
+      "children": [
+        {
+          "type": "text",
+          "id": "mrwYj",
+          "name": "Num",
+          "fill": "$primary",
+          "content": "§ 04 · DATA RETENTION",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "700",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "text",
+          "id": "kkQKe",
+          "name": "Heading",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Data retention & deletion",
+          "lineHeight": 1.3,
+          "fontFamily": "DM Sans",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "OGBpt",
+          "name": "Body",
+          "fill": "$muted-foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Delete your account or clear history anytime from Settings. Voice recordings are transcribed, then discarded within 30 days unless you choose to keep them.",
+          "lineHeight": 1.6,
+          "fontFamily": "DM Sans",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rAyAF",
+      "name": "LegalIndexRow",
+      "reusable": true,
+      "width": 600,
+      "stroke": "$border",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "strokeAlignment": "inner",
+      "padding": [
+        16,
+        4
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "v0ibwi",
+          "name": "Left",
+          "layout": "vertical",
+          "gap": 4,
+          "children": [
+            {
+              "type": "text",
+              "id": "lxn7V",
+              "name": "Title",
+              "fill": "$foreground",
+              "content": "Privacy Policy",
+              "fontFamily": "DM Sans",
+              "fontSize": 16,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "BRV25",
+              "name": "Meta",
+              "fill": "$muted-foreground-subtle",
+              "content": "UPDATED 2026-06-03",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 10,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "icon",
+          "id": "CETop",
+          "name": "Chev",
+          "width": 18,
+          "height": 18,
+          "icon": "chevron-right",
+          "library": "lucide",
+          "fill": "$muted-foreground"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CQp4D",
+      "name": "ManualLiveBlock",
+      "reusable": true,
+      "width": 600,
+      "fill": "$muted",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "fINJA",
+          "name": "Bar",
+          "width": "fill_container",
+          "fill": "$card-elevated",
+          "stroke": "$border",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "strokeAlignment": "inner",
+          "gap": 7,
+          "padding": [
+            9,
+            14
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "BTLzF",
+              "name": "I",
+              "width": 13,
+              "height": 13,
+              "icon": "box",
+              "library": "lucide",
+              "fill": "$primary"
+            },
+            {
+              "type": "text",
+              "id": "XcD8R",
+              "name": "L",
+              "fill": "$muted-foreground",
+              "content": "LIVE COMPONENT",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 10,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "eEAwn",
+          "name": "Stage",
+          "slot": [],
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 28,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "L3NcBq",
+              "name": "SlotHint",
+              "fill": "$muted-foreground-subtle",
+              "content": "→ instance the documented component here",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AqpmA",
+      "name": "ManualTOCItem",
+      "reusable": true,
+      "width": 248,
+      "fill": "#00000000",
+      "stroke": "#00000000",
+      "strokeWidth": {
+        "left": 2
+      },
+      "strokeAlignment": "inner",
+      "padding": [
+        9,
+        12
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "RLfZV",
+          "name": "L",
+          "fill": "$muted-foreground",
+          "content": "Window states",
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HgKT6",
+      "name": "SectionNavChip",
+      "reusable": true,
+      "fill": "#00000000",
+      "cornerRadius": 999,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "padding": [
+        5,
+        12
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "ecsfE",
+          "name": "L",
+          "fill": "$muted-foreground",
+          "content": "Status",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "500",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "g2Ink7",
+      "name": "CodeCallout",
+      "reusable": true,
+      "width": 600,
+      "fill": "$card-elevated",
+      "stroke": "$primary",
+      "strokeWidth": {
+        "left": 2
+      },
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 5,
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "O2ZWJg",
+          "name": "Ln",
+          "fill": "$muted-foreground-subtle",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "// scope, then speak",
+          "lineHeight": 1.6,
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12.5,
+          "fontWeight": "500"
+        },
+        {
+          "type": "text",
+          "id": "frMqH",
+          "name": "Ln",
+          "fill": "$foreground",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "“AfrikaBurn — mark insurance done”",
+          "lineHeight": 1.6,
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12.5,
+          "fontWeight": "500"
+        },
+        {
+          "type": "text",
+          "id": "P93dSf",
+          "name": "Ln",
+          "fill": "$success",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "→ resolves the task in-mission, status → DONE",
+          "lineHeight": 1.6,
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12.5,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ht6vH",
+      "name": "SyncStatus",
+      "reusable": true,
+      "gap": 6,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "s0ALHr",
+          "name": "Dot",
+          "fill": "$success",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "text",
+          "id": "rb2d0",
+          "name": "Label",
+          "fill": "$muted-foreground",
+          "content": "SYNCED",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 10,
+          "fontWeight": "500",
+          "letterSpacing": 1.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "E5VLtZ",
+      "name": "AppHeader",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$muted",
+      "stroke": "$border",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "strokeAlignment": "inner",
+      "padding": [
+        20,
+        32
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "c6h2PI",
+          "name": "Wordmark",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "AC3jl",
+              "name": "OPS",
+              "fill": "$primary",
+              "content": "OPS",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 16,
+              "fontWeight": "700",
+              "letterSpacing": 4
+            },
+            {
+              "type": "text",
+              "id": "G63mq1",
+              "name": "BOARD",
+              "fill": "$muted-foreground",
+              "content": "BOARD",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 16,
+              "fontWeight": "700",
+              "letterSpacing": 4
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Jkmy3",
+          "name": "Actions",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "KWOGS",
+              "type": "ref",
+              "ref": "ht6vH",
+              "name": "SyncStatus"
+            },
+            {
+              "id": "lUmer",
+              "type": "ref",
+              "ref": "q7fK5p",
+              "name": "Search",
+              "descendants": {
+                "u3RZw7": {
+                  "icon": "search"
+                }
+              }
+            },
+            {
+              "id": "HgN0l",
+              "type": "ref",
+              "ref": "q7fK5p",
+              "name": "Notifications",
+              "descendants": {
+                "u3RZw7": {
+                  "icon": "bell"
+                }
+              }
+            },
+            {
+              "id": "LwJr4",
+              "type": "ref",
+              "ref": "q7fK5p",
+              "name": "More"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Na4yA",
+      "name": "MobileHeader",
+      "reusable": true,
+      "width": "fill_container",
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "NKCKH",
+          "name": "Wordmark",
+          "children": [
+            {
+              "type": "text",
+              "id": "v5Qkv",
+              "name": "OPS",
+              "fill": "$primary",
+              "content": "OPS",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 18,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "LxW3C",
+              "name": "BOARD",
+              "fill": "$muted-foreground",
+              "content": "BOARD",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 18,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            }
+          ]
+        },
+        {
+          "id": "D2pa2",
+          "type": "ref",
+          "ref": "ht6vH",
+          "name": "SyncStatus"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "TIDIA",
+      "name": "CategoryGroupHeader",
+      "reusable": true,
+      "gap": 8,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "sm7Fa",
+          "name": "Dot",
+          "fill": "$cat-medical",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "text",
+          "id": "kxZbC",
+          "name": "Label",
+          "fill": "$cat-medical",
+          "content": "MEDICAL",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "text",
+          "id": "xyJm9",
+          "name": "Count",
+          "fill": "$muted-foreground-subtle",
+          "content": "2/4",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "bPiGP",
+      "name": "ViewTabs",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$muted",
+      "stroke": "$border",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "strokeAlignment": "inner",
+      "gap": 28,
+      "padding": [
+        0,
+        32
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "A3ToR",
+          "name": "Tab Active",
+          "stroke": "$primary",
+          "strokeWidth": {
+            "bottom": 2
+          },
+          "strokeAlignment": "inner",
+          "padding": [
+            14,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "DI6pA",
+              "name": "L",
+              "fill": "$primary",
+              "content": "BY CATEGORY",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ZE9VY",
+          "name": "Tab",
+          "padding": [
+            14,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ifAfT",
+              "name": "L",
+              "fill": "$muted-foreground",
+              "content": "TIMELINE",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "o67i7",
+          "name": "Tab",
+          "padding": [
+            14,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "oqpX9",
+              "name": "L",
+              "fill": "$muted-foreground",
+              "content": "DEPENDENCIES",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "uJ5hm",
+      "name": "MissionDetailHeader",
+      "reusable": true,
+      "width": "fill_container",
+      "fill": "$background",
+      "stroke": "$border",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 16,
+      "padding": [
+        24,
+        32
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "lu9U0",
+          "name": "Title",
+          "fill": "$foreground",
+          "content": "AfrikaBurn 2026",
+          "fontFamily": "DM Sans",
+          "fontSize": 26,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "vVnj5",
+          "name": "Target",
+          "fill": "$muted-foreground",
+          "content": "TARGET: 2026-04-27",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 13,
+          "fontWeight": "500",
+          "letterSpacing": 1
+        },
+        {
+          "type": "frame",
+          "id": "gVxeZ",
+          "name": "Stats",
+          "gap": 32,
+          "children": [
+            {
+              "id": "GAgpp",
+              "type": "ref",
+              "ref": "h2sG4m",
+              "name": "DONE",
+              "descendants": {
+                "omxBe": {
+                  "content": "3",
+                  "fill": "$success"
+                },
+                "D5VQq": {
+                  "content": "DONE"
+                }
+              }
+            },
+            {
+              "id": "S9p4m9",
+              "type": "ref",
+              "ref": "h2sG4m",
+              "name": "BLOCKED",
+              "descendants": {
+                "omxBe": {
+                  "content": "3",
+                  "fill": "$destructive"
+                },
+                "D5VQq": {
+                  "content": "BLOCKED"
+                }
+              }
+            },
+            {
+              "id": "TGPMX",
+              "type": "ref",
+              "ref": "h2sG4m",
+              "name": "CLOSING",
+              "descendants": {
+                "omxBe": {
+                  "content": "2",
+                  "fill": "$warning"
+                },
+                "D5VQq": {
+                  "content": "CLOSING"
+                }
+              }
+            },
+            {
+              "id": "RJg6u",
+              "type": "ref",
+              "ref": "h2sG4m",
+              "name": "TOTAL",
+              "descendants": {
+                "omxBe": {
+                  "content": "11"
+                },
+                "D5VQq": {
+                  "content": "TOTAL"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "B4sbBK",
+          "type": "ref",
+          "ref": "fehXu",
+          "name": "Progress",
+          "width": "fill_container"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "thUh3",
+      "name": "Sidebar",
+      "reusable": true,
+      "clip": true,
+      "width": 280,
+      "height": 560,
+      "fill": "$muted",
+      "stroke": "$border",
+      "strokeWidth": {
+        "right": 1
+      },
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ktgt2",
+          "name": "SidebarHeader",
+          "width": "fill_container",
+          "padding": 18,
+          "children": [
+            {
+              "type": "text",
+              "id": "x8qcC",
+              "name": "Label",
+              "fill": "$muted-foreground-subtle",
+              "content": "MISSIONS",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fQag1",
+          "name": "MissionList",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": [
+            0,
+            8
+          ],
+          "children": [
+            {
+              "id": "RUcvy",
+              "type": "ref",
+              "ref": "zDpJJ",
+              "name": "AfrikaBurn",
+              "width": "fill_container",
+              "fill": "#ff6b351f",
+              "stroke": "$primary",
+              "descendants": {
+                "k77ytt": {
+                  "content": "AfrikaBurn 2026"
+                },
+                "mgOhM": {
+                  "content": "3/11 tasks"
+                }
+              }
+            },
+            {
+              "id": "hZAKU",
+              "type": "ref",
+              "ref": "zDpJJ",
+              "name": "Passport",
+              "width": "fill_container",
+              "descendants": {
+                "k77ytt": {
+                  "content": "Passport Renewal"
+                },
+                "mgOhM": {
+                  "content": "1/5 tasks"
+                }
+              }
+            },
+            {
+              "id": "s9xYmb",
+              "type": "ref",
+              "ref": "zDpJJ",
+              "name": "Visa",
+              "width": "fill_container",
+              "descendants": {
+                "k77ytt": {
+                  "content": "Schengen Visa"
+                },
+                "mgOhM": {
+                  "content": "0/4 tasks"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "n4lLE",
+      "name": "TimelineWeekHeader",
+      "reusable": true,
+      "width": "fill_container",
+      "gap": 12,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "M75qEY",
+          "name": "Range",
+          "fill": "$muted-foreground",
+          "content": "JUN 01 – JUN 07",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "frame",
+          "id": "Nc5iy",
+          "name": "DaysPill",
+          "fill": "$muted",
+          "cornerRadius": 100,
+          "stroke": "$border",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "padding": [
+            2,
+            8
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "r339JL",
+              "name": "DaysLbl",
+              "fill": "$muted-foreground",
+              "content": "THIS WEEK",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 10,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "X0Fav",
+          "name": "Rule",
+          "fill": "$border",
+          "width": "fill_container",
+          "height": 1
+        }
+      ]
+    }
+  ]
+}

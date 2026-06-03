@@ -1,0 +1,144 @@
+{
+  "variables": {
+    "background": {
+      "type": "color",
+      "value": "#0a0a0c"
+    },
+    "foreground": {
+      "type": "color",
+      "value": "#e8e8f0"
+    },
+    "muted": {
+      "type": "color",
+      "value": "#131318"
+    },
+    "muted-foreground": {
+      "type": "color",
+      "value": "#7a7a8e"
+    },
+    "muted-foreground-subtle": {
+      "type": "color",
+      "value": "#4a4a5e"
+    },
+    "card": {
+      "type": "color",
+      "value": "#1a1a22"
+    },
+    "card-foreground": {
+      "type": "color",
+      "value": "#e8e8f0"
+    },
+    "card-elevated": {
+      "type": "color",
+      "value": "#22222e"
+    },
+    "popover": {
+      "type": "color",
+      "value": "#1a1a22"
+    },
+    "popover-foreground": {
+      "type": "color",
+      "value": "#e8e8f0"
+    },
+    "border": {
+      "type": "color",
+      "value": "#2a2a38"
+    },
+    "border-hover": {
+      "type": "color",
+      "value": "#3a3a4a"
+    },
+    "input": {
+      "type": "color",
+      "value": "#2a2a38"
+    },
+    "primary": {
+      "type": "color",
+      "value": "#ff6b35"
+    },
+    "primary-hover": {
+      "type": "color",
+      "value": "#ff8555"
+    },
+    "primary-foreground": {
+      "type": "color",
+      "value": "#0a0a0c"
+    },
+    "ring": {
+      "type": "color",
+      "value": "#ff6b35"
+    },
+    "secondary": {
+      "type": "color",
+      "value": "#1a1a22"
+    },
+    "secondary-foreground": {
+      "type": "color",
+      "value": "#e8e8f0"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#1a1a22"
+    },
+    "accent-foreground": {
+      "type": "color",
+      "value": "#e8e8f0"
+    },
+    "destructive": {
+      "type": "color",
+      "value": "#e05a5a"
+    },
+    "destructive-foreground": {
+      "type": "color",
+      "value": "#fafafa"
+    },
+    "success": {
+      "type": "color",
+      "value": "#5ae07a"
+    },
+    "success-foreground": {
+      "type": "color",
+      "value": "#0a1f12"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#d9a73e"
+    },
+    "warning-foreground": {
+      "type": "color",
+      "value": "#251a05"
+    },
+    "info": {
+      "type": "color",
+      "value": "#ff6b35"
+    },
+    "info-foreground": {
+      "type": "color",
+      "value": "#0a0a0c"
+    },
+    "cat-medical": {
+      "type": "color",
+      "value": "#e05a9f"
+    },
+    "cat-bureaucratic": {
+      "type": "color",
+      "value": "#5aa0e0"
+    },
+    "cat-travel": {
+      "type": "color",
+      "value": "#5ae0a0"
+    },
+    "cat-gear": {
+      "type": "color",
+      "value": "#e0c05a"
+    },
+    "cat-tech": {
+      "type": "color",
+      "value": "#a05ae0"
+    },
+    "radius": {
+      "type": "number",
+      "value": 0
+    }
+  }
+}

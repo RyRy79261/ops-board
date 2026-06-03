@@ -1,0 +1,1163 @@
+{
+  "nodes": [
+    {
+      "type": "frame",
+      "id": "vsP7L",
+      "x": 33296,
+      "y": 0,
+      "name": "OpsBoard — Component Usage Map",
+      "fill": "$background",
+      "layout": "vertical",
+      "gap": 28,
+      "padding": 48,
+      "children": [
+        {
+          "type": "frame",
+          "id": "K25a3",
+          "name": "Header",
+          "width": 1664,
+          "layout": "vertical",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "XvqXE",
+              "name": "Title",
+              "fill": "$foreground",
+              "content": "COMPONENT USAGE MAP",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "VJMF6",
+              "name": "Sub",
+              "fill": "$muted-foreground",
+              "textGrowth": "fixed-width",
+              "width": 1664,
+              "content": "Audit of every product board against the component library. RESULT: 0 / 8 boards currently instance the library — all were built before components existed, so every element is a hand-built ad-hoc frame. Below: what each board should instance (existing components) and the new components being registered to fill the gaps. NEXT STEP for the team: migrate each board to instances so edits propagate from one source of truth.",
+              "lineHeight": 1.55,
+              "fontFamily": "DM Sans",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VUZlZ",
+          "name": "Table",
+          "clip": true,
+          "width": 1664,
+          "fill": "$card",
+          "stroke": "$border",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "aGgyY",
+              "name": "HeaderRow",
+              "width": "fill_container",
+              "fill": "$muted",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bk1KF",
+                  "name": "BOARD",
+                  "width": 260,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QHgMY",
+                      "name": "L",
+                      "fill": "$muted-foreground",
+                      "content": "BOARD",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h2F83E",
+                  "name": "STATUS",
+                  "width": 130,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wOoi9",
+                      "name": "L",
+                      "fill": "$muted-foreground",
+                      "content": "STATUS",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NQiPt",
+                  "name": "MAPS TO (EXISTING COMPONENTS)",
+                  "width": 600,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Wj6Yf",
+                      "name": "L",
+                      "fill": "$muted-foreground",
+                      "content": "MAPS TO (EXISTING COMPONENTS)",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "M6x3R",
+                  "name": "NEW COMPONENTS (REGISTERED)",
+                  "width": 560,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "d5csZ",
+                      "name": "L",
+                      "fill": "$muted-foreground",
+                      "content": "NEW COMPONENTS (REGISTERED)",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ufcwP",
+              "name": "Category Board (desktop)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mm5Oq",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kzL0h",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Category Board (desktop)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Xzv4T",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OWNeM",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "v4wWu",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SinzO",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "t5fu9x",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TaskCard · CategoryTag · WindowStatePill · StatusCycleButton · ProgressBar · StatTile · NavCard · StatusDot · Eyebrow",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "X0xy1",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "u59ZGU",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AppHeader · Sidebar · MissionDetailHeader · ViewTabs · CategoryGroupHeader",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "V37TL",
+              "name": "Timeline view (desktop)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WLwlb",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "R8s1o",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Timeline view (desktop)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "B0nBct",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LkgNL",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yqIGv",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TpULO",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WgIxH",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TaskCard · WindowStatePill · CategoryTag · StatusCycleButton · Eyebrow · Divider",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fTzAI",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "do28o",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TimelineWeekHeader · TimelineBucket · NoCliffBucket",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y57gDS",
+              "name": "Dependencies view (desktop)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "P7MWaA",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SRGyD",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Dependencies view (desktop)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o8EHP",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "h1UpfT",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pYyWu",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y1zpif",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "l5lfz",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TaskCard · WindowStatePill · StatusCycleButton · Eyebrow",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L0xiq",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fYKmg",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "DependencyTreeNode · DependencyConnector · CriticalPathAccent · UnlinkedGroup",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IH2uj",
+              "name": "Voice & Toasts (states)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "c0m3Oy",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LPfy5",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Voice & Toasts (states)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vAKZT",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RBhky",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "C69OH",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wAvpt",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "M6z2gZ",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "VoiceFAB · RecordingPanel · Toast · Alert · Spinner",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "supeA",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OqBBR",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "VoiceTranscriptCard  (most elements already covered)",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VCwwW",
+              "name": "Mobile screens",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "luFZ0",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HGTTn",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Mobile screens",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Pu5La",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "akgHY",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nRaAH",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SwJ7n",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zQEbE",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TaskCard · MissionSummaryCard · VoiceFAB · WindowStatePill · CategoryTag · StatusCycleButton · Toast",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BLFOF",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BLBVS",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "MobileHeader · MobileSectionNav",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "o2n1i",
+              "name": "Empty / Loading / Error (states)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z5ydd",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y1cSU",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Empty / Loading / Error (states)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "b4bRWz",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "v5jvJw",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "fr5qK",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "P4q5tV",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Q1NJoy",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "EmptyState · Skeleton · Spinner · Card",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x3OgOS",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "m46Pf",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "ErrorBoundaryFallback · LoadingScreen",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eOUBw",
+              "name": "Account · Settings · Legal · Manual",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fc5GO",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WO59W",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Account · Settings · Legal · Manual",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FCAIq",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LDVhG",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pwUAg",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nFORp",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "DWReu",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "TextInput · Textarea · Select · SearchField · Switch · Checkbox · Button · Toast · Card · LegalSection · LegalIndexRow · Manual* · SectionNavChip · CodeCallout · Type/* · Label/*",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BMPa5",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SJhFq",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "SettingsGroupHeader · SettingsRow · DangerZoneCard · AccountProfileSummary · TypeToConfirmField · DeleteHistoryRangeOption · DebugInfoRow · ErrorLogRow · FeatureFlagChip · ShakeReportSheet · ReportComposer",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FWcpv",
+              "name": "AI Research (Task Agent)",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "strokeAlignment": "inner",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DBWLo",
+                  "name": "Board",
+                  "width": 260,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "D1kwl",
+                      "name": "T",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AI Research (Task Agent)",
+                      "lineHeight": 1.4,
+                      "fontFamily": "DM Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MlYVR",
+                  "name": "Status",
+                  "width": 130,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "m4CYAI",
+                      "name": "Pill",
+                      "fill": "#d9a73e1f",
+                      "cornerRadius": 999,
+                      "padding": [
+                        3,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IZOvO",
+                          "name": "L",
+                          "fill": "$warning",
+                          "content": "AD-HOC",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jzja6",
+                  "name": "Maps",
+                  "width": 600,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "B1dVec",
+                      "name": "T",
+                      "fill": "$muted-foreground",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "ScopeChip · ParsedIntentPanel · IntentRow · ResearchJobPanel · ResearchStepRow · ComeBackLaterBanner · MinimizedJobPill · AINotesBlock · SourceRow · CitationChip · ErrorStateCard · Toast · VoiceFAB · TaskCard",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W6l9GL",
+                  "name": "New",
+                  "width": 560,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "caYjl",
+                      "name": "T",
+                      "fill": "$primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "DisambiguationPicker · ResearchAttachedBadge",
+                      "lineHeight": 1.55,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

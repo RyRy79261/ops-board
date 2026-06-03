@@ -1,0 +1,889 @@
+{
+  "nodes": [
+    {
+      "type": "frame",
+      "id": "AtbGz",
+      "name": "Button",
+      "reusable": true,
+      "fill": "$primary",
+      "gap": 7,
+      "padding": [
+        9,
+        16
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "DSJAe",
+          "name": "Label",
+          "fill": "$primary-foreground",
+          "content": "Save",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 13,
+          "fontWeight": "600",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "q7fK5p",
+      "name": "IconButton",
+      "reusable": true,
+      "width": 36,
+      "height": 36,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "u3RZw7",
+          "name": "i",
+          "width": 16,
+          "height": 16,
+          "icon": "ellipsis",
+          "library": "lucide",
+          "fill": "$muted-foreground"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SbuAZ",
+      "name": "Badge",
+      "reusable": true,
+      "cornerRadius": 999,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 5,
+      "padding": [
+        4,
+        10
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "r0QbCK",
+          "name": "l",
+          "fill": "$muted-foreground",
+          "content": "BADGE",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "600",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XDuCZ",
+      "name": "CategoryTag",
+      "reusable": true,
+      "fill": "#e05a9f1f",
+      "cornerRadius": 999,
+      "gap": 5,
+      "padding": [
+        4,
+        10
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "y2qfeP",
+          "name": "i",
+          "width": 12,
+          "height": 12,
+          "icon": "stethoscope",
+          "library": "lucide",
+          "fill": "$cat-medical"
+        },
+        {
+          "type": "text",
+          "id": "eI2YO",
+          "name": "l",
+          "fill": "$cat-medical",
+          "content": "MEDICAL",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "600",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o4Fe4h",
+      "name": "WindowStatePill",
+      "reusable": true,
+      "cornerRadius": 999,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 5,
+      "padding": [
+        4,
+        10
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "YeQPo",
+          "x": 0,
+          "y": 0,
+          "name": "i",
+          "enabled": false,
+          "width": 12,
+          "height": 12,
+          "icon": "circle",
+          "library": "lucide",
+          "fill": "$muted-foreground"
+        },
+        {
+          "type": "text",
+          "id": "CyMMs",
+          "name": "l",
+          "fill": "$muted-foreground",
+          "content": "OPEN",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "600",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "PaMgT",
+      "name": "StatusBadge",
+      "reusable": true,
+      "cornerRadius": 999,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "gap": 5,
+      "padding": [
+        4,
+        10
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "U60Zb",
+          "x": 0,
+          "y": 0,
+          "name": "i",
+          "enabled": false,
+          "width": 12,
+          "height": 12,
+          "icon": "circle-dot",
+          "library": "lucide",
+          "fill": "$muted-foreground"
+        },
+        {
+          "type": "text",
+          "id": "PdJ6l",
+          "name": "l",
+          "fill": "$muted-foreground",
+          "content": "NOT STARTED",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "600",
+          "letterSpacing": 0.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "TK7Jz",
+      "name": "StatusCycleButton",
+      "reusable": true,
+      "width": 18,
+      "height": 18,
+      "stroke": "$border",
+      "strokeWidth": 2,
+      "strokeAlignment": "inner",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "KUM5c",
+          "x": 0,
+          "y": 0,
+          "name": "g",
+          "enabled": false,
+          "fill": "$primary",
+          "content": "◼",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 8,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "ellipse",
+      "id": "xpMSV",
+      "name": "StatusDot",
+      "reusable": true,
+      "fill": "$primary",
+      "width": 8,
+      "height": 8
+    },
+    {
+      "type": "rectangle",
+      "id": "tqj5T",
+      "name": "Divider",
+      "reusable": true,
+      "fill": "$border",
+      "width": "fill_container",
+      "height": 1
+    },
+    {
+      "type": "text",
+      "id": "zteNg",
+      "name": "Eyebrow",
+      "reusable": true,
+      "fill": "$muted-foreground",
+      "content": "SECTION LABEL",
+      "fontFamily": "JetBrains Mono",
+      "fontSize": 11,
+      "fontWeight": "600",
+      "letterSpacing": 1.5
+    },
+    {
+      "type": "frame",
+      "id": "qgyiI",
+      "name": "Cmp · TextInput",
+      "reusable": true,
+      "width": "fill_container",
+      "layout": "vertical",
+      "gap": 7,
+      "children": [
+        {
+          "type": "text",
+          "id": "FRQsp",
+          "name": "Label",
+          "fill": "$muted-foreground",
+          "content": "ASSIGNEE",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "frame",
+          "id": "yTlNC",
+          "name": "Field",
+          "width": "fill_container",
+          "height": 40,
+          "fill": "$muted",
+          "stroke": "$input",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "gap": 8,
+          "padding": [
+            0,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "uysfT",
+              "name": "Value",
+              "fill": "$muted-foreground-subtle",
+              "content": "Search teammate…",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Dn0NA",
+      "name": "Cmp · Textarea",
+      "reusable": true,
+      "width": "fill_container",
+      "layout": "vertical",
+      "gap": 7,
+      "children": [
+        {
+          "type": "text",
+          "id": "HRF5b",
+          "name": "Label",
+          "fill": "$muted-foreground",
+          "content": "NOTE",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "frame",
+          "id": "h3v6q",
+          "name": "Area",
+          "width": "fill_container",
+          "height": 96,
+          "fill": "$muted",
+          "stroke": "$input",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "padding": [
+            10,
+            12
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "jsHam",
+              "name": "Value",
+              "fill": "$muted-foreground-subtle",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Add context for the dispatcher…",
+              "lineHeight": 1.5,
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HzETq",
+      "name": "Cmp · Select",
+      "reusable": true,
+      "width": "fill_container",
+      "layout": "vertical",
+      "gap": 7,
+      "children": [
+        {
+          "type": "text",
+          "id": "LfFba",
+          "name": "Label",
+          "fill": "$muted-foreground",
+          "content": "PRIORITY",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "frame",
+          "id": "w0mss0",
+          "name": "Trigger",
+          "width": "fill_container",
+          "height": 40,
+          "fill": "$muted",
+          "stroke": "$input",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "padding": [
+            0,
+            12
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "x7bA7R",
+              "name": "Value",
+              "fill": "$muted-foreground-subtle",
+              "content": "Select priority…",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "icon",
+              "id": "aR80e",
+              "name": "Chevron",
+              "width": 16,
+              "height": 16,
+              "icon": "chevron-down",
+              "library": "lucide",
+              "fill": "$muted-foreground"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "iCbku",
+      "name": "Cmp · SearchField",
+      "reusable": true,
+      "width": "fill_container",
+      "layout": "vertical",
+      "gap": 7,
+      "children": [
+        {
+          "type": "text",
+          "id": "DkKOb",
+          "name": "Label",
+          "fill": "$muted-foreground",
+          "content": "FILTER",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "normal",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "frame",
+          "id": "qNmRA",
+          "name": "Field",
+          "width": "fill_container",
+          "height": 40,
+          "fill": "$muted",
+          "stroke": "$input",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "gap": 8,
+          "padding": [
+            0,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "csIht",
+              "name": "Icon",
+              "width": 16,
+              "height": 16,
+              "icon": "search",
+              "library": "lucide",
+              "fill": "$muted-foreground-subtle"
+            },
+            {
+              "type": "text",
+              "id": "JGuLZ",
+              "name": "Value",
+              "fill": "$muted-foreground-subtle",
+              "content": "Filter tasks…",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "f8IkAp",
+      "name": "Cmp · Checkbox",
+      "reusable": true,
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "gBulc",
+          "name": "Box",
+          "width": 18,
+          "height": 18,
+          "fill": "$background",
+          "stroke": "$border-hover",
+          "strokeWidth": 2,
+          "strokeAlignment": "inner",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "F7XMr",
+              "x": 0,
+              "y": 0,
+              "name": "Check",
+              "enabled": false,
+              "width": 13,
+              "height": 13,
+              "icon": "check",
+              "library": "lucide",
+              "weight": 600,
+              "fill": "$primary-foreground"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "GmShX",
+          "name": "Label",
+          "fill": "$foreground",
+          "content": "Notify crew",
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hr3IB",
+      "name": "Cmp · Radio",
+      "reusable": true,
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "C57Of",
+          "name": "Radio",
+          "width": 18,
+          "height": 18,
+          "fill": "$background",
+          "cornerRadius": 9,
+          "stroke": "$border-hover",
+          "strokeWidth": 2,
+          "strokeAlignment": "inner",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "OwSYJ",
+              "x": 0,
+              "y": 0,
+              "name": "Dot",
+              "enabled": false,
+              "fill": "$primary",
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "F3mfPh",
+          "name": "Label",
+          "fill": "$foreground",
+          "content": "Dock 7",
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qrgYL",
+      "name": "Cmp · Switch",
+      "reusable": true,
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "erfHJ",
+          "name": "Track",
+          "width": 44,
+          "height": 24,
+          "fill": "$muted",
+          "cornerRadius": 2,
+          "stroke": "$border-hover",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "padding": [
+            0,
+            3
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "qNOb3",
+              "name": "Knob",
+              "width": 18,
+              "height": 18,
+              "fill": "$muted-foreground",
+              "cornerRadius": 9
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "ZwrZX",
+          "name": "Label",
+          "fill": "$foreground",
+          "content": "Auto-dispatch",
+          "fontFamily": "DM Sans",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Aipy6",
+      "name": "Cmp · Card",
+      "reusable": true,
+      "clip": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "children": [
+        {
+          "type": "frame",
+          "id": "GnIEO",
+          "name": "Inner",
+          "width": "fill_container",
+          "gap": 12,
+          "padding": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "aOk8H",
+              "name": "Status",
+              "width": 18,
+              "height": 18,
+              "stroke": "$border",
+              "strokeWidth": 2,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center"
+            },
+            {
+              "type": "frame",
+              "id": "rYpD8",
+              "name": "Col",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 7,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lb6Qq",
+                  "name": "TaskName",
+                  "fill": "$foreground",
+                  "content": "Tankwa permit confirmation",
+                  "fontFamily": "DM Sans",
+                  "fontSize": 15,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "L7MIuq",
+                  "name": "MetaRow",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "F6x2ZO",
+                      "name": "Tag",
+                      "fill": "#e05a9f1f",
+                      "cornerRadius": 999,
+                      "gap": 5,
+                      "padding": [
+                        3,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "ukdyf",
+                          "name": "Dot",
+                          "fill": "$cat-medical",
+                          "width": 6,
+                          "height": 6
+                        },
+                        {
+                          "type": "text",
+                          "id": "CAxXP",
+                          "name": "TagLabel",
+                          "fill": "$cat-medical",
+                          "content": "MEDICAL",
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "qULnw",
+                      "name": "Pill",
+                      "fill": "$muted-foreground",
+                      "content": "TUE 17:00",
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "h2sG4m",
+      "name": "Cmp · StatTile",
+      "reusable": true,
+      "layout": "vertical",
+      "gap": 4,
+      "children": [
+        {
+          "type": "text",
+          "id": "omxBe",
+          "name": "Val",
+          "fill": "$foreground",
+          "content": "11",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "D5VQq",
+          "name": "Lab",
+          "fill": "$muted-foreground-subtle",
+          "content": "TOTAL",
+          "fontFamily": "JetBrains Mono",
+          "fontSize": 11,
+          "fontWeight": "600",
+          "letterSpacing": 1.5
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "fehXu",
+      "name": "Cmp · ProgressBar",
+      "reusable": true,
+      "clip": true,
+      "width": "fill_container",
+      "height": 4,
+      "fill": "$card-elevated",
+      "children": [
+        {
+          "type": "frame",
+          "id": "l08CCX",
+          "name": "Done",
+          "width": 140,
+          "height": "fill_container",
+          "fill": "$success"
+        },
+        {
+          "type": "frame",
+          "id": "g5CPMC",
+          "name": "Closing",
+          "width": 70,
+          "height": "fill_container",
+          "fill": "$warning"
+        },
+        {
+          "type": "frame",
+          "id": "hkiVd",
+          "name": "Blocked",
+          "width": 40,
+          "height": "fill_container",
+          "fill": "$destructive"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zDpJJ",
+      "name": "Cmp · NavCard",
+      "reusable": true,
+      "clip": true,
+      "width": "fill_container",
+      "fill": "$card",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 8,
+      "padding": 14,
+      "children": [
+        {
+          "type": "text",
+          "id": "k77ytt",
+          "name": "Name",
+          "fill": "$foreground",
+          "content": "Passport Renewal",
+          "fontFamily": "DM Sans",
+          "fontSize": 16,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "D5BhX",
+          "name": "Meta",
+          "gap": 8,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "N56kJ",
+              "name": "Chip",
+              "fill": "#5aa0e01f",
+              "cornerRadius": 999,
+              "gap": 4,
+              "padding": [
+                2,
+                7
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "d9yme",
+                  "name": "clock",
+                  "width": 11,
+                  "height": 11,
+                  "icon": "timer",
+                  "library": "lucide",
+                  "fill": "$cat-bureaucratic"
+                },
+                {
+                  "type": "text",
+                  "id": "ArGgM",
+                  "name": "ChipLabel",
+                  "fill": "$cat-bureaucratic",
+                  "content": "T-21d",
+                  "fontFamily": "JetBrains Mono",
+                  "fontSize": 11,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "mgOhM",
+              "name": "Count",
+              "fill": "$muted-foreground",
+              "content": "1/5 tasks",
+              "fontFamily": "JetBrains Mono",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
