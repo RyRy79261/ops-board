@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- OpsBoard favicon — SOLID command-cursor mark (Brand & Social board).
+       Orange tile (#ff6b35), near-black (#0a0a0c) `›` chevron + cursor block.
+       Pure geometry (no font) so it stays crisp at 16px. Zero corner radius. -->
+  <rect width="32" height="32" fill="#ff6b35"/>
+  <!-- `›` chevron: a sharp right-pointing wedge built from a filled polygon
+       (two strokes meeting at a point), thickness ~3px. -->
+  <path
+    fill="#0a0a0c"
+    shape-rendering="geometricPrecision"
+    d="M9 9 L12 9 L18 16 L12 23 L9 23 L15 16 Z"/>
+  <!-- cursor block: filled vertical bar to the right of the chevron -->
+  <rect x="19.5" y="9.5" width="3.5" height="13" fill="#0a0a0c"/>
+</svg>

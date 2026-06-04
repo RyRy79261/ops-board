@@ -17,6 +17,20 @@ const config: NextConfig = {
     "@opsboard/db",
   ],
   typedRoutes: true,
+  // The brand cards (opengraph-image / twitter-image / apple-icon / PWA icon
+  // PNGs) read bundled TTFs off disk via fs.readFile for next/og. On Vercel each
+  // route is a separate serverless function, so the font dir must be traced into
+  // every one of their bundles — otherwise satori silently falls back to its
+  // default font and the wordmark loses JetBrains Mono. (load.ts already tolerates
+  // a missing font, so this only upgrades fidelity; it can't break the build.)
+  outputFileTracingIncludes: {
+    "/opengraph-image": ["./app/_fonts/**"],
+    "/twitter-image": ["./app/_fonts/**"],
+    "/apple-icon": ["./app/_fonts/**"],
+    "/icon-192.png": ["./app/_fonts/**"],
+    "/icon-512.png": ["./app/_fonts/**"],
+    "/icon-512-maskable.png": ["./app/_fonts/**"],
+  },
   // Next's App Router refuses to route `.`-prefixed folders, so the canonical
   // `/.well-known/*` OAuth-discovery paths Claude.ai fetches are rewritten into
   // normal app routes under /api/mcp/well-known/* (scaffolding-plan.md S6).
