@@ -216,6 +216,21 @@ describe("needsConfirmation routing", () => {
     });
     expect(res).toMatchObject({ ok: true, needsConfirmation: false });
   });
+
+  it("flags an `unknown` intent even at full confidence (never auto-act)", () => {
+    const unknown = VoiceIntent.parse({
+      intent: "unknown",
+      confidence: 0.99,
+      rawTranscript: "uh, do the thing with the stuff",
+    });
+    expect(needsConfirmation(unknown)).toBe(true);
+    const res = safeParseIntent({
+      intent: "unknown",
+      confidence: 0.99,
+      rawTranscript: "garbled",
+    });
+    expect(res).toMatchObject({ ok: true, needsConfirmation: true });
+  });
 });
 
 // ---------------------------------------------------------------------------

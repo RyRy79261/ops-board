@@ -70,18 +70,40 @@ export interface UpdateTaskPatch {
 
 const STATUSES: readonly TaskStatus[] = ["not-started", "in-progress", "done"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
+}
+
+/** Reject malformed ids at the boundary so a bad UUID never reaches SQL as a
+ *  raw "invalid input syntax for type uuid" Postgres error. */
+function isUuid(v: unknown): v is string {
+  return typeof v === "string" && UUID_RE.test(v);
 }
 
 function isValidStatus(v: unknown): v is TaskStatus {
   return typeof v === "string" && (STATUSES as readonly string[]).includes(v);
 }
 
-/** A date-only column accepts "YYYY-MM-DD" or null/undefined (cleared). */
+/** "YYYY-MM-DD" that is ALSO a real calendar date — DATE_RE alone admits
+ *  impossible dates like 2026-13-45 / 2026-02-30, which would otherwise reach
+ *  SQL and throw a raw Postgres error. Verify the parts round-trip. */
+function isRealDate(v: string): boolean {
+  if (!DATE_RE.test(v)) return false;
+  const [y, m, d] = v.split("-").map(Number) as [number, number, number];
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === m - 1 &&
+    dt.getUTCDate() === d
+  );
+}
+
+/** A date-only column accepts a real "YYYY-MM-DD" or null/undefined (cleared). */
 function isValidDateOrNullish(v: unknown): v is string | null | undefined {
-  return v == null || (typeof v === "string" && DATE_RE.test(v));
+  return v == null || (typeof v === "string" && isRealDate(v));
 }
 
 /**
@@ -155,8 +177,8 @@ export async function deleteMission(
   missionId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
-  if (!isNonEmptyString(missionId)) {
-    throw new TypeError("deleteMission: `missionId` must be a string.");
+  if (!isUuid(missionId)) {
+    throw new TypeError("deleteMission: `missionId` must be a valid UUID.");
   }
   await db.delete(schema.missions).where(eq(schema.missions.id, missionId));
   return { ok: true };
@@ -175,8 +197,13 @@ export async function createTask(
   input: CreateTaskInput,
   db: OpsboardDb = createHttpDb(),
 ): Promise<CreateTaskResult> {
-  if (!isNonEmptyString(input.missionId)) {
-    throw new TypeError("createTask: `missionId` must be a string.");
+  if (!isUuid(input.missionId)) {
+    throw new TypeError("createTask: `missionId` must be a valid UUID.");
+  }
+  if (input.categoryId != null && !isUuid(input.categoryId)) {
+    throw new TypeError(
+      "createTask: `categoryId` must be a valid UUID or null.",
+    );
   }
   if (!isNonEmptyString(input.name)) {
     throw new TypeError("createTask: `name` must be a non-empty string.");
@@ -238,8 +265,13 @@ export async function updateTask(
   patch: UpdateTaskPatch,
   db: OpsboardDb = createHttpDb(),
 ): Promise<UpdateTaskResult> {
-  if (!isNonEmptyString(taskId)) {
-    throw new TypeError("updateTask: `taskId` must be a string.");
+  if (!isUuid(taskId)) {
+    throw new TypeError("updateTask: `taskId` must be a valid UUID.");
+  }
+  if (patch.categoryId != null && !isUuid(patch.categoryId)) {
+    throw new TypeError(
+      "updateTask: `categoryId` must be a valid UUID or null.",
+    );
   }
   if (patch.name !== undefined && !isNonEmptyString(patch.name)) {
     throw new TypeError("updateTask: `name` must be a non-empty string.");
@@ -315,8 +347,8 @@ export async function deleteTask(
   taskId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
-  if (!isNonEmptyString(taskId)) {
-    throw new TypeError("deleteTask: `taskId` must be a string.");
+  if (!isUuid(taskId)) {
+    throw new TypeError("deleteTask: `taskId` must be a valid UUID.");
   }
   await db.delete(schema.tasks).where(eq(schema.tasks.id, taskId));
   return { ok: true };
@@ -338,9 +370,9 @@ export async function addDependency(
   dependsOnId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
-  if (!isNonEmptyString(taskId) || !isNonEmptyString(dependsOnId)) {
+  if (!isUuid(taskId) || !isUuid(dependsOnId)) {
     throw new TypeError(
-      "addDependency: `taskId` and `dependsOnId` must be strings.",
+      "addDependency: `taskId` and `dependsOnId` must be valid UUIDs.",
     );
   }
   // Cheap pre-check so the common self-dep case never hits the DB; the CHECK
@@ -378,9 +410,9 @@ export async function removeDependency(
   dependsOnId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
-  if (!isNonEmptyString(taskId) || !isNonEmptyString(dependsOnId)) {
+  if (!isUuid(taskId) || !isUuid(dependsOnId)) {
     throw new TypeError(
-      "removeDependency: `taskId` and `dependsOnId` must be strings.",
+      "removeDependency: `taskId` and `dependsOnId` must be valid UUIDs.",
     );
   }
   await db

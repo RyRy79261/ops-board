@@ -150,13 +150,18 @@ export function isDestructive(intent: VoiceIntent | VoiceIntentName): boolean {
 
 /**
  * True when an intent must be routed to user confirmation before execution:
- * either it is destructive, or its self-reported confidence is below the floor.
+ * it is destructive, it is `unknown` (the classifier couldn't commit — never
+ * auto-act on it), or its self-reported confidence is below the floor.
  */
 export function needsConfirmation(
   intent: VoiceIntent,
   floor: number = CONFIDENCE_FLOOR,
 ): boolean {
-  return isDestructive(intent) || intent.confidence < floor;
+  return (
+    isDestructive(intent) ||
+    intent.intent === "unknown" ||
+    intent.confidence < floor
+  );
 }
 
 export type SafeParseIntentResult =
