@@ -30,11 +30,14 @@ import { cn } from "../lib/utils";
  *                 ring hidden, `TRANSCRIBING…` ($muted-foreground)
  *   error       → $muted button + $destructive stroke, lucide `triangle-alert`,
  *                 a 64×2 $destructive underline bar, `TAP TO RETRY`
- *                 ($destructive), role="alert"
+ *                 ($destructive); the failure is announced via an assertive
+ *                 `role="alert"` text region (NOT on the button — a button may
+ *                 not carry role="alert", axe `aria-allowed-role`).
  *
- * a11y: state-reflecting `aria-label`; `role="alert"` on error; ≥44px target
- * (default 56px); pulse ring is decorative (`aria-hidden`). The pulse + loader
- * spin honour `prefers-reduced-motion` (frozen via `motion-reduce:*`).
+ * a11y: state-reflecting `aria-label` on the plain `button`; the error state
+ * announces assertively through the hint/sr-only `role="alert"` live region;
+ * ≥44px target (default 56px); pulse ring is decorative (`aria-hidden`). The
+ * pulse + loader spin honour `prefers-reduced-motion` (frozen via `motion-reduce:*`).
  */
 
 export type VoiceFabState =
@@ -162,8 +165,6 @@ const VoiceFAB = React.forwardRef<HTMLButtonElement, VoiceFabProps>(
             {...props}
             aria-label={ariaLabel ?? ARIA_LABEL[state]}
             aria-busy={isBusy || undefined}
-            // The error cell IS the retry target and must announce assertively.
-            role={isError ? "alert" : undefined}
             onClick={onPress}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
@@ -219,17 +220,26 @@ const VoiceFAB = React.forwardRef<HTMLButtonElement, VoiceFabProps>(
           ) : null}
         </span>
 
-        {/* Status hint. Announced politely; the error label already carries
-            assertive role via the button. */}
+        {/* Status hint + live region. The error state announces ASSERTIVELY via
+            role="alert" on this text node (valid on a span — a button may not
+            carry role="alert", aria-allowed-role); all other states announce
+            politely. The button itself keeps its plain `button` role + label. */}
         {hintText ? (
           <span
-            aria-live="polite"
+            role={isError ? "alert" : undefined}
+            aria-live={isError ? "assertive" : "polite"}
             className={cn(
               "font-mono text-micro uppercase leading-none tracking-[1px]",
               HINT_COLOR[state],
             )}
           >
             {hintText}
+          </span>
+        ) : isError ? (
+          // hint suppressed (fixed-position product use) → keep an assertive
+          // sr-only alert so the failure is still announced to AT users.
+          <span role="alert" className="sr-only">
+            {ARIA_LABEL.error}
           </span>
         ) : null}
 
