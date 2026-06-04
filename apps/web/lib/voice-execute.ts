@@ -111,9 +111,12 @@ export type ExecuteOutcome =
 
 // --- DB-backed snapshot + resolvers -----------------------------------------
 
-/** All missions as Resolvables (code = target date or "MISSION"). */
-async function missionResolvables(db: OpsboardDb): Promise<Resolvable[]> {
-  const missions = await getMissions(db);
+/** The session user's missions as Resolvables (code = target date or "MISSION"). */
+async function missionResolvables(
+  userId: string,
+  db: OpsboardDb,
+): Promise<Resolvable[]> {
+  const missions = await getMissions(userId, db);
   return missions.map((m) => ({
     id: m.id,
     name: m.name,
@@ -128,10 +131,11 @@ async function missionResolvables(db: OpsboardDb): Promise<Resolvable[]> {
  * are distinguished by that code.
  */
 async function allTaskResolvables(
+  userId: string,
   db: OpsboardDb,
 ): Promise<{ resolvables: Resolvable[]; tasksById: Map<string, TaskWithMission> }> {
   const [missions, categories] = await Promise.all([
-    getMissions(db),
+    getMissions(userId, db),
     getCategories(db),
   ]);
   const catSlugById = new Map<string, string>(
@@ -142,7 +146,10 @@ async function allTaskResolvables(
   const tasksById = new Map<string, TaskWithMission>();
 
   const perMission = await Promise.all(
-    missions.map(async (m) => ({ mission: m, tasks: await getTasks(m.id, db) })),
+    missions.map(async (m) => ({
+      mission: m,
+      tasks: await getTasks(m.id, userId, db),
+    })),
   );
   for (const { mission, tasks } of perMission) {
     for (const t of tasks) {
@@ -188,34 +195,37 @@ function resolveCategory(
 // --- The executor -----------------------------------------------------------
 
 /**
- * Execute one already-validated, already-confirmed VoiceIntent. The route calls
- * this AFTER safeParseIntent and AFTER the needsConfirmation gate, so a delete
- * only lands here when the user confirmed it. `query` is read-only.
+ * Execute one already-validated, already-confirmed VoiceIntent for the SESSION
+ * user. The route calls this AFTER safeParseIntent and AFTER the
+ * needsConfirmation gate, so a delete only lands here when the user confirmed
+ * it. `userId` is the verified Neon Auth principal (from the route) — every read
+ * and mutation below is scoped to it. `query` is read-only.
  */
 export async function executeIntent(
   intent: VoiceIntent,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<ExecuteOutcome> {
   try {
     switch (intent.intent) {
       case "create_mission":
-        return await execCreateMission(intent, db);
+        return await execCreateMission(intent, userId, db);
       case "create_task":
-        return await execCreateTask(intent, db);
+        return await execCreateTask(intent, userId, db);
       case "update_task_status":
-        return await execUpdateTaskStatus(intent, db);
+        return await execUpdateTaskStatus(intent, userId, db);
       case "update_task":
-        return await execUpdateTask(intent, db);
+        return await execUpdateTask(intent, userId, db);
       case "add_dependency":
-        return await execDependency(intent, db, "add");
+        return await execDependency(intent, userId, db, "add");
       case "remove_dependency":
-        return await execDependency(intent, db, "remove");
+        return await execDependency(intent, userId, db, "remove");
       case "delete_task":
-        return await execDeleteTask(intent, db);
+        return await execDeleteTask(intent, userId, db);
       case "delete_mission":
-        return await execDeleteMission(intent, db);
+        return await execDeleteMission(intent, userId, db);
       case "query":
-        return await execQuery(intent, db);
+        return await execQuery(intent, userId, db);
       case "unknown":
         return {
           needsConfirmation: true,
@@ -232,10 +242,15 @@ export async function executeIntent(
 
 async function execCreateMission(
   intent: Extract<VoiceIntent, { intent: "create_mission" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
   const targetDate = isoDateOrNull(intent.targetDateHint);
-  const res = await createMission({ name: intent.name, targetDate }, db);
+  const res = await createMission(
+    { name: intent.name, targetDate },
+    userId,
+    db,
+  );
   return {
     result: {
       kind: "mission_created",
@@ -299,11 +314,12 @@ function resolveTaskMission(
 
 async function execCreateTask(
   intent: Extract<VoiceIntent, { intent: "create_task" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
   // Resolve the owning mission. With no hint and exactly one mission, default to
   // it; otherwise the hint must resolve to exactly one.
-  const missions = await getMissions(db);
+  const missions = await getMissions(userId, db);
   const resolvedMission = resolveTaskMission(intent.missionHint, missions);
   if ("outcome" in resolvedMission) return resolvedMission.outcome;
   const mission = resolvedMission.mission;
@@ -322,6 +338,7 @@ async function execCreateTask(
       tooLateBy: isoDateOrNull(intent.tooLateByHint),
       notBefore: isoDateOrNull(intent.notBeforeHint),
     },
+    userId,
     db,
   );
   if (!res.ok) {
@@ -339,9 +356,10 @@ async function execCreateTask(
 
 async function execUpdateTaskStatus(
   intent: Extract<VoiceIntent, { intent: "update_task_status" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
-  const { resolvables, tasksById } = await allTaskResolvables(db);
+  const { resolvables, tasksById } = await allTaskResolvables(userId, db);
   const resolved = resolveHint(intent.taskHint, resolvables);
   if (resolved.status === "none") {
     return {
@@ -356,7 +374,7 @@ async function execUpdateTaskStatus(
       prompt: "Which task?",
     };
   }
-  const res = await updateTaskStatus(resolved.match.id, intent.status, db);
+  const res = await updateTaskStatus(resolved.match.id, intent.status, userId, db);
   if (!res.ok) return { error: "Could not update that task." };
   const task = tasksById.get(resolved.match.id);
   return {
@@ -371,9 +389,10 @@ async function execUpdateTaskStatus(
 
 async function execUpdateTask(
   intent: Extract<VoiceIntent, { intent: "update_task" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
-  const { resolvables } = await allTaskResolvables(db);
+  const { resolvables } = await allTaskResolvables(userId, db);
   const resolved = resolveHint(intent.taskHint, resolvables);
   if (resolved.status === "none") {
     return {
@@ -418,7 +437,7 @@ async function execUpdateTask(
     patch = built.patch;
   }
 
-  const res = await updateTask(resolved.match.id, patch, db);
+  const res = await updateTask(resolved.match.id, patch, userId, db);
   if (!res.ok) return { error: "Could not update that task." };
   return {
     result: {
@@ -434,10 +453,11 @@ async function execDependency(
   intent:
     | Extract<VoiceIntent, { intent: "add_dependency" }>
     | Extract<VoiceIntent, { intent: "remove_dependency" }>,
+  userId: string,
   db: OpsboardDb,
   mode: "add" | "remove",
 ): Promise<ExecuteOutcome> {
-  const { resolvables } = await allTaskResolvables(db);
+  const { resolvables } = await allTaskResolvables(userId, db);
 
   const task = resolveHint(intent.taskHint, resolvables);
   if (task.status === "none") {
@@ -471,8 +491,8 @@ async function execDependency(
 
   const res =
     mode === "add"
-      ? await addDependency(task.match.id, dependsOn.match.id, db)
-      : await removeDependency(task.match.id, dependsOn.match.id, db);
+      ? await addDependency(task.match.id, dependsOn.match.id, userId, db)
+      : await removeDependency(task.match.id, dependsOn.match.id, userId, db);
   if (!res.ok) {
     // addDependency returns typed domain errors (self-dep / dup / missing).
     return { error: res.error };
@@ -488,9 +508,10 @@ async function execDependency(
 
 async function execDeleteTask(
   intent: Extract<VoiceIntent, { intent: "delete_task" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
-  const { resolvables } = await allTaskResolvables(db);
+  const { resolvables } = await allTaskResolvables(userId, db);
   const resolved = resolveHint(intent.taskHint, resolvables);
   if (resolved.status === "none") {
     return {
@@ -505,15 +526,19 @@ async function execDeleteTask(
       prompt: "Which task should I delete?",
     };
   }
-  await deleteTask(resolved.match.id, db);
+  await deleteTask(resolved.match.id, userId, db);
   return { result: { kind: "task_deleted", name: resolved.match.name } };
 }
 
 async function execDeleteMission(
   intent: Extract<VoiceIntent, { intent: "delete_mission" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
-  const resolved = resolveHint(intent.missionHint, await missionResolvables(db));
+  const resolved = resolveHint(
+    intent.missionHint,
+    await missionResolvables(userId, db),
+  );
   if (resolved.status === "none") {
     return {
       needsConfirmation: true,
@@ -527,7 +552,7 @@ async function execDeleteMission(
       prompt: "Which mission should I delete?",
     };
   }
-  await deleteMission(resolved.match.id, db);
+  await deleteMission(resolved.match.id, userId, db);
   return { result: { kind: "mission_deleted", name: resolved.match.name } };
 }
 
@@ -535,13 +560,17 @@ async function execDeleteMission(
 
 async function execQuery(
   intent: Extract<VoiceIntent, { intent: "query" }>,
+  userId: string,
   db: OpsboardDb,
 ): Promise<ExecuteOutcome> {
   const q = intent.question.toLowerCase();
   // Pick a query topic from cheap keyword cues; default to a blocked read-out.
   if (q.includes("critical") || q.includes("path") || q.includes("chain")) {
     return {
-      result: { kind: "query_answer", answer: await queryCriticalPath(db) },
+      result: {
+        kind: "query_answer",
+        answer: await queryCriticalPath(userId, db),
+      },
     };
   }
   if (
@@ -551,20 +580,27 @@ async function execQuery(
     q.includes("week") ||
     q.includes("late")
   ) {
-    return { result: { kind: "query_answer", answer: await queryClosing(db) } };
+    return {
+      result: { kind: "query_answer", answer: await queryClosing(userId, db) },
+    };
   }
   // Default + explicit "blocked"/"waiting"/"stuck".
-  return { result: { kind: "query_answer", answer: await queryBlocked(db) } };
+  return {
+    result: { kind: "query_answer", answer: await queryBlocked(userId, db) },
+  };
 }
 
-/** Tasks blocked by an unmet dependency, across all missions. */
-async function queryBlocked(db: OpsboardDb): Promise<QueryAnswer> {
-  const missions = await getMissions(db);
+/** The session user's tasks blocked by an unmet dependency, across their missions. */
+async function queryBlocked(
+  userId: string,
+  db: OpsboardDb,
+): Promise<QueryAnswer> {
+  const missions = await getMissions(userId, db);
   const rows: QueryAnswer["rows"] = [];
   for (const mission of missions) {
     const [tasks, edges] = await Promise.all([
-      getTasks(mission.id, db),
-      getTaskDependencies(mission.id, db),
+      getTasks(mission.id, userId, db),
+      getTaskDependencies(mission.id, userId, db),
     ]);
     const coreEdges = toCoreEdges(edges);
     // `Task.status` is the DB `text` column (typed `string`); the three legal
@@ -598,17 +634,20 @@ async function queryBlocked(db: OpsboardDb): Promise<QueryAnswer> {
   };
 }
 
-/** Tasks whose window is closing or closed soon, across all missions. */
-async function queryClosing(db: OpsboardDb): Promise<QueryAnswer> {
+/** The session user's tasks whose window is closing or closed soon, across their missions. */
+async function queryClosing(
+  userId: string,
+  db: OpsboardDb,
+): Promise<QueryAnswer> {
   const now = Date.now();
   // The query route hands a tz to the executor via a module-level default; for
   // the read path we use UTC labels since the executor doesn't receive a tz here
   // (the route's snapshot carries the tz for the CLASSIFIER, not the reader).
   const tz = "UTC";
-  const missions = await getMissions(db);
+  const missions = await getMissions(userId, db);
   const rows: QueryAnswer["rows"] = [];
   for (const mission of missions) {
-    const tasks = await getTasks(mission.id, db);
+    const tasks = await getTasks(mission.id, userId, db);
     for (const t of tasks) {
       const detail: WindowStateDetail = windowStateDetail(
         now,
@@ -641,17 +680,20 @@ async function queryClosing(db: OpsboardDb): Promise<QueryAnswer> {
   };
 }
 
-/** Longest dependency chain across the missions (the critical path). */
-async function queryCriticalPath(db: OpsboardDb): Promise<QueryAnswer> {
-  const missions = await getMissions(db);
+/** Longest dependency chain across the session user's missions (the critical path). */
+async function queryCriticalPath(
+  userId: string,
+  db: OpsboardDb,
+): Promise<QueryAnswer> {
+  const missions = await getMissions(userId, db);
   let best: { rows: QueryAnswer["rows"]; mission: string } = {
     rows: [],
     mission: "",
   };
   for (const mission of missions) {
-    const full = await getMissionWithTasks(mission.id, db);
+    const full = await getMissionWithTasks(mission.id, userId, db);
     if (!full) continue;
-    const edges = await getTaskDependencies(mission.id, db);
+    const edges = await getTaskDependencies(mission.id, userId, db);
     const path = criticalPath(
       full.tasks.map((t) => ({ id: t.id })),
       toCoreEdges(edges),

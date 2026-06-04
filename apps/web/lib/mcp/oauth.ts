@@ -1,6 +1,5 @@
 import { createHttpDb, createPooledDb } from "@opsboard/db";
 import * as schema from "@opsboard/db/schema";
-import { MCP_PRINCIPAL_ID } from "@opsboard/db/mcp";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import {
   generateOpaqueToken,
@@ -9,10 +8,13 @@ import {
   constantTimeEqual,
 } from "./tokens";
 
-// LIFTED from camp-404 apps/web/lib/mcp/oauth.ts (scaffolding-plan.md S6) and
-// stripped to single-principal: every place camp scoped a row to a `users.id`
-// now writes the constant `principalId` (MCP_PRINCIPAL_ID). The OAuth 2.1 +
-// PKCE + DCR shell — code issuance/consumption, token issuance, refresh-token
+// LIFTED from camp-404 apps/web/lib/mcp/oauth.ts (scaffolding-plan.md S6). MCP
+// is now per-user: every auth code / access token is bound to the `userId` of
+// the human who approved consent (the verified Neon Auth session captured in
+// the authorize route). That id is stored in the row's `user_id` column AND
+// mirrored into `principal_id` so the audit log attributes the real user.
+// Refresh-token rotation carries the userId forward from the old token. The
+// OAuth 2.1 + PKCE + DCR shell — code issuance/consumption, token issuance,
 // rotation, and the redirect-URI allow-list — is otherwise unchanged.
 
 // --- Lifetimes -----------------------------------------------------------
@@ -134,6 +136,8 @@ export function verifyClientSecret(
 
 export interface IssueAuthCodeInput {
   clientId: string;
+  /** The authorizing human's verified Neon Auth user id (from the session). */
+  userId: string;
   redirectUri: string;
   codeChallenge: string;
   codeChallengeMethod: "S256" | "plain";
@@ -149,7 +153,10 @@ export async function issueAuthCode(
   await db.insert(schema.mcpAuthCodes).values({
     code,
     clientId: input.clientId,
-    principalId: MCP_PRINCIPAL_ID,
+    // Bind the code to the approving user; mirror it into principalId so the
+    // audit trail attributes the real human.
+    userId: input.userId,
+    principalId: input.userId,
     redirectUri: input.redirectUri,
     codeChallenge: input.codeChallenge,
     codeChallengeMethod: input.codeChallengeMethod,
@@ -160,7 +167,8 @@ export async function issueAuthCode(
 }
 
 export interface ConsumedAuthCode {
-  principalId: string;
+  /** The authorizing user id the code was bound to. */
+  userId: string;
   scope: string;
 }
 
@@ -214,7 +222,7 @@ export async function consumeAuthCode(input: {
         .returning({ code: schema.mcpAuthCodes.code });
       if (updated.length === 0) return null; // raced
       return {
-        principalId: row.principalId ?? MCP_PRINCIPAL_ID,
+        userId: row.userId,
         scope: row.scope,
       };
     });
@@ -235,6 +243,8 @@ export interface IssuedTokens {
 
 export async function issueAccessToken(input: {
   clientId: string;
+  /** The authorizing user id carried over from the consumed auth code. */
+  userId: string;
   scope: string;
 }): Promise<IssuedTokens> {
   const db = createHttpDb();
@@ -245,7 +255,9 @@ export async function issueAccessToken(input: {
     tokenHash: sha256(access),
     refreshTokenHash: sha256(refresh),
     clientId: input.clientId,
-    principalId: MCP_PRINCIPAL_ID,
+    // Bind the token to the approving user; mirror into principalId for audit.
+    userId: input.userId,
+    principalId: input.userId,
     scope: input.scope,
     expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_SEC * 1000),
     refreshExpiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_SEC * 1000),
@@ -286,7 +298,7 @@ export async function rotateRefreshToken(input: {
           ),
         )
         .returning({
-          principalId: schema.mcpAccessTokens.principalId,
+          userId: schema.mcpAccessTokens.userId,
           scope: schema.mcpAccessTokens.scope,
         });
       const old = revoked[0];
@@ -298,7 +310,9 @@ export async function rotateRefreshToken(input: {
         tokenHash: sha256(access),
         refreshTokenHash: sha256(refresh),
         clientId: input.clientId,
-        principalId: old.principalId ?? MCP_PRINCIPAL_ID,
+        // Carry the authorizing user forward; never re-derive or default it.
+        userId: old.userId,
+        principalId: old.userId,
         scope: old.scope,
         expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_SEC * 1000),
         refreshExpiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_SEC * 1000),

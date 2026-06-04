@@ -54,17 +54,29 @@ export const users = pgTable("users", {
 // A mission is one real-world objective with a fixed event date (e.g. an
 // AfrikaBurn departure). `target_date` is the anchor real-world event date —
 // nullable for open-ended missions. Tasks hang off it.
-export const missions = pgTable("missions", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  // The fixed real-world event date this mission is built around. Nullable
-  // for missions without a hard date. Date-only (no time / tz) — stored and
-  // read as a "YYYY-MM-DD" string; the user-tz window-state derivation lives
-  // in @opsboard/core.
-  targetDate: date("target_date"),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
-});
+export const missions = pgTable(
+  "missions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // The owning user. Missions are user-scoped: every query/mutation filters
+    // by this. ON DELETE CASCADE so removing a user removes their missions
+    // (and, transitively, their tasks + dependency edges).
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // The fixed real-world event date this mission is built around. Nullable
+    // for missions without a hard date. Date-only (no time / tz) — stored and
+    // read as a "YYYY-MM-DD" string; the user-tz window-state derivation lives
+    // in @opsboard/core.
+    targetDate: date("target_date"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (m) => ({
+    userIdx: index("missions_user_idx").on(m.userId),
+  }),
+);
 
 // Seed-able task categories. Five are shipped as defaults (see CATEGORY_SEEDS
 // below); a `slug` is the stable identifier, `color` is a hex mirror of the
@@ -104,6 +116,14 @@ export const tasks = pgTable(
     missionId: uuid("mission_id")
       .notNull()
       .references(() => missions.id, { onDelete: "cascade" }),
+    // The owning user — DENORMALIZED from the parent mission so a task can be
+    // scoped directly without a join. INVARIANT: a task's userId always equals
+    // its mission's userId (enforced in createTask, which verifies the mission
+    // belongs to the user before inserting). ON DELETE CASCADE mirrors the
+    // mission FK so a user delete removes their tasks.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     // Nullable: an uncategorised task. ON DELETE SET NULL so deleting a
     // category never deletes its tasks.
     categoryId: uuid("category_id").references(() => categories.id, {
@@ -125,6 +145,7 @@ export const tasks = pgTable(
   },
   (t) => ({
     missionIdx: index("tasks_mission_idx").on(t.missionId),
+    userIdx: index("tasks_user_idx").on(t.userId),
     categoryIdx: index("tasks_category_idx").on(t.categoryId),
     statusIdx: index("tasks_status_idx").on(t.status),
     statusCheck: check(
@@ -277,6 +298,12 @@ export const mcpAuthCodes = pgTable(
       .notNull()
       .references(() => mcpOauthClients.clientId, { onDelete: "cascade" }),
     principalId: text("principal_id"),
+    // The authorizing human's user id. A code is always minted for a known,
+    // signed-in user, so this is NOT NULL. ON DELETE CASCADE so a user delete
+    // sweeps their outstanding codes.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     redirectUri: text("redirect_uri").notNull(),
     codeChallenge: text("code_challenge").notNull(),
     codeChallengeMethod: mcpCodeChallengeMethodEnum(
@@ -305,6 +332,12 @@ export const mcpAccessTokens = pgTable(
       .notNull()
       .references(() => mcpOauthClients.clientId, { onDelete: "cascade" }),
     principalId: text("principal_id"),
+    // The authorizing human's user id. A token is always minted for a known,
+    // signed-in user, so this is NOT NULL. ON DELETE CASCADE so a user delete
+    // sweeps their issued tokens.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     scope: text("scope").notNull(),
     expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
     refreshExpiresAt: timestamp("refresh_expires_at", { mode: "date" }),

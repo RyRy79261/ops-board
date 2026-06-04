@@ -1,6 +1,7 @@
 import { EmptyState } from "@opsboard/ui/components/empty-state";
 import { AppHeader } from "@opsboard/ui/components/app-header";
 import { getDashboardData } from "@/lib/dashboard-data";
+import { getSessionUser } from "@/lib/session";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 // The read-only board entry point. force-dynamic: the board is live (status
@@ -22,7 +23,10 @@ export default async function HomePage({
     ? params.mission[0]
     : params.mission;
 
-  const data = await getDashboardData(missionParam);
+  // Resolve the verified session principal (redirects to /auth if none), then
+  // scope the board read to it — never to anything from the request.
+  const { userId } = await getSessionUser();
+  const data = await getDashboardData(missionParam, userId);
 
   // No missions at all → the no-missions empty state, framed by the header so
   // the chrome stays consistent. Voice-first: tells the operator what to say.

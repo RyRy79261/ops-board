@@ -1,23 +1,25 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { appendMcpAuditLog } from "@opsboard/db/mcp";
-import { getPrincipalIdFromAuth } from "./auth";
+import { getUserIdFromAuth } from "./auth";
 
 // ADAPTED from camp-404 apps/web/lib/mcp/tool-utils.ts (scaffolding-plan.md
 // S6). `runTool` lives HERE (not server.ts) and wraps EVERY tool handler with
 // the two cross-cutting guarantees that must never be skipped
 // (research-dossier §9): (1) audit logging via appendMcpAuditLog and (2)
 // generic error masking so a tool never leaks SQL / stack traces to the
-// caller. Camp's multi-user scope/profile gate is DROPPED — OpsBoard is
-// single-user, so a valid bearer token (already verified upstream by
-// `withMcpAuth` → verifyMcpToken) is the owner; the handler just runs.
+// caller. Per-user: the bearer token (verified upstream by `withMcpAuth` →
+// verifyMcpToken) carries the authorizing user's id; runTool extracts it
+// (getUserIdFromAuth) and hands it to the handler, which scopes every db call
+// to it. A token with no userId is rejected before the handler runs.
 
 /**
  * The context every tool handler receives. `clientId` is what we audit-log
- * against; `principalId` is the single-user owner (MCP_PRINCIPAL_ID).
+ * against; `userId` is the verified authorizing user the token is bound to —
+ * every scoped db read / mutation in a handler uses it.
  */
 export interface ToolCtx {
-  principalId: string;
+  userId: string;
   clientId: string;
 }
 
@@ -49,11 +51,30 @@ export async function runTool<T>(opts: {
   handler: (ctx: ToolCtx) => Promise<T>;
 }): Promise<CallToolResult> {
   const started = Date.now();
-  const principalId = getPrincipalIdFromAuth(opts.extra.authInfo);
+  const userId = getUserIdFromAuth(opts.extra.authInfo);
   const clientId = opts.extra.authInfo?.clientId ?? "unknown";
 
+  // A verified token ALWAYS carries the authorizing user's id. Its absence means
+  // the token is malformed / pre-migration — refuse rather than run a tool with
+  // no owner to scope against. Audit the rejection (principal unknown).
+  if (!userId) {
+    await appendMcpAuditLog({
+      principalId: null,
+      clientId,
+      tool: opts.toolName,
+      argsJson: opts.argsForAudit,
+      outcome: "error",
+      errorMessage: "Unauthenticated: token carries no user id.",
+      durationMs: Date.now() - started,
+    });
+    return errorContent("Not authenticated.");
+  }
+
+  // The audit principal IS the authorizing user.
+  const principalId = userId;
+
   try {
-    const result = await opts.handler({ principalId, clientId });
+    const result = await opts.handler({ userId, clientId });
     await appendMcpAuditLog({
       principalId,
       clientId,

@@ -13,8 +13,9 @@ import { rateLimiter, getClientIp } from "@/lib/rate-limit";
 // (scaffolding-plan.md S6). OAuth 2.1 token endpoint: authorization_code +
 // refresh_token grants, PKCE-verified (in consumeAuthCode), Basic-or-body
 // client auth, no-store headers (RFC 6749 §5.1), and the empty-JSON-body
-// SyntaxError guard fuzz-tested in intake-tracker. Single-user: token issuance
-// no longer threads a user id — the principal is the constant owner.
+// SyntaxError guard fuzz-tested in intake-tracker. Per-user: the code exchange
+// carries the authorizing user's id (consumed.userId) into the issued token;
+// refresh-token rotation carries it forward from the old token internally.
 
 // RFC 6749 §5.1 requires no-store on every response, success or error.
 const NO_STORE_HEADERS = {
@@ -127,6 +128,8 @@ async function handleAuthCode(body: Record<string, unknown>) {
 
   const tokens = await issueAccessToken({
     clientId: parsed.data.client_id,
+    // Carry the authorizing user from the consumed code into the token.
+    userId: consumed.userId,
     scope: consumed.scope,
   });
 

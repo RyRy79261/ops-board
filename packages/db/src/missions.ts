@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
@@ -34,51 +34,61 @@ function toMissionView(row: Mission): MissionView {
   };
 }
 
-/** All missions, alphabetically by name. */
+/** All of `userId`'s missions, alphabetically by name. */
 export async function getMissions(
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MissionView[]> {
   const rows = await db
     .select()
     .from(schema.missions)
+    .where(eq(schema.missions.userId, userId))
     .orderBy(asc(schema.missions.name));
   return rows.map(toMissionView);
 }
 
-/** One mission by id, or null if it doesn't exist. */
+/** One of `userId`'s missions by id, or null if it doesn't exist / isn't theirs. */
 export async function getMission(
   id: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MissionView | null> {
   const [row] = await db
     .select()
     .from(schema.missions)
-    .where(eq(schema.missions.id, id))
+    .where(and(eq(schema.missions.id, id), eq(schema.missions.userId, userId)))
     .limit(1);
   return row ? toMissionView(row) : null;
 }
 
 /**
- * One mission plus its tasks (sorted by `sort_order`, then name). Returns
- * null when the mission doesn't exist. The dependency graph and the derived
- * blocked / window state are computed separately in @opsboard/core from
- * getTasks + getTaskDependencies (./tasks.ts).
+ * One of `userId`'s missions plus its tasks (sorted by `sort_order`, then
+ * name). Returns null when the mission doesn't exist or isn't theirs. Both the
+ * mission AND its tasks are scoped by userId. The dependency graph and the
+ * derived blocked / window state are computed separately in @opsboard/core
+ * from getTasks + getTaskDependencies (./tasks.ts).
  */
 export async function getMissionWithTasks(
   id: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MissionWithTasks | null> {
   const [mission] = await db
     .select()
     .from(schema.missions)
-    .where(eq(schema.missions.id, id))
+    .where(and(eq(schema.missions.id, id), eq(schema.missions.userId, userId)))
     .limit(1);
   if (!mission) return null;
 
   const tasks = await db
     .select()
     .from(schema.tasks)
-    .where(eq(schema.tasks.missionId, id))
+    .where(
+      and(
+        eq(schema.tasks.missionId, id),
+        eq(schema.tasks.userId, userId),
+      ),
+    )
     .orderBy(asc(schema.tasks.sortOrder), asc(schema.tasks.name));
 
   return { ...toMissionView(mission), tasks };
