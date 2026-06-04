@@ -1,18 +1,45 @@
-/**
- * S0 placeholder home. The real read-only dashboard (3-pane shell + Category /
- * Timeline / Dependencies views + StatusCycleButton + voice FAB) is built in S4
- * from docs/tech-spec/03-surfaces/ once @opsboard/{ui,core,db} land (S1–S3).
- */
-export default function HomePage() {
-  return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-3 p-8 text-center">
-      <h1 className="font-[family-name:var(--font-jetbrains-mono)] text-2xl font-bold tracking-[0.25em]">
-        <span className="text-[color:var(--color-primary)]">OPS</span>
-        <span className="text-[color:var(--color-muted-foreground)]">BOARD</span>
-      </h1>
-      <p className="text-sm text-[color:var(--color-muted-foreground)]">
-        Scaffold S0 — monorepo skeleton. Dashboard arrives in S4.
-      </p>
-    </main>
-  );
+import { EmptyState } from "@opsboard/ui/components/empty-state";
+import { AppHeader } from "@opsboard/ui/components/app-header";
+import { getDashboardData } from "@/lib/dashboard-data";
+import { DashboardShell } from "@/components/dashboard-shell";
+
+// The read-only board entry point. force-dynamic: the board is live (status
+// cycling + window-state ticking), never statically cached. Reads the active
+// mission from ?mission=ID, assembles the payload server-side (blocked +
+// critical-path derived there; window-state stays client-side), and hands it to
+// the client shell. EmptyState (voice-first copy) covers the no-data branches.
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage({
+  searchParams,
+}: {
+  // Next 16: searchParams is a Promise.
+  searchParams: Promise<{ mission?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const missionParam = Array.isArray(params.mission)
+    ? params.mission[0]
+    : params.mission;
+
+  const data = await getDashboardData(missionParam);
+
+  // No missions at all → the no-missions empty state, framed by the header so
+  // the chrome stays consistent. Voice-first: tells the operator what to say.
+  if (!data) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-background">
+        <AppHeader />
+        <main className="flex flex-1 items-center justify-center p-6">
+          <EmptyState
+            variant="no-missions"
+            hintStyle="tokens"
+            className="w-full max-w-md"
+          />
+        </main>
+      </div>
+    );
+  }
+
+  return <DashboardShell data={data} />;
 }
