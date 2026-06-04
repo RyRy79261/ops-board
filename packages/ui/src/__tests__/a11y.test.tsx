@@ -37,6 +37,7 @@ import { StatTile } from "../components/stat-tile";
 import { ProgressBar } from "../components/progress-bar";
 import { NavCard } from "../components/nav-card";
 import { Alert } from "../components/alert";
+import { TextInput } from "../components/text-input";
 import { EmptyState } from "../components/empty-state";
 import { Spinner } from "../components/spinner";
 import { ToastItem, type ToastRecord } from "../components/toast";
@@ -277,6 +278,45 @@ describe("a11y — atoms", () => {
         <Alert variant="destructive" title="BLOCKED">
           Blocked by an upstream task.
         </Alert>
+      </div>,
+    );
+  });
+
+  it("TextInput — label association, error role=alert, password reveal button", async () => {
+    await expectNoA11yViolations(
+      <div>
+        {/* labelled + required (eyebrow label associated via htmlFor/id) */}
+        <TextInput
+          id="a11y-email"
+          label="Email Address"
+          size="lg"
+          type="email"
+          placeholder="you@example.com"
+          required
+        />
+        {/* error → aria-invalid + aria-describedby + role=alert helper */}
+        <TextInput
+          id="a11y-error"
+          label="Email Address"
+          defaultValue="not-an-email"
+          error="Enter a valid email address"
+        />
+        {/* password → auto reveal button carries aria-label + aria-pressed */}
+        <TextInput
+          id="a11y-password"
+          label="Password"
+          type="password"
+          defaultValue="hunter2"
+        />
+        {/* leading icon (decorative) + helper text */}
+        <TextInput
+          id="a11y-helper"
+          label="Email Address"
+          leadingIcon={Settings}
+          helper="We'll only use this to sign you in."
+        />
+        {/* disabled, non-interactive */}
+        <TextInput id="a11y-disabled" label="Email Address" disabled />
       </div>,
     );
   });
