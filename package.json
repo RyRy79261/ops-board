@@ -20,5 +20,10 @@
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22"
+  },
+  "pnpm": {
+    "overrides": {
+      "better-auth": "~1.4.18"
+    }
   }
 }
