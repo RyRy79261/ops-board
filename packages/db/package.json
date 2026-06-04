@@ -8,6 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
+    "./api-keys": "./src/api-keys.ts",
+    "./testing": "./src/__tests__/db-harness.ts",
     "./mcp": "./src/mcp.ts",
     "./missions": "./src/missions.ts",
     "./mutations": "./src/mutations.ts",

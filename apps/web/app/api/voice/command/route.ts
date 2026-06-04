@@ -6,6 +6,8 @@ import { transcribeAudio } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import { callForcedTool } from "@/lib/anthropic";
 import { executeIntent } from "@/lib/voice-execute";
+import { resolveAiKey } from "@/lib/ai-key-resolver";
+import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
 
 import {
   safeParseIntent,
@@ -126,7 +128,9 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // --- Shape A: multipart audio → full pipeline ----------------------------
-  return handleAudio(req, user.id);
+  // The full principal (id + verified email) flows in so the BYO key resolver
+  // can apply its ALLOWED_EMAILS env-var fallback against the SESSION email.
+  return handleAudio(req, user.id, user.email);
 }
 
 /**
@@ -175,7 +179,11 @@ async function handleReissue(req: Request, userId: string): Promise<Response> {
  * Shape A — the normal capture: transcribe → server snapshot → classify →
  * validate → confirm-gate → execute.
  */
-async function handleAudio(req: Request, userId: string): Promise<Response> {
+async function handleAudio(
+  req: Request,
+  userId: string,
+  email: string | null,
+): Promise<Response> {
   let form: FormData;
   try {
     form = await req.formData();
@@ -196,22 +204,31 @@ async function handleAudio(req: Request, userId: string): Promise<Response> {
 
   const tz = sanitizeTz(form.get("tz"));
 
-  // 1. Transcribe (Groq Whisper, OpsBoard bias prompt).
+  // 0. Resolve the SESSION user's Groq key. FAIL CLOSED: a user with no key
+  //    gets a 402 NO_AI_KEY (the resolver's ALLOWED_EMAILS env branch is the
+  //    only env path — there is NO silent direct-env fallback here).
+  let groqKey: string;
+  try {
+    groqKey = await resolveAiKey(userId, email, "groq");
+  } catch (err) {
+    const failClosed = aiKeyErrorResponse(err);
+    if (failClosed) return failClosed;
+    throw err;
+  }
+
+  // 1. Transcribe (Groq Whisper, OpsBoard bias prompt, per-user key).
   let transcript: string;
   try {
     transcript = (
-      await transcribeAudio(file, { prompt: OPSBOARD_WHISPER_PROMPT })
+      await transcribeAudio(file, groqKey, { prompt: OPSBOARD_WHISPER_PROMPT })
     ).trim();
   } catch (err) {
     console.error("voice-command transcription error", err);
-    const message = err instanceof Error ? err.message : "";
     return NextResponse.json(
       {
         transcript: "",
         intent: null,
-        error: message.includes("GROQ_API_KEY")
-          ? "Voice isn't configured."
-          : "Couldn't transcribe that audio.",
+        error: "Couldn't transcribe that audio.",
       } satisfies CommandResponseBody,
       { status: 200 },
     );
@@ -233,8 +250,19 @@ async function handleAudio(req: Request, userId: string): Promise<Response> {
   //    missions / tasks (no cross-user names leak into the prompt).
   const snapshot = await buildSnapshot(tz, userId);
 
-  // 3. Classify via Claude (pinned Haiku, forced tool_use, temp 0, ~30s).
+  // 3. Resolve the SESSION user's Anthropic key, then classify via Claude
+  //    (pinned Haiku, forced tool_use, temp 0, ~30s). FAIL CLOSED on no key
+  //    with a 402 NO_AI_KEY — same single env path as transcription.
+  let anthropicKey: string;
+  try {
+    anthropicKey = await resolveAiKey(userId, email, "anthropic");
+  } catch (err) {
+    const failClosed = aiKeyErrorResponse(err);
+    if (failClosed) return failClosed;
+    throw err;
+  }
   const raw = await callForcedTool({
+    apiKey: anthropicKey,
     model: INTENT_CLASSIFIER_MODEL,
     system: voiceIntentPrompt.system,
     userMessage: voiceIntentPrompt.user(transcript, snapshot),

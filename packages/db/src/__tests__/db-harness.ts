@@ -25,8 +25,8 @@ const MIGRATIONS_FOLDER = resolve(
 
 /**
  * Every table the committed migrations create: the four domain tables, the
- * four MCP tables, plus the `users` table (added in 0002) that the user-scoping
- * FKs target.
+ * four MCP tables, the `users` table (added in 0002) that the user-scoping FKs
+ * target, plus `user_api_keys` (added in 0004) for the BYO key vault.
  */
 export const EXPECTED_TABLES = [
   "categories",
@@ -37,6 +37,7 @@ export const EXPECTED_TABLES = [
   "missions",
   "task_dependencies",
   "tasks",
+  "user_api_keys",
   "users",
 ] as const;
 
