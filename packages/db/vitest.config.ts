@@ -9,6 +9,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/__tests__/**/*.test.ts"],
+    // The integration suites all migrate + truncate the SAME real Postgres.
+    // Run test FILES serially so two suites never race on the non-idempotent
+    // `migrate()` bootstrap (drizzle's __drizzle_migrations schema/type
+    // creation) or on each other's TRUNCATE-based reset(). In Vitest 4,
+    // `fileParallelism: false` forces a single worker (maxWorkers = 1).
+    fileParallelism: false,
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],

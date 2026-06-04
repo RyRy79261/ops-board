@@ -6,6 +6,11 @@ import * as schema from "./schema";
 
 export * as schema from "./schema";
 
+// The voice (S5) + MCP (S6) write layer. Re-exported from the root entry for
+// discoverability; the primary import path is the `@opsboard/db/mutations`
+// subpath (mirrors `@opsboard/db/tasks` / `/missions`).
+export * from "./mutations";
+
 /**
  * The drizzle Postgres database type the query services accept. Deliberately
  * broad: it is the base `PgDatabase` generic parameterised only by our schema,
