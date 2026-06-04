@@ -117,3 +117,71 @@ jobs:
             exit 1
           fi
           echo "migrations in sync with schema.ts"
+
+  # Apply the committed migrations (+ seed) to a FRESH ephemeral Neon branch per
+  # run — catches Neon-specific issues the Docker service can't (pooled-vs-direct
+  # endpoints, cross-schema FK perms, CHECK syntax). Self-deletes the branch;
+  # neon-pr-cleanup.yml is the safety net for any orphans. Requires the
+  # NEON_API_KEY + NEON_PROJECT_ID repo secrets; SKIPS cleanly until they're set.
+  schema-migration:
+    name: db · migrate on Neon branch
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gate on Neon secrets
+        id: gate
+        run: |
+          if [ -n "${NEON_API_KEY}" ] && [ -n "${NEON_PROJECT_ID}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NEON_API_KEY/NEON_PROJECT_ID not set — skipping the Neon-branch migration test."
+          fi
+      - uses: pnpm/action-setup@v4
+        if: steps.gate.outputs.enabled == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.gate.outputs.enabled == 'true'
+      - name: Create ephemeral Neon branch
+        id: neon-branch
+        if: steps.gate.outputs.enabled == 'true'
+        uses: neondatabase/create-branch-action@v5
+        with:
+          api_key: ${{ secrets.NEON_API_KEY }}
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch_name: ci-schema-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Apply migrations (+ seed) to the branch
+        if: steps.gate.outputs.enabled == 'true'
+        # The action's db_url is the DIRECT (unpooled) endpoint — what migrations
+        # need. drizzle.config reads DATABASE_URL (then DATABASE_URL_UNPOOLED).
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
+        run: pnpm --filter @opsboard/db db:migrate
+      - name: Delete the ephemeral Neon branch
+        if: always() && steps.gate.outputs.enabled == 'true'
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          api_key: ${{ secrets.NEON_API_KEY }}
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch: ci-schema-${{ github.run_id }}-${{ github.run_attempt }}
+
+  # High-severity dependency audit (fails only on >=high; moderate is allowed).
+  supply-chain:
+    name: supply-chain · audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
