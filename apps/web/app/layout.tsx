@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ops-manager.ryanjnoble.dev"),
+  metadataBase: new URL("https://ops-board.ryanjnoble.dev"),
   title: "OpsBoard",
   description:
     "Voice-first, read-only personal mission planner — windows, not deadlines.",

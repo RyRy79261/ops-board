@@ -42,6 +42,27 @@ export default async function middleware(request: NextRequest): Promise<NextResp
     return NextResponse.next();
   }
 
+  // PUBLIC metadata routes. These are App-Router file conventions served at
+  // EXTENSIONLESS paths, so the static-asset matcher below (which only excludes
+  // *.svg/*.png/… and /favicon.ico) does NOT catch them — without this guard
+  // they'd be auth-gated, which (a) makes the browser fetch /manifest.webmanifest
+  // get a /auth HTML redirect → "Manifest: Syntax error", and (b) hides the OG /
+  // Twitter card from social crawlers (which never carry a session). They expose
+  // no user data, so they must be reachable while logged out.
+  // (The .svg/.png icon routes — /icon.svg, /icon-192.png, … — already match the
+  // static-asset exclusion in `config.matcher`, so the middleware never runs on
+  // them; only these extensionless ones need an explicit pass-through.)
+  if (
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/opengraph-image") ||
+    pathname.startsWith("/twitter-image") ||
+    pathname.startsWith("/apple-icon")
+  ) {
+    return NextResponse.next();
+  }
+
   // Everything else (the board pages + /auth itself) goes through the Neon
   // Auth middleware: verifier exchange always, plus the unauth→/auth redirect
   // for protected pages. loginUrl === "/auth" means /auth never redirects to
