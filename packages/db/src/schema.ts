@@ -26,6 +26,29 @@ import { sql } from "drizzle-orm";
 // camp-404 multi-user substrate (rank/team/consent, Telegram, POPIA crypto)
 // is NOT carried over; this app holds no PII worth encrypting.
 
+// --- Auth -----------------------------------------------------------------
+
+// The authenticated-user mirror. Neon Auth (Better Auth) is the source of
+// truth for credentials/sessions; this `users` row is OpsBoard's own copy of
+// the principal, upserted lazily by `ensureUserSynced` on the first
+// authenticated request (apps/web/lib/auth-middleware.ts). `id` is the Neon
+// Auth user id verbatim (text, not a uuid) so it can be the FK target every
+// data table gains a `user_id` against in the NEXT PR — DELIBERATELY no FKs
+// added here yet. Open signup: there is no whitelist; any signed-in identity
+// gets a row. Kept minimal on purpose.
+export const users = pgTable("users", {
+  // The Neon Auth user id (Better Auth subject). NOT generated here — the
+  // auth server owns it; we mirror it verbatim.
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- Domain ---------------------------------------------------------------
 
 // A mission is one real-world objective with a fixed event date (e.g. an
@@ -325,6 +348,9 @@ export const mcpAuditLog = pgTable(
 // --- Inferred row types ---------------------------------------------------
 // Drizzle's $inferSelect / $inferInsert are the domain row types — import
 // these from @opsboard/db/schema rather than re-declaring shapes elsewhere.
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 
 export type Mission = typeof missions.$inferSelect;
 export type NewMission = typeof missions.$inferInsert;

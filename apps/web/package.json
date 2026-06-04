@@ -16,6 +16,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
     "@modelcontextprotocol/sdk": "1.26.0",
+    "@neondatabase/auth": "0.4.1-beta",
     "@opsboard/ai-prompts": "workspace:*",
     "@opsboard/core": "workspace:*",
     "@opsboard/db": "workspace:*",

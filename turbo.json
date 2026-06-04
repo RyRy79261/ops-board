@@ -5,6 +5,9 @@
   "globalEnv": [
     "NODE_ENV",
     "DATABASE_URL",
+    "DATABASE_URL_UNPOOLED",
+    "NEON_AUTH_BASE_URL",
+    "NEON_AUTH_COOKIE_SECRET",
     "ANTHROPIC_API_KEY",
     "GROQ_API_KEY",
     "MCP_PUBLIC_URL",
