@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@opsboard/ui/components/alert";
 import { Button } from "@opsboard/ui/components/button";
+import { Divider } from "@opsboard/ui/components/divider";
+import { OAuthButton } from "@opsboard/ui/components/google-button";
 import { TextInput } from "@opsboard/ui/components/text-input";
 import { authClient } from "@/lib/auth-client";
 
@@ -52,6 +54,23 @@ export function SignUpForm() {
     }
   }
 
+  async function handleGoogle() {
+    setError(null);
+    setLoading(true);
+    try {
+      // Aim the return trip at /auth (not /) so Neon Auth's verifier exchange
+      // — which runs inside the proxy middleware on /auth/* — fires before we
+      // read the session; /auth/page.tsx then forwards us home.
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/auth",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign up failed");
+      setLoading(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
@@ -59,7 +78,7 @@ export function SignUpForm() {
           Create your account
         </h1>
         <p className="text-label text-muted-foreground">
-          Sign up to start planning missions.
+          Set a password or continue with Google to start planning missions.
         </p>
       </div>
 
@@ -111,6 +130,16 @@ export function SignUpForm() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Creating account…" : "Create account"}
       </Button>
+
+      <div className="flex items-center gap-2.5">
+        <Divider className="flex-1" />
+        <span className="text-micro text-muted-foreground">
+          Or continue with
+        </span>
+        <Divider className="flex-1" />
+      </div>
+
+      <OAuthButton onClick={handleGoogle} disabled={loading} />
 
       <p className="text-center text-label text-muted-foreground">
         Already have an account?{" "}
