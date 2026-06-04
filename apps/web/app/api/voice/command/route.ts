@@ -1,0 +1,398 @@
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+
+import { getAuthenticatedUser } from "@/lib/auth";
+import { transcribeAudio } from "@/lib/groq";
+import { getClientIp, rateLimiter } from "@/lib/rate-limit";
+import { callForcedTool } from "@/lib/anthropic";
+import { executeIntent } from "@/lib/voice-execute";
+
+import {
+  safeParseIntent,
+  needsConfirmation as intentNeedsConfirmation,
+  VoiceIntent,
+} from "@opsboard/types";
+import {
+  voiceIntentPrompt,
+  OPSBOARD_WHISPER_PROMPT,
+  INTENT_CLASSIFIER_MODEL,
+  type VoiceStateSnapshot,
+} from "@opsboard/ai-prompts";
+import { createHttpDb } from "@opsboard/db";
+import { getMissions } from "@opsboard/db/missions";
+import { getCategories, getTasks } from "@opsboard/db/tasks";
+
+// /api/voice/command — the transcript → intent → execute pipeline. Node runtime
+// (Groq + Anthropic SDKs + the neon-http driver). Mirrors camp-404's transcribe
+// route guard ladder (auth → rate-limit → validate → scrub), collapsed to a
+// single principal (lib/auth.ts) but KEEPING per-IP + per-principal rate-limits.
+//
+// Two request shapes:
+//   A) multipart/form-data { audio: File, tz?: string } → full pipeline:
+//      transcribe → server-built snapshot → Claude (forced tool_use) →
+//      safeParseIntent → confirm-gate → execute.
+//   B) application/json { intent: VoiceIntent, confirmed: true } → the confirm
+//      re-issue / disambiguation re-issue: skip transcription, execute directly.
+//
+// The board mutates ONLY through here (voice) or MCP (S6); destructive intents
+// are NEVER executed without an explicit confirmed re-issue.
+
+export const runtime = "nodejs";
+
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB hard cap (parallels transcribe).
+const DEFAULT_TZ = "UTC";
+
+// The emit_intent forced tool — its input is the VoiceIntent shape. The model is
+// FORCED to call it; the raw input is Zod-validated via safeParseIntent (the
+// schema in @opsboard/types is the source of truth, NOT this loose JSON schema).
+const EMIT_INTENT_TOOL = {
+  name: "emit_intent",
+  description:
+    "Emit exactly one structured OpsBoard voice intent matching the VoiceIntent union.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      intent: {
+        type: "string",
+        enum: [
+          "create_mission",
+          "create_task",
+          "update_task_status",
+          "update_task",
+          "add_dependency",
+          "remove_dependency",
+          "delete_task",
+          "delete_mission",
+          "query",
+          "unknown",
+        ],
+        description: "The intent discriminator.",
+      },
+      confidence: {
+        type: "number",
+        description: "0..1 confidence in BOTH the intent and its key fields.",
+      },
+    },
+    // Per-intent fields are open — the union (Zod) is the real validator. We keep
+    // the JSON schema permissive so the model isn't fought by a partial mirror.
+    required: ["intent", "confidence"],
+  },
+};
+
+/** The response contract the FAB consumes (see voice-execute ExecuteOutcome). */
+interface CommandResponseBody {
+  transcript: string;
+  intent: VoiceIntent | null;
+  result?: unknown;
+  needsConfirmation?: boolean;
+  /** A clarify line when a hint couldn't be resolved (soft, non-destructive). */
+  clarify?: string;
+  needsDisambiguation?: boolean;
+  options?: unknown;
+  /** A prompt for the confirm / disambiguation surfaces. */
+  prompt?: string;
+  error?: string;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  // --- Guard ladder: auth (single principal) -------------------------------
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    // The stub never returns null today, but the route keeps the camp shape so a
+    // future real session reader drops in without touching this handler.
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // --- Rate-limit: per-principal AND per-IP (defence in depth) -------------
+  const principalLimit = await rateLimiter.limit(`voice-command:${user.id}`, {
+    limit: 30,
+  });
+  if (!principalLimit.ok) {
+    return rateLimited(principalLimit.retryAfterSeconds);
+  }
+  const ipLimit = await rateLimiter.limit(
+    `voice-command-ip:${getClientIp(req.headers)}`,
+    { limit: 60 },
+  );
+  if (!ipLimit.ok) {
+    return rateLimited(ipLimit.retryAfterSeconds);
+  }
+
+  const contentType = req.headers.get("content-type") ?? "";
+
+  // --- Shape B: JSON confirm / disambiguation re-issue ---------------------
+  if (contentType.includes("application/json")) {
+    return handleReissue(req);
+  }
+
+  // --- Shape A: multipart audio → full pipeline ----------------------------
+  return handleAudio(req);
+}
+
+/**
+ * Shape B — the confirm re-issue (and the disambiguation pick re-issue). The
+ * intent is already parsed; we re-validate it against the union and execute it
+ * as CONFIRMED. This is the only path that may run a destructive mutation.
+ */
+async function handleReissue(req: Request): Promise<Response> {
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    (payload as { confirmed?: unknown }).confirmed !== true
+  ) {
+    return NextResponse.json(
+      { error: "Re-issue requires { intent, confirmed: true }." },
+      { status: 400 },
+    );
+  }
+
+  const parsed = VoiceIntent.safeParse((payload as { intent?: unknown }).intent);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        transcript: "",
+        intent: null,
+        error: "That command couldn't be understood.",
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  const outcome = await executeIntent(parsed.data);
+  const body = outcomeToBody("", parsed.data, outcome);
+  if ("result" in outcome) revalidatePath("/");
+  return NextResponse.json(body, { status: 200 });
+}
+
+/**
+ * Shape A — the normal capture: transcribe → server snapshot → classify →
+ * validate → confirm-gate → execute.
+ */
+async function handleAudio(req: Request): Promise<Response> {
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+  }
+
+  const file = form.get("audio");
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: "Missing `audio` file" }, { status: 400 });
+  }
+  if (!file.type.startsWith("audio/")) {
+    return NextResponse.json({ error: "File must be audio/*" }, { status: 415 });
+  }
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json({ error: "Audio too large" }, { status: 413 });
+  }
+
+  const tz = sanitizeTz(form.get("tz"));
+
+  // 1. Transcribe (Groq Whisper, OpsBoard bias prompt).
+  let transcript: string;
+  try {
+    transcript = (
+      await transcribeAudio(file, { prompt: OPSBOARD_WHISPER_PROMPT })
+    ).trim();
+  } catch (err) {
+    console.error("voice-command transcription error", err);
+    const message = err instanceof Error ? err.message : "";
+    return NextResponse.json(
+      {
+        transcript: "",
+        intent: null,
+        error: message.includes("GROQ_API_KEY")
+          ? "Voice isn't configured."
+          : "Couldn't transcribe that audio.",
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  if (transcript.length === 0) {
+    return NextResponse.json(
+      {
+        transcript: "",
+        intent: null,
+        error: "I didn't catch that — try again.",
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  // 2. Build the snapshot SERVER-SIDE from the DB (never from model output).
+  const snapshot = await buildSnapshot(tz);
+
+  // 3. Classify via Claude (pinned Haiku, forced tool_use, temp 0, ~30s).
+  const raw = await callForcedTool({
+    model: INTENT_CLASSIFIER_MODEL,
+    system: voiceIntentPrompt.system,
+    userMessage: voiceIntentPrompt.user(transcript, snapshot),
+    tool: EMIT_INTENT_TOOL,
+  });
+  if (raw === null) {
+    return NextResponse.json(
+      {
+        transcript,
+        intent: null,
+        error: "I couldn't understand that command.",
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  // 4. Validate against the VoiceIntent union — never execute an unvalidated shape.
+  const result = safeParseIntent(raw);
+  if (!result.ok) {
+    return NextResponse.json(
+      {
+        transcript,
+        intent: null,
+        error: `Couldn't parse "${transcript}".`,
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  const intent = result.intent;
+
+  // 5. Confirm gate: destructive / unknown / low-confidence are NOT executed.
+  if (intentNeedsConfirmation(intent)) {
+    return NextResponse.json(
+      {
+        transcript,
+        intent,
+        needsConfirmation: true,
+      } satisfies CommandResponseBody,
+      { status: 200 },
+    );
+  }
+
+  // 6. Execute (resolve hints → mutation / read). May still surface a soft
+  // confirm / disambiguation if a hint resolves to 0 / many.
+  const outcome = await executeIntent(intent);
+  const body = outcomeToBody(transcript, intent, outcome);
+  if ("result" in outcome) revalidatePath("/");
+  return NextResponse.json(body, { status: 200 });
+}
+
+// --- Snapshot + helpers -----------------------------------------------------
+
+/** Build the compact current-state snapshot the classifier fuzzy-matches against. */
+async function buildSnapshot(tz: string): Promise<VoiceStateSnapshot> {
+  const db = createHttpDb();
+  const [missions, categories] = await Promise.all([
+    getMissions(db),
+    getCategories(db),
+  ]);
+  const catNameById = new Map(categories.map((c) => [c.id, c.slug]));
+
+  const perMission = await Promise.all(
+    missions.map(async (m) => ({ mission: m, tasks: await getTasks(m.id, db) })),
+  );
+
+  const tasks: VoiceStateSnapshot["tasks"] = [];
+  for (const { mission, tasks: rows } of perMission) {
+    for (const t of rows) {
+      tasks.push({
+        name: t.name,
+        mission: mission.name,
+        category: t.categoryId
+          ? (catNameById.get(t.categoryId) ?? "uncategorised")
+          : "uncategorised",
+        // `Task.status` is the DB `text` column (typed `string`); the CHECK pins
+        // it to the three legal values, so the narrow is safe for the snapshot.
+        status: t.status as "not-started" | "in-progress" | "done",
+      });
+    }
+  }
+
+  return {
+    today: isoTodayInTz(tz),
+    timezone: tz,
+    missions: missions.map((m) => ({ name: m.name, targetDate: m.targetDate })),
+    tasks,
+    categories: categories.map((c) => c.slug),
+  };
+}
+
+/** Today's calendar date (YYYY-MM-DD) as seen in `tz` — the classifier's anchor. */
+function isoTodayInTz(tz: string): string {
+  try {
+    // en-CA renders ISO-ordered YYYY-MM-DD.
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+  } catch {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: DEFAULT_TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+  }
+}
+
+/** Validate a browser-supplied IANA tz; fall back to UTC on anything dodgy. */
+function sanitizeTz(value: FormDataEntryValue | null): string {
+  if (typeof value !== "string" || value.length === 0 || value.length > 64) {
+    return DEFAULT_TZ;
+  }
+  try {
+    // Throws RangeError for an unknown zone.
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+    return value;
+  } catch {
+    return DEFAULT_TZ;
+  }
+}
+
+function rateLimited(retryAfterSeconds: number): Response {
+  return NextResponse.json(
+    { error: "Rate limit exceeded", retryAfterSeconds },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
+    },
+  );
+}
+
+/** Fold an ExecuteOutcome into the wire response the FAB handles. */
+function outcomeToBody(
+  transcript: string,
+  intent: VoiceIntent,
+  outcome: Awaited<ReturnType<typeof executeIntent>>,
+): CommandResponseBody {
+  if ("result" in outcome) {
+    return { transcript, intent, result: outcome.result };
+  }
+  if ("needsDisambiguation" in outcome) {
+    return {
+      transcript,
+      intent,
+      needsDisambiguation: true,
+      options: outcome.options,
+      prompt: outcome.prompt,
+    };
+  }
+  if ("needsConfirmation" in outcome) {
+    return {
+      transcript,
+      intent,
+      needsConfirmation: true,
+      clarify: outcome.clarify,
+    };
+  }
+  return { transcript, intent, error: outcome.error };
+}

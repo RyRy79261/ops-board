@@ -20,6 +20,7 @@ import { updateTaskStatusAction } from "@/app/actions";
 import { CategoryView } from "@/components/views/category-view";
 import { TimelineView } from "@/components/views/timeline-view";
 import { DependenciesView } from "@/components/views/dependencies-view";
+import { VoiceController } from "@/components/voice/voice-controller";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
 // desktop 3-pane). Holds the active-view state (ViewTabs), provides each view a
@@ -184,6 +185,11 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         )}
         {mainColumn}
       </div>
+      {/* The voice command flow — the fixed mic FAB + capture panel + the Toaster
+          feedback surface. The board mutates only via this pipeline (voice) or a
+          StatusCycleButton tap; the controller calls router.refresh() after any
+          successful mutation so the board reflects it. */}
+      <VoiceController />
     </div>
   );
 }
