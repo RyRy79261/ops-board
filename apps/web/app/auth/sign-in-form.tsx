@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert } from "@opsboard/ui/components/alert";
 import { Button } from "@opsboard/ui/components/button";
+import { Divider } from "@opsboard/ui/components/divider";
+import { OAuthButton } from "@opsboard/ui/components/google-button";
 import { TextInput } from "@opsboard/ui/components/text-input";
 import { authClient } from "@/lib/auth-client";
 
@@ -64,6 +66,23 @@ export function SignInForm() {
     }
   }
 
+  async function handleGoogle() {
+    setError(null);
+    setLoading(true);
+    try {
+      // Route the social return-trip through /auth so Neon Auth's verifier
+      // exchange (the proxy middleware on /auth/*) fires before we read the
+      // session; /auth/page.tsx then forwards us on to the requested page.
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/auth",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign in failed");
+      setLoading(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
@@ -110,6 +129,16 @@ export function SignInForm() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </Button>
+
+      <div className="flex items-center gap-2.5">
+        <Divider className="flex-1" />
+        <span className="text-micro text-muted-foreground">
+          Or continue with
+        </span>
+        <Divider className="flex-1" />
+      </div>
+
+      <OAuthButton onClick={handleGoogle} disabled={loading} />
 
       <p className="text-center text-label text-muted-foreground">
         Don&apos;t have an account?{" "}
