@@ -2,7 +2,12 @@ import { createHttpDb, createPooledDb } from "@opsboard/db";
 import * as schema from "@opsboard/db/schema";
 import { MCP_PRINCIPAL_ID } from "@opsboard/db/mcp";
 import { and, eq, gt, isNull } from "drizzle-orm";
-import { generateOpaqueToken, sha256, verifyPkce } from "./tokens";
+import {
+  generateOpaqueToken,
+  sha256,
+  verifyPkce,
+  constantTimeEqual,
+} from "./tokens";
 
 // LIFTED from camp-404 apps/web/lib/mcp/oauth.ts (scaffolding-plan.md S6) and
 // stripped to single-principal: every place camp scoped a row to a `users.id`
@@ -116,13 +121,13 @@ export async function findClient(clientId: string) {
   return row ?? null;
 }
 
-/** Constant-time-ish check via sha256 + string compare on the hashes. */
+/** Constant-time hash comparison (timing-safe) of the presented secret. */
 export function verifyClientSecret(
   presented: string,
   storedHash: string | null,
 ): boolean {
   if (!storedHash) return false;
-  return sha256(presented) === storedHash;
+  return constantTimeEqual(sha256(presented), storedHash);
 }
 
 // --- Authorization codes -------------------------------------------------

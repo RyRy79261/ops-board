@@ -90,13 +90,21 @@ export async function GET(req: Request) {
 // POST — approve / deny
 // ---------------------------------------------------------------------------
 
+const AuthorizeAction = z.enum(["approve", "deny"]);
+
 export async function POST(req: Request) {
   const form = await req.formData().catch(() => null);
   if (!form) {
     return errorPage(400, "invalid_request", "Form body required.");
   }
 
-  const action = form.get("action");
+  // Require an explicit approve/deny — a missing or unexpected `action` must
+  // NOT fall through to minting an auth code (unconfirmed consent grants nothing).
+  const actionParsed = AuthorizeAction.safeParse(form.get("action"));
+  if (!actionParsed.success) {
+    return errorPage(400, "invalid_request", "Invalid action.");
+  }
+  const action = actionParsed.data;
   const rebuilt = new URLSearchParams();
   for (const [k, v] of form.entries()) {
     if (k === "action") continue;
