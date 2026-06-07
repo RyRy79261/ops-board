@@ -4,14 +4,21 @@ import { auth } from "@/lib/neon-auth";
 /**
  * PAGE GATING + the Neon Auth OAuth verifier exchange.
  *
- * Mirrors the mechanism camp-404 and intake-tracker use. `auth.middleware()`
- * does two jobs in one pass:
+ * Next.js 16 renamed the middleware file convention: `middleware.ts` →
+ * `proxy.ts`, and the exported `middleware` function → `proxy`. The old name
+ * is deprecated and NO LONGER RUNS, so this logic has to live in `proxy.ts`
+ * or it never executes — which is exactly what silently broke Google sign-in
+ * (the verifier exchange below never fired, so social sign-in returned the
+ * user with a `?neon_auth_session_verifier=…` in the URL but no session cookie
+ * ever got set). camp-404 uses the same `proxy.ts` mechanism.
+ *
+ * `auth.middleware()` does two jobs in one pass:
  *   1. Exchanges the `?neon_auth_session_verifier=…` that Neon Auth's hosted
  *      social callback appends to the return URL for a real session cookie on
  *      our origin. This runs nowhere else (NOT in auth.handler()), so it has
- *      to be in middleware or social sign-in silently 401s afterwards.
+ *      to be in the proxy or social sign-in silently 401s afterwards.
  *   2. Redirects unauthenticated requests to `loginUrl` (/auth) — the page
- *      gate this PR is adding.
+ *      gate.
  *
  * ALLOW-LIST (never gated):
  *   - /auth and /auth/*  — the sign-in surface itself + the OAuth landing.
@@ -24,6 +31,10 @@ import { auth } from "@/lib/neon-auth";
  *
  * Open signup: there is NO email whitelist anywhere in this flow.
  *
+ * NOTE (runtime): `proxy` runs on the Node.js runtime (the `edge` runtime is
+ * not supported for proxy in Next 16). The Neon Auth cookie/session work runs
+ * fine there — camp-404 proves it.
+ *
  * TODO(setup-gate): a LATER PR adds the per-user setup wizard (own
  * Anthropic+Groq keys). Once a user is authenticated here, that PR will gate
  * "setup complete" — redirect authenticated-but-unconfigured users to
@@ -32,7 +43,7 @@ import { auth } from "@/lib/neon-auth";
  */
 const protect = auth.middleware({ loginUrl: "/auth" });
 
-export default async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   // API routes are never page-gated — they authenticate via withAuth() and
@@ -50,7 +61,7 @@ export default async function middleware(request: NextRequest): Promise<NextResp
   // Twitter card from social crawlers (which never carry a session). They expose
   // no user data, so they must be reachable while logged out.
   // (The .svg/.png icon routes — /icon.svg, /icon-192.png, … — already match the
-  // static-asset exclusion in `config.matcher`, so the middleware never runs on
+  // static-asset exclusion in `config.matcher`, so the proxy never runs on
   // them; only these extensionless ones need an explicit pass-through.)
   if (
     pathname === "/manifest.webmanifest" ||
@@ -64,14 +75,14 @@ export default async function middleware(request: NextRequest): Promise<NextResp
   }
 
   // Everything else (the board pages + /auth itself) goes through the Neon
-  // Auth middleware: verifier exchange always, plus the unauth→/auth redirect
+  // Auth proxy: verifier exchange always, plus the unauth→/auth redirect
   // for protected pages. loginUrl === "/auth" means /auth never redirects to
   // itself, so the sign-in page stays reachable while logged out.
   return protect(request);
 }
 
 export const config = {
-  // Skip Next internals and static files so the middleware only ever runs on
+  // Skip Next internals and static files so the proxy only ever runs on
   // real navigations. (The /api/* short-circuit above is belt-and-braces.)
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
