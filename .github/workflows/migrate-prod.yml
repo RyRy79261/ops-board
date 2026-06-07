@@ -1,0 +1,84 @@
+name: Migrate production DB
+
+# Apply the committed Drizzle migrations to the PRODUCTION Neon database when
+# schema changes land on main — and on demand via the "Run workflow" button.
+#
+# DECOUPLED from the Vercel build on purpose: the build stays pure/cacheable and
+# never migrates (previews get ephemeral Neon branches, not prod), and a failed
+# migration surfaces HERE instead of bricking a deploy. This runs the SAME
+# `db:migrate` + migration files the per-PR `db · migrate on Neon branch` job
+# already validates on a throwaway branch, so by the time a migration reaches
+# prod it has applied cleanly at least once. drizzle-kit is idempotent — it
+# records applied migrations in __drizzle_migrations and no-ops when nothing is
+# pending — so re-runs / the manual button are safe.
+#
+# REQUIRES the DATABASE_URL_UNPOOLED repo secret = the Neon DIRECT (unpooled)
+# connection string for the production database (the value of Vercel's prod
+# DATABASE_URL_UNPOOLED, or Neon Console → Connect → Direct connection — the host
+# WITHOUT `-pooler`). This is a GitHub Actions secret, separate from the Vercel
+# runtime env vars. The job SKIPS cleanly until the secret is set.
+#
+# Ordering note: this Action and the Vercel production deploy both fire on push
+# to main and run in parallel. Migrations so far are ADDITIVE (new tables /
+# columns) and forward-compatible with the briefly-still-live old code, and the
+# Action (seconds) finishes well before a Next build+deploy (minutes). If a
+# DESTRUCTIVE migration is ever needed, switch to strict ordering: disable
+# Vercel's git auto-deploy for production and fire a Vercel Deploy Hook from this
+# job's final step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/db/migrations/**"
+      - ".github/workflows/migrate-prod.yml"
+  workflow_dispatch: {}
+
+# Never let two production migrations run concurrently.
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: drizzle migrate · production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Gate on the prod DB secret
+        id: gate
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          if [ -n "${DATABASE_URL_UNPOOLED}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DATABASE_URL_UNPOOLED secret not set — skipping prod migration."
+          fi
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        if: steps.gate.outputs.enabled == 'true'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.gate.outputs.enabled == 'true'
+
+      # drizzle.config reads DATABASE_URL_UNPOOLED first (then DATABASE_URL); we
+      # hand it the DIRECT/unpooled endpoint under that exact name — the direct
+      # connection is what migrations need (pooled PgBouncer can choke on DDL /
+      # advisory locks).
+      - name: Apply pending migrations to production
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: pnpm --filter @opsboard/db db:migrate
