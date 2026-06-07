@@ -29,6 +29,13 @@
       "when": 1780574471802,
       "tag": "0003_careless_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780576436491,
+      "tag": "0004_naive_gorgon",
+      "breakpoints": true
     }
   ]
 }
