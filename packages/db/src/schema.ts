@@ -242,6 +242,33 @@ export const CATEGORY_SEEDS: ReadonlyArray<{
   },
 ];
 
+// --- BYO API keys (server-only) ------------------------------------------
+// Per-user, bring-your-own AI provider keys. One row per user (the userId PK
+// FKs into `users` ON DELETE CASCADE, so deleting a user sweeps their keys).
+// Each provider column stores a versioned encrypted blob authored by the
+// crypto module in apps/web/lib/key-vault.ts (AES-256-GCM, `v1:` prefix); the
+// `*_last4` columns hold only the last 4 plaintext characters for UI display —
+// NEVER the whole key. The encryption secret (API_KEY_ENCRYPTION_SECRET) lives
+// in apps/web, never the DB; this package stays crypto-FREE and only stores /
+// reads the opaque blobs (see ./api-keys.ts). Rotating the secret invalidates
+// every stored key (users re-enter); a future KMS migration adds a "v2:" blob
+// in the same column.
+export const userApiKeys = pgTable("user_api_keys", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  anthropicKeyEncrypted: text("anthropic_key_encrypted"),
+  anthropicLast4: text("anthropic_last4"),
+  groqKeyEncrypted: text("groq_key_encrypted"),
+  groqLast4: text("groq_last4"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- MCP OAuth (server-only) --------------------------------------------
 // Pure auth-server state for Claude.ai (and other MCP clients) connecting
 // over OAuth 2.1 + Dynamic Client Registration. Nothing here is rendered or
@@ -400,6 +427,9 @@ export type TaskStatus = "not-started" | "in-progress" | "done";
 
 export type TaskDependency = typeof taskDependencies.$inferSelect;
 export type NewTaskDependency = typeof taskDependencies.$inferInsert;
+
+export type UserApiKeyRow = typeof userApiKeys.$inferSelect;
+export type NewUserApiKeyRow = typeof userApiKeys.$inferInsert;
 
 export type McpOauthClient = typeof mcpOauthClients.$inferSelect;
 export type NewMcpOauthClient = typeof mcpOauthClients.$inferInsert;

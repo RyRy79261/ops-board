@@ -17,6 +17,12 @@ import { ensureUserSynced } from "@/lib/auth-middleware";
 /** The minimal principal shape the voice routes rate-limit + audit against. */
 export interface Principal {
   id: string;
+  /**
+   * Verified primary email (lowercased), or null if the IdP omits it. Carried
+   * so the BYO key resolver can apply its ALLOWED_EMAILS env-var fallback —
+   * NEVER from client input, always the verified session value.
+   */
+  email: string | null;
 }
 
 /**
@@ -30,7 +36,8 @@ export async function getAuthenticatedUser(): Promise<Principal | null> {
   if (!session?.user?.id) return null;
 
   const userId = session.user.id;
-  await ensureUserSynced(userId, session.user.email?.toLowerCase() ?? null);
+  const email = session.user.email?.toLowerCase() ?? null;
+  await ensureUserSynced(userId, email);
 
-  return { id: userId };
+  return { id: userId, email };
 }

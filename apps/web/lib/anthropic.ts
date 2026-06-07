@@ -2,8 +2,12 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 
-// ADAPTED from camp-404 apps/web/lib/anthropic.ts (scaffolding-plan.md S5).
-// Lazy Anthropic client + a generic forced-tool_use call helper.
+// ADAPTED from camp-404 apps/web/lib/anthropic.ts (scaffolding-plan.md S5),
+// then REWIRED for OpsBoard BYO keys: the Anthropic client is built per-request
+// from a key the caller RESOLVED for the session user
+// (apps/web/lib/ai-key-resolver.ts) — NOT a process-wide env-keyed singleton.
+// The route fails closed (402) before calling here when the user has no key, so
+// there is no silent env path.
 //
 // MODEL DISCIPLINE: camp inlined a `MODELS` const here. OpsBoard pins model ids
 // in @opsboard/ai-prompts instead (INTENT_CLASSIFIER_MODEL) — never inline an id
@@ -12,20 +16,6 @@ import Anthropic from "@anthropic-ai/sdk";
 // mirrors lib/feedback-ai.ts: forced `tool_use`, temperature 0, ~30s timeout,
 // fail-safe (any problem returns null so the route can fall back / error cleanly
 // instead of throwing the raw SDK error at the boundary).
-
-let client: Anthropic | null = null;
-
-/** Lazy singleton Anthropic client. Throws only if the key is missing. */
-export function anthropic(): Anthropic {
-  if (!client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY is not set");
-    }
-    client = new Anthropic({ apiKey });
-  }
-  return client;
-}
 
 /** A single forced-tool definition, in the shape the Anthropic SDK expects. */
 export interface ForcedTool {
@@ -39,6 +29,12 @@ export interface ForcedTool {
 }
 
 export interface ToolCallOptions {
+  /**
+   * The per-request Anthropic key the route resolved for the SESSION user
+   * (apps/web/lib/ai-key-resolver.ts). A fresh client is built per call so two
+   * users never share a cached, env-keyed singleton.
+   */
+  apiKey: string;
   /** Pinned model id — pass INTENT_CLASSIFIER_MODEL from @opsboard/ai-prompts. */
   model: string;
   /** System prompt (the classifier instructions). */
@@ -65,7 +61,8 @@ export async function callForcedTool(
   opts: ToolCallOptions,
 ): Promise<unknown | null> {
   try {
-    const response = await anthropic().messages.create(
+    const client = new Anthropic({ apiKey: opts.apiKey });
+    const response = await client.messages.create(
       {
         model: opts.model,
         max_tokens: opts.maxTokens ?? 1024,

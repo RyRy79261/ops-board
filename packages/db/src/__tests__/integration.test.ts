@@ -46,14 +46,14 @@ describe.skipIf(!hasDb)("@opsboard/db integration (real Postgres)", () => {
 
   // --- Migration --------------------------------------------------------
   describe("migration", () => {
-    it("applies cleanly and creates the 9 expected tables", async () => {
+    it("applies cleanly and creates the 10 expected tables", async () => {
       const tables = await h.listTables();
       for (const expected of EXPECTED_TABLES) {
         expect(tables).toContain(expected);
       }
-      // The four domain + four MCP tables + users are all present.
+      // The four domain + four MCP tables + users + user_api_keys are present.
       const present = EXPECTED_TABLES.filter((t) => tables.includes(t));
-      expect(present).toHaveLength(9);
+      expect(present).toHaveLength(10);
     });
   });
 
