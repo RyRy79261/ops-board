@@ -1,21 +1,18 @@
 import "server-only";
 
-// SINGLE-USER stub — collapses camp-404's per-user Neon-Auth gate
-// (apps/web/lib/auth.ts) to one constant principal (project_brief.md §0/§3:
-// "single-user personal tool"). The camp route guard ladder
-// (auth → rate-limit → validate → scrub) is preserved by the voice routes;
-// only the auth step is degenerate here. Rate-limiting is KEPT and keyed on
-// this principal + the client IP.
-//
-// TODO(auth): if OpsBoard ever gains real session auth, replace this with the
-// session reader (cookie/JWT) and return null for unauthenticated requests —
-// the route's `if (!user) 401` branch already handles that shape. Until then
-// the principal is always present, so the board is effectively open; deploy
-// behind a platform-level access gate (e.g. Vercel password protection) if it
-// must not be public.
+import { auth } from "@/lib/neon-auth";
+import { ensureUserSynced } from "@/lib/auth-middleware";
 
-/** Mirrors the MCP single-principal id (@opsboard/db/mcp MCP_PRINCIPAL_ID). */
-export const PRINCIPAL_ID = "owner" as const;
+// The voice routes' principal reader. Originally a single-user stub returning a
+// constant "owner"; now reads the REAL verified Neon Auth session so the voice
+// pipeline scopes every read/mutation to the signed-in user. The camp-404 route
+// guard ladder (auth → rate-limit → validate → scrub) is preserved by the voice
+// routes; this is the auth step. Rate-limiting is KEPT and keyed on the
+// principal id + client IP.
+//
+// SECURITY: the principal id is ALWAYS the server-verified Neon Auth user id —
+// never from client input. A missing session returns null (the route's
+// `if (!user) 401` branch handles that).
 
 /** The minimal principal shape the voice routes rate-limit + audit against. */
 export interface Principal {
@@ -23,11 +20,17 @@ export interface Principal {
 }
 
 /**
- * The single-user principal. Always resolves (never null) because OpsBoard has
- * no users table. Kept `async` so the call-site shape matches camp's
- * `await getAuthenticatedUser()` and a future real implementation can drop in
- * without touching the routes.
+ * The verified principal for the voice routes, read from the Neon Auth cookie
+ * session. Returns null when there is no active session (the route answers 401).
+ * Lazily mirrors the user into `public.users` so a user-scoped insert
+ * downstream (createMission / createTask) finds its parent row.
  */
 export async function getAuthenticatedUser(): Promise<Principal | null> {
-  return { id: PRINCIPAL_ID };
+  const { data: session } = await auth.getSession();
+  if (!session?.user?.id) return null;
+
+  const userId = session.user.id;
+  await ensureUserSynced(userId, session.user.email?.toLowerCase() ?? null);
+
+  return { id: userId };
 }

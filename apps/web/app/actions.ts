@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { updateTaskStatus } from "@opsboard/db/tasks";
+import { auth } from "@/lib/neon-auth";
+import { ensureUserSynced } from "@/lib/auth-middleware";
 
 // The board's ONLY mutation: cycle a task's stored status. Mirrors the camp-404
 // page/action/client triad — co-located "use server" action, returns the
@@ -35,7 +37,15 @@ export async function updateTaskStatusAction(
   const status = Status.safeParse(next);
   if (!status.success) return { ok: false, error: "Unknown status." };
 
-  const result = await updateTaskStatus(id.data, status.data);
+  // Resolve the verified session principal — the scoped mutation only touches
+  // a task the SESSION user owns. Reject (not redirect) so the client island
+  // surfaces the failure inline. userId is NEVER taken from the action args.
+  const { data: session } = await auth.getSession();
+  if (!session?.user?.id) return { ok: false, error: "Not signed in." };
+  const userId = session.user.id;
+  await ensureUserSynced(userId, session.user.email?.toLowerCase() ?? null);
+
+  const result = await updateTaskStatus(id.data, status.data, userId);
   if (!result.ok) return { ok: false, error: result.error };
 
   revalidatePath("/");

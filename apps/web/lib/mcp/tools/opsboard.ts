@@ -28,7 +28,7 @@ import {
   type BlockedTask,
   type DependencyEdge as CoreDependencyEdge,
 } from "@opsboard/core";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import * as schema from "@opsboard/db/schema";
 import { runTool, ToolError, notFound, MAX_DATE_RANGE_DAYS } from "../tool-utils";
 import { issueConfirmToken, consumeConfirmToken } from "../confirm-token";
@@ -158,15 +158,18 @@ function unwrap<T extends { ok: boolean }>(
  * substring; exact-name match wins, then a unique substring). Throws a
  * ToolError when nothing / more than one mission matches a hint.
  */
-async function resolveMission(args: { missionId?: string; nameHint?: string }) {
+async function resolveMission(
+  args: { missionId?: string; nameHint?: string },
+  userId: string,
+) {
   if (args.missionId) {
-    const mission = await getMission(args.missionId);
+    const mission = await getMission(args.missionId, userId);
     if (!mission) notFound("No mission with that id.");
     return mission!;
   }
   if (args.nameHint) {
     const hint = args.nameHint.trim().toLowerCase();
-    const missions = await getMissions();
+    const missions = await getMissions(userId);
     const exact = missions.filter((m) => m.name.toLowerCase() === hint);
     if (exact.length === 1) return exact[0]!;
     const partial = missions.filter((m) =>
@@ -204,8 +207,8 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "list_missions",
         extra,
         argsForAudit: args,
-        handler: async () => {
-          const missions = await getMissions();
+        handler: async (ctx) => {
+          const missions = await getMissions(ctx.userId);
           return { missions };
         },
       }),
@@ -227,9 +230,9 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "get_mission",
         extra,
         argsForAudit: args,
-        handler: async () => {
-          const mission = await resolveMission(args);
-          const tasks = await getTasks(mission.id);
+        handler: async (ctx) => {
+          const mission = await resolveMission(args, ctx.userId);
+          const tasks = await getTasks(mission.id, ctx.userId);
           return { mission, tasks: tasks.map(toTaskView) };
         },
       }),
@@ -253,7 +256,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "list_tasks",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
           // Resolve a category slug → id once (so we can filter in memory).
           let categoryId: string | null = null;
@@ -264,14 +267,16 @@ export function registerOpsboardDataTools(server: McpServer): void {
             categoryId = cat.id;
           }
 
-          // Gather the candidate task set (one mission, or all of them).
+          // Gather the candidate task set (one mission, or all of them) — every
+          // read scoped to the authorizing user. A foreign `missionId` yields no
+          // tasks (getTasks filters by userId), so no cross-user leak.
           const missionIds = args.missionId
             ? [args.missionId]
-            : (await getMissions(db)).map((m) => m.id);
+            : (await getMissions(ctx.userId, db)).map((m) => m.id);
 
           let tasks: Task[] = [];
           for (const mid of missionIds) {
-            tasks = tasks.concat(await getTasks(mid, db));
+            tasks = tasks.concat(await getTasks(mid, ctx.userId, db));
           }
 
           // blocked=true needs the dependency graph; derive per-mission so the
@@ -281,7 +286,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
             blockedFilter = new Set();
             for (const mid of missionIds) {
               const mTasks = tasks.filter((t) => t.missionId === mid);
-              const edges = await getTaskDependencies(mid, db);
+              const edges = await getTaskDependencies(mid, ctx.userId, db);
               const blockedMap = deriveBlocked(
                 toBlockedTasks(mTasks),
                 toCoreEdges(edges),
@@ -319,11 +324,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "get_blocked_tasks",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
           const missionIds = args.missionId
             ? [args.missionId]
-            : (await getMissions(db)).map((m) => m.id);
+            : (await getMissions(ctx.userId, db)).map((m) => m.id);
 
           const blocked: Array<{
             id: string;
@@ -334,8 +339,8 @@ export function registerOpsboardDataTools(server: McpServer): void {
           }> = [];
 
           for (const mid of missionIds) {
-            const tasks = await getTasks(mid, db);
-            const edges = await getTaskDependencies(mid, db);
+            const tasks = await getTasks(mid, ctx.userId, db);
+            const edges = await getTaskDependencies(mid, ctx.userId, db);
             const coreEdges = toCoreEdges(edges);
             const blockedMap = deriveBlocked(
               toBlockedTasks(tasks),
@@ -390,7 +395,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "get_closing_windows",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
           const now = Date.now();
           const tz = args.tz ?? DEFAULT_TZ;
@@ -398,7 +403,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
 
           const missionIds = args.missionId
             ? [args.missionId]
-            : (await getMissions(db)).map((m) => m.id);
+            : (await getMissions(ctx.userId, db)).map((m) => m.id);
 
           const closing: Array<{
             id: string;
@@ -411,8 +416,8 @@ export function registerOpsboardDataTools(server: McpServer): void {
           }> = [];
 
           for (const mid of missionIds) {
-            const tasks = await getTasks(mid, db);
-            const edges = await getTaskDependencies(mid, db);
+            const tasks = await getTasks(mid, ctx.userId, db);
+            const edges = await getTaskDependencies(mid, ctx.userId, db);
             const blockedMap = deriveBlocked(
               toBlockedTasks(tasks),
               toCoreEdges(edges),
@@ -469,12 +474,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "get_critical_path",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
-          const mission = await getMission(args.missionId, db);
+          const mission = await getMission(args.missionId, ctx.userId, db);
           if (!mission) notFound("No mission with that id.");
-          const tasks = await getTasks(args.missionId, db);
-          const edges = await getTaskDependencies(args.missionId, db);
+          const tasks = await getTasks(args.missionId, ctx.userId, db);
+          const edges = await getTaskDependencies(args.missionId, ctx.userId, db);
           const pathIds = criticalPath(
             tasks.map((t) => ({ id: t.id })),
             toCoreEdges(edges),
@@ -511,12 +516,15 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "create_mission",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const result = unwrap(
-            await createMission({
-              name: args.name,
-              targetDate: args.targetDate ?? null,
-            }),
+            await createMission(
+              {
+                name: args.name,
+                targetDate: args.targetDate ?? null,
+              },
+              ctx.userId,
+            ),
           );
           return { mission: result.mission };
         },
@@ -540,13 +548,15 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "update_mission",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           if (args.name === undefined && args.targetDate === undefined) {
             throw new ToolError("Provide name and/or targetDate to update.");
           }
           // @opsboard/db/mutations doesn't yet export updateMission — do a
           // guarded direct update of only the supplied columns, mirroring the
-          // mutations-layer style (validated input, {ok}-shaped result).
+          // mutations-layer style (validated input, {ok}-shaped result). The
+          // WHERE is scoped to the authorizing user so a foreign mission id can
+          // never be updated (returns no row → notFound).
           const db = createHttpDb();
           const set: Partial<typeof schema.missions.$inferInsert> = {
             updatedAt: new Date(),
@@ -556,7 +566,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
           const [row] = await db
             .update(schema.missions)
             .set(set)
-            .where(eq(schema.missions.id, args.missionId))
+            .where(
+              and(
+                eq(schema.missions.id, args.missionId),
+                eq(schema.missions.userId, ctx.userId),
+              ),
+            )
             .returning();
           if (!row) notFound("No mission with that id.");
           return { mission: row };
@@ -585,28 +600,33 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "create_task",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
+          // createTask first verifies the mission belongs to ctx.userId; a
+          // foreign missionId returns { ok:false } → unwrap throws a ToolError.
           const created = unwrap(
-            await createTask({
-              missionId: args.missionId,
-              name: args.name,
-              categorySlug: args.category ?? null,
-              tooLateBy: args.tooLateBy ?? null,
-              notBefore: args.notBefore ?? null,
-            }),
+            await createTask(
+              {
+                missionId: args.missionId,
+                name: args.name,
+                categorySlug: args.category ?? null,
+                tooLateBy: args.tooLateBy ?? null,
+                notBefore: args.notBefore ?? null,
+              },
+              ctx.userId,
+            ),
           );
           const task = created.task;
 
           // Notes aren't a createTask input — patch them in if supplied.
           if (args.notes !== undefined) {
-            unwrap(await updateTask(task.id, { notes: args.notes }));
+            unwrap(await updateTask(task.id, { notes: args.notes }, ctx.userId));
           }
 
           // Wire up each dependency edge; surface the FIRST failure (so a bad
           // edge doesn't silently vanish), but the task itself already exists.
           const addedDeps: string[] = [];
           for (const depId of args.dependsOn ?? []) {
-            const dep = await addDependency(task.id, depId);
+            const dep = await addDependency(task.id, depId, ctx.userId);
             if (!dep.ok) {
               throw new ToolError(
                 `Task created, but dependency on ${depId} failed: ${dep.error}`,
@@ -641,7 +661,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "update_task",
         extra,
         argsForAudit: args,
-        handler: async () => {
+        handler: async (ctx) => {
           const patch: Parameters<typeof updateTask>[1] = {};
           if (args.name !== undefined) patch.name = args.name;
           if (args.status !== undefined) patch.status = args.status;
@@ -655,7 +675,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
             throw new ToolError("Provide at least one field to update.");
           }
 
-          const result = unwrap(await updateTask(args.taskId, patch));
+          // Scoped to ctx.userId — a foreign taskId yields { ok:false, "Task
+          // not found." } → unwrap surfaces it as a clean ToolError.
+          const result = unwrap(
+            await updateTask(args.taskId, patch, ctx.userId),
+          );
           return { task: toTaskView(result.task) };
         },
       }),
@@ -674,8 +698,10 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "add_dependency",
         extra,
         argsForAudit: args,
-        handler: async () => {
-          unwrap(await addDependency(args.taskId, args.dependsOnId));
+        handler: async (ctx) => {
+          // addDependency requires BOTH endpoints to belong to ctx.userId;
+          // otherwise it returns "One or both tasks do not exist." → ToolError.
+          unwrap(await addDependency(args.taskId, args.dependsOnId, ctx.userId));
           return { ok: true, taskId: args.taskId, dependsOnId: args.dependsOnId };
         },
       }),
@@ -694,8 +720,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
         toolName: "remove_dependency",
         extra,
         argsForAudit: args,
-        handler: async () => {
-          unwrap(await removeDependency(args.taskId, args.dependsOnId));
+        handler: async (ctx) => {
+          // Scoped to edges among ctx.userId's own tasks (idempotent).
+          unwrap(
+            await removeDependency(args.taskId, args.dependsOnId, ctx.userId),
+          );
           return { ok: true, taskId: args.taskId, dependsOnId: args.dependsOnId };
         },
       }),
@@ -717,9 +746,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
         extra,
         // Never audit the confirm token value — only whether one was presented.
         argsForAudit: { taskId: args.taskId, confirm: Boolean(args.confirm) },
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
-          const task = await getTask(args.taskId, db);
+          // Scope the existence check to the user — a foreign task reads as
+          // "not found", so confirm tokens are never issued for it.
+          const task = await getTask(args.taskId, ctx.userId, db);
           if (!task) notFound("No task with that id.");
 
           if (!args.confirm) {
@@ -737,7 +768,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
             );
           }
 
-          unwrap(await deleteTask(args.taskId, db));
+          unwrap(await deleteTask(args.taskId, ctx.userId, db));
           return { deleted: true, taskId: args.taskId, name: task!.name };
         },
       }),
@@ -759,14 +790,20 @@ export function registerOpsboardDataTools(server: McpServer): void {
           missionId: args.missionId,
           confirm: Boolean(args.confirm),
         },
-        handler: async () => {
+        handler: async (ctx) => {
           const db = createHttpDb();
-          const mission = await getMission(args.missionId, db);
+          // Scoped to the user — a foreign mission reads as "not found".
+          const mission = await getMission(args.missionId, ctx.userId, db);
           if (!mission) notFound("No mission with that id.");
           const [{ count } = { count: 0 }] = await db
             .select({ count: sql<number>`count(*)::int` })
             .from(schema.tasks)
-            .where(eq(schema.tasks.missionId, args.missionId));
+            .where(
+              and(
+                eq(schema.tasks.missionId, args.missionId),
+                eq(schema.tasks.userId, ctx.userId),
+              ),
+            );
 
           if (!args.confirm) {
             const token = issueConfirmToken("delete_mission", args.missionId);
@@ -790,7 +827,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
             );
           }
 
-          unwrap(await deleteMission(args.missionId, db));
+          unwrap(await deleteMission(args.missionId, ctx.userId, db));
           return {
             deleted: true,
             missionId: args.missionId,

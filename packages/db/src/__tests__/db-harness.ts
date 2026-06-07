@@ -23,7 +23,11 @@ const MIGRATIONS_FOLDER = resolve(
   "../../migrations",
 );
 
-/** The four domain tables + four MCP tables the 0000 migration creates. */
+/**
+ * Every table the committed migrations create: the four domain tables, the
+ * four MCP tables, plus the `users` table (added in 0002) that the user-scoping
+ * FKs target.
+ */
 export const EXPECTED_TABLES = [
   "categories",
   "mcp_access_tokens",
@@ -33,10 +37,14 @@ export const EXPECTED_TABLES = [
   "missions",
   "task_dependencies",
   "tasks",
+  "users",
 ] as const;
 
 /** Every table we truncate when resetting state between test groups. */
 const ALL_TABLES = [...EXPECTED_TABLES];
+
+/** A default test user id used across the integration suites. */
+export const TEST_USER_ID = "user_test_alpha";
 
 export interface TestDb {
   /** The node-postgres drizzle client, typed as the injectable service db. */
@@ -49,6 +57,12 @@ export interface TestDb {
   migrate(): Promise<void>;
   /** Insert the five default categories (CATEGORY_SEEDS). */
   seedCategories(): Promise<void>;
+  /**
+   * Insert a user row (the FK target every mission/task scopes against) and
+   * return its id. Defaults to TEST_USER_ID; pass an id to create a second
+   * user for isolation tests.
+   */
+  seedUser(id?: string): Promise<string>;
   /** TRUNCATE every table (RESTART IDENTITY CASCADE) — full reset. */
   reset(): Promise<void>;
   /** Assert which of the expected tables exist (via information_schema). */
@@ -95,6 +109,13 @@ export function createTestDb(connectionString?: string): TestDb {
           isDefault: c.isDefault,
         })),
       );
+    },
+
+    async seedUser(id = TEST_USER_ID) {
+      await client
+        .insert(schema.users)
+        .values({ id, email: `${id}@example.test` });
+      return id;
     },
 
     async reset() {

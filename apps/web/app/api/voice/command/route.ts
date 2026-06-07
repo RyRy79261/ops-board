@@ -122,11 +122,11 @@ export async function POST(req: Request): Promise<Response> {
 
   // --- Shape B: JSON confirm / disambiguation re-issue ---------------------
   if (contentType.includes("application/json")) {
-    return handleReissue(req);
+    return handleReissue(req, user.id);
   }
 
   // --- Shape A: multipart audio → full pipeline ----------------------------
-  return handleAudio(req);
+  return handleAudio(req, user.id);
 }
 
 /**
@@ -134,7 +134,7 @@ export async function POST(req: Request): Promise<Response> {
  * intent is already parsed; we re-validate it against the union and execute it
  * as CONFIRMED. This is the only path that may run a destructive mutation.
  */
-async function handleReissue(req: Request): Promise<Response> {
+async function handleReissue(req: Request, userId: string): Promise<Response> {
   let payload: unknown;
   try {
     payload = await req.json();
@@ -165,7 +165,7 @@ async function handleReissue(req: Request): Promise<Response> {
     );
   }
 
-  const outcome = await executeIntent(parsed.data);
+  const outcome = await executeIntent(parsed.data, userId);
   const body = outcomeToBody("", parsed.data, outcome);
   if ("result" in outcome) revalidatePath("/");
   return NextResponse.json(body, { status: 200 });
@@ -175,7 +175,7 @@ async function handleReissue(req: Request): Promise<Response> {
  * Shape A — the normal capture: transcribe → server snapshot → classify →
  * validate → confirm-gate → execute.
  */
-async function handleAudio(req: Request): Promise<Response> {
+async function handleAudio(req: Request, userId: string): Promise<Response> {
   let form: FormData;
   try {
     form = await req.formData();
@@ -229,7 +229,9 @@ async function handleAudio(req: Request): Promise<Response> {
   }
 
   // 2. Build the snapshot SERVER-SIDE from the DB (never from model output).
-  const snapshot = await buildSnapshot(tz);
+  //    Scoped to the SESSION user so the classifier only ever sees THIS user's
+  //    missions / tasks (no cross-user names leak into the prompt).
+  const snapshot = await buildSnapshot(tz, userId);
 
   // 3. Classify via Claude (pinned Haiku, forced tool_use, temp 0, ~30s).
   const raw = await callForcedTool({
@@ -278,7 +280,7 @@ async function handleAudio(req: Request): Promise<Response> {
 
   // 6. Execute (resolve hints → mutation / read). May still surface a soft
   // confirm / disambiguation if a hint resolves to 0 / many.
-  const outcome = await executeIntent(intent);
+  const outcome = await executeIntent(intent, userId);
   const body = outcomeToBody(transcript, intent, outcome);
   if ("result" in outcome) revalidatePath("/");
   return NextResponse.json(body, { status: 200 });
@@ -286,17 +288,27 @@ async function handleAudio(req: Request): Promise<Response> {
 
 // --- Snapshot + helpers -----------------------------------------------------
 
-/** Build the compact current-state snapshot the classifier fuzzy-matches against. */
-async function buildSnapshot(tz: string): Promise<VoiceStateSnapshot> {
+/**
+ * Build the compact current-state snapshot the classifier fuzzy-matches
+ * against, scoped to the SESSION user. Categories are global; missions + tasks
+ * are read with `userId` so the prompt never carries another user's data.
+ */
+async function buildSnapshot(
+  tz: string,
+  userId: string,
+): Promise<VoiceStateSnapshot> {
   const db = createHttpDb();
   const [missions, categories] = await Promise.all([
-    getMissions(db),
+    getMissions(userId, db),
     getCategories(db),
   ]);
   const catNameById = new Map(categories.map((c) => [c.id, c.slug]));
 
   const perMission = await Promise.all(
-    missions.map(async (m) => ({ mission: m, tasks: await getTasks(m.id, db) })),
+    missions.map(async (m) => ({
+      mission: m,
+      tasks: await getTasks(m.id, userId, db),
+    })),
   );
 
   const tasks: VoiceStateSnapshot["tasks"] = [];

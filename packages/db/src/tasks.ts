@@ -1,8 +1,8 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
-import type { Task, TaskDependency, TaskStatus } from "./schema";
+import type { Task, TaskStatus } from "./schema";
 
 // @opsboard/db/tasks — read query services for tasks, categories, and the
 // dependency graph, plus the single status-cycle mutation the S4 Server
@@ -49,62 +49,76 @@ export async function getCategories(
 }
 
 /**
- * All tasks for a mission, sorted by `sort_order` then name. Returns the raw
+ * All of `userId`'s tasks for a mission, sorted by `sort_order` then name.
+ * Scoped by BOTH missionId and the denormalized tasks.userId. Returns the raw
  * (inferred) Task rows — the board groups / buckets them and derives blocked +
  * window state via @opsboard/core.
  */
 export async function getTasks(
   missionId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<Task[]> {
   return db
     .select()
     .from(schema.tasks)
-    .where(eq(schema.tasks.missionId, missionId))
+    .where(
+      and(
+        eq(schema.tasks.missionId, missionId),
+        eq(schema.tasks.userId, userId),
+      ),
+    )
     .orderBy(asc(schema.tasks.sortOrder), asc(schema.tasks.name));
 }
 
-/** One task by id, or null. */
+/** One of `userId`'s tasks by id, or null if it doesn't exist / isn't theirs. */
 export async function getTask(
   id: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<Task | null> {
   const [row] = await db
     .select()
     .from(schema.tasks)
-    .where(eq(schema.tasks.id, id))
+    .where(and(eq(schema.tasks.id, id), eq(schema.tasks.userId, userId)))
     .limit(1);
   return row ?? null;
 }
 
 /**
- * Every dependency edge for a mission's tasks. We scope by mission rather than
- * scanning the whole edge table: fetch the mission's task ids, then return the
- * edges whose `taskId` is one of them. Feeds @opsboard/core's cycle detection
+ * Every dependency edge for a mission's tasks, scoped to `userId`. We first
+ * select the user's own task ids for the mission (WHERE missionId AND userId),
+ * then select the edges whose `taskId` is one of those ids — NO unscoped
+ * full-table scan of task_dependencies. Feeds @opsboard/core's cycle detection
  * + critical-path + blocked derivations.
  */
 export async function getTaskDependencies(
   missionId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<DependencyEdge[]> {
   const taskRows = await db
     .select({ id: schema.tasks.id })
     .from(schema.tasks)
-    .where(eq(schema.tasks.missionId, missionId));
-  const taskIds = new Set(taskRows.map((t) => t.id));
-  if (taskIds.size === 0) return [];
+    .where(
+      and(
+        eq(schema.tasks.missionId, missionId),
+        eq(schema.tasks.userId, userId),
+      ),
+    );
+  const taskIds = taskRows.map((t) => t.id);
+  if (taskIds.length === 0) return [];
 
-  const edges: TaskDependency[] = await db
+  const edges = await db
     .select()
-    .from(schema.taskDependencies);
+    .from(schema.taskDependencies)
+    .where(inArray(schema.taskDependencies.taskId, taskIds));
 
-  return edges
-    .filter((e) => taskIds.has(e.taskId))
-    .map((e) => ({
-      id: e.id,
-      taskId: e.taskId,
-      dependsOnId: e.dependsOnId,
-    }));
+  return edges.map((e) => ({
+    id: e.id,
+    taskId: e.taskId,
+    dependsOnId: e.dependsOnId,
+  }));
 }
 
 /** Result of a status-cycle mutation: the updated task, or null if not found. */
@@ -122,12 +136,13 @@ export type UpdateTaskStatusResult =
 export async function updateTaskStatus(
   taskId: string,
   status: TaskStatus,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<UpdateTaskStatusResult> {
   const [row] = await db
     .update(schema.tasks)
     .set({ status, updatedAt: new Date() })
-    .where(eq(schema.tasks.id, taskId))
+    .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)))
     .returning();
   if (!row) return { ok: false, error: "Task not found." };
   return { ok: true, task: row };

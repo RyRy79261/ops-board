@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
@@ -150,10 +150,14 @@ async function resolveCategorySlug(
  */
 export async function createMission(
   input: CreateMissionInput,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<CreateMissionResult> {
   if (!isNonEmptyString(input.name)) {
     throw new TypeError("createMission: `name` must be a non-empty string.");
+  }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("createMission: `userId` must be a non-empty string.");
   }
   if (!isValidDateOrNullish(input.targetDate)) {
     throw new TypeError(
@@ -163,7 +167,11 @@ export async function createMission(
 
   const [mission] = await db
     .insert(schema.missions)
-    .values({ name: input.name.trim(), targetDate: input.targetDate ?? null })
+    .values({
+      userId,
+      name: input.name.trim(),
+      targetDate: input.targetDate ?? null,
+    })
     .returning();
   return { ok: true, mission: mission! };
 }
@@ -175,12 +183,23 @@ export async function createMission(
  */
 export async function deleteMission(
   missionId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
   if (!isUuid(missionId)) {
     throw new TypeError("deleteMission: `missionId` must be a valid UUID.");
   }
-  await db.delete(schema.missions).where(eq(schema.missions.id, missionId));
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("deleteMission: `userId` must be a non-empty string.");
+  }
+  await db
+    .delete(schema.missions)
+    .where(
+      and(
+        eq(schema.missions.id, missionId),
+        eq(schema.missions.userId, userId),
+      ),
+    );
   return { ok: true };
 }
 
@@ -195,10 +214,14 @@ export async function deleteMission(
  */
 export async function createTask(
   input: CreateTaskInput,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<CreateTaskResult> {
   if (!isUuid(input.missionId)) {
     throw new TypeError("createTask: `missionId` must be a valid UUID.");
+  }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("createTask: `userId` must be a non-empty string.");
   }
   if (input.categoryId != null && !isUuid(input.categoryId)) {
     throw new TypeError(
@@ -220,6 +243,27 @@ export async function createTask(
     throw new TypeError('createTask: `notBefore` must be "YYYY-MM-DD" or null.');
   }
 
+  // Verify the mission belongs to this user BEFORE inserting anything. This is
+  // what upholds the tasks.userId == missions.userId invariant (and prevents a
+  // user planting a task on someone else's mission). If the mission is absent
+  // or owned by someone else, return a typed error and do NOT insert.
+  const [mission] = await db
+    .select({ id: schema.missions.id })
+    .from(schema.missions)
+    .where(
+      and(
+        eq(schema.missions.id, input.missionId),
+        eq(schema.missions.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!mission) {
+    return {
+      ok: false,
+      error: "Unknown mission or category — task not created.",
+    };
+  }
+
   let categoryId: string | null = input.categoryId ?? null;
   if (isNonEmptyString(input.categorySlug)) {
     const resolved = await resolveCategorySlug(input.categorySlug, db);
@@ -234,6 +278,7 @@ export async function createTask(
       .insert(schema.tasks)
       .values({
         missionId: input.missionId,
+        userId,
         name: input.name.trim(),
         categoryId,
         status: input.status ?? "not-started",
@@ -263,10 +308,14 @@ export async function createTask(
 export async function updateTask(
   taskId: string,
   patch: UpdateTaskPatch,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<UpdateTaskResult> {
   if (!isUuid(taskId)) {
     throw new TypeError("updateTask: `taskId` must be a valid UUID.");
+  }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("updateTask: `userId` must be a non-empty string.");
   }
   if (patch.categoryId != null && !isUuid(patch.categoryId)) {
     throw new TypeError(
@@ -326,7 +375,7 @@ export async function updateTask(
     const [row] = await db
       .update(schema.tasks)
       .set(set)
-      .where(eq(schema.tasks.id, taskId))
+      .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)))
       .returning();
     if (!row) return { ok: false, error: "Task not found." };
     return { ok: true, task: row };
@@ -345,12 +394,18 @@ export async function updateTask(
  */
 export async function deleteTask(
   taskId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
   if (!isUuid(taskId)) {
     throw new TypeError("deleteTask: `taskId` must be a valid UUID.");
   }
-  await db.delete(schema.tasks).where(eq(schema.tasks.id, taskId));
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("deleteTask: `userId` must be a non-empty string.");
+  }
+  await db
+    .delete(schema.tasks)
+    .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)));
   return { ok: true };
 }
 
@@ -368,6 +423,7 @@ export async function deleteTask(
 export async function addDependency(
   taskId: string,
   dependsOnId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
   if (!isUuid(taskId) || !isUuid(dependsOnId)) {
@@ -375,10 +431,30 @@ export async function addDependency(
       "addDependency: `taskId` and `dependsOnId` must be valid UUIDs.",
     );
   }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("addDependency: `userId` must be a non-empty string.");
+  }
   // Cheap pre-check so the common self-dep case never hits the DB; the CHECK
   // below is still the source of truth for the same race.
   if (taskId === dependsOnId) {
     return { ok: false, error: "A task cannot depend on itself." };
+  }
+
+  // Both endpoints must be the user's own tasks before we create the edge —
+  // otherwise a user could wire an edge into / out of someone else's task.
+  // We count the user's tasks among {taskId, dependsOnId}: exactly 2 means
+  // both are owned.
+  const owned = await db
+    .select({ id: schema.tasks.id })
+    .from(schema.tasks)
+    .where(
+      and(
+        inArray(schema.tasks.id, [taskId, dependsOnId]),
+        eq(schema.tasks.userId, userId),
+      ),
+    );
+  if (owned.length !== 2) {
+    return { ok: false, error: "One or both tasks do not exist." };
   }
 
   try {
@@ -408,6 +484,7 @@ export async function addDependency(
 export async function removeDependency(
   taskId: string,
   dependsOnId: string,
+  userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<MutationResult> {
   if (!isUuid(taskId) || !isUuid(dependsOnId)) {
@@ -415,12 +492,26 @@ export async function removeDependency(
       "removeDependency: `taskId` and `dependsOnId` must be valid UUIDs.",
     );
   }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError(
+      "removeDependency: `userId` must be a non-empty string.",
+    );
+  }
+  // Scope the delete to edges whose `task_id` is one of the user's own tasks
+  // (the edge's ownership flows through its tasks — there is no user_id column
+  // on task_dependencies). A subquery keeps this a single round-trip and means
+  // another user's edge with the same id pair is never touched.
+  const ownedTaskIds = db
+    .select({ id: schema.tasks.id })
+    .from(schema.tasks)
+    .where(eq(schema.tasks.userId, userId));
   await db
     .delete(schema.taskDependencies)
     .where(
       and(
         eq(schema.taskDependencies.taskId, taskId),
         eq(schema.taskDependencies.dependsOnId, dependsOnId),
+        inArray(schema.taskDependencies.taskId, ownedTaskIds),
       ),
     );
   return { ok: true };

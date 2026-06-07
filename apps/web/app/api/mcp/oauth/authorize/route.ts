@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { DEFAULT_SCOPE, findClient, isAllowedScope, issueAuthCode } from "@/lib/mcp/oauth";
+import { auth } from "@/lib/neon-auth";
+import { ensureUserSynced } from "@/lib/auth-middleware";
 
 // ADAPTED from camp-404 apps/web/app/api/mcp/oauth/authorize/route.ts
-// (scaffolding-plan.md S6), STRIPPED to single-user. Camp gated the consent
-// screen behind a Neon-Auth login redirect (/mcp/connect), a per-user
-// camp-profile lookup, and a multi-condition access denial (camp access /
-// onboarding / captain approval). OpsBoard has no users table and no second
-// principal — the operator IS the owner — so all of that is removed: the
-// consent screen renders directly and Approve mints a code bound to the
-// constant MCP_PRINCIPAL_ID (set inside issueAuthCode).
+// (scaffolding-plan.md S6). MCP is per-user: consent is GATED behind a verified
+// Neon Auth session. The GET handler redirects an unauthenticated visitor to
+// /auth with a callbackURL back to this full authorize URL (so after sign-in
+// they return to approve). On POST "approve" we capture the verified
+// session.user.id and bind the minted code to it (issueAuthCode stores it in
+// user_id + principal_id); with no session on POST we deny.
 //
 // PRESERVED EXACTLY (the OAuth-shell load-bearing bits):
 //   - PKCE: code_challenge / code_challenge_method flow unchanged.
@@ -79,6 +80,17 @@ export async function GET(req: Request) {
   const resolved = await resolveClientOrError(parsed.data);
   if (resolved instanceof NextResponse) return resolved;
 
+  // GATE consent behind a verified Neon Auth session. With no session, send the
+  // visitor to sign in and bring them straight back to THIS authorize URL
+  // (full original query intact) so they can approve once authenticated.
+  const { data: session } = await auth.getSession();
+  if (!session?.user?.id) {
+    const callbackURL = url.pathname + url.search;
+    const signIn = new URL("/auth", url.origin);
+    signIn.searchParams.set("callbackURL", callbackURL);
+    return NextResponse.redirect(signIn);
+  }
+
   return consentHtml({
     clientName: resolved.client.clientName,
     scope: resolved.scope,
@@ -131,10 +143,23 @@ export async function POST(req: Request) {
     );
   }
 
-  // Single-user: no login / profile / approval gate. A confirmed Approve mints
-  // a code for the constant owner principal (bound inside issueAuthCode).
+  // A confirmed Approve must be tied to a verified Neon Auth session — the code
+  // is bound to the approving human's user id. No session ⇒ DENY (an
+  // unauthenticated POST grants nothing). userId is NEVER taken from the form.
+  const { data: session } = await auth.getSession();
+  if (!session?.user?.id) {
+    return errorPage(
+      401,
+      "login_required",
+      "You must be signed in to approve this connection. Start the connection again to sign in first.",
+    );
+  }
+  const userId = session.user.id;
+  await ensureUserSynced(userId, session.user.email?.toLowerCase() ?? null);
+
   const code = await issueAuthCode({
     clientId: parsed.data.client_id,
+    userId,
     redirectUri: parsed.data.redirect_uri,
     codeChallenge: parsed.data.code_challenge,
     codeChallengeMethod: parsed.data.code_challenge_method,

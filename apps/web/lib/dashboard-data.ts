@@ -32,11 +32,12 @@ import type {
  * 404s the board.
  */
 export async function getDashboardData(
-  missionId?: string,
+  missionId: string | undefined,
+  userId: string,
 ): Promise<DashboardData | null> {
   const db = createHttpDb();
 
-  const missions = await getMissions(db);
+  const missions = await getMissions(userId, db);
   const firstMission = missions[0];
   if (firstMission === undefined) return null;
 
@@ -46,11 +47,12 @@ export async function getDashboardData(
   const activeMissionSummary = requested ?? firstMission;
 
   // Load the active mission's full detail + its tasks, deps, and the category
-  // catalogue (sorted by sort_order) in parallel — independent reads.
+  // catalogue (sorted by sort_order) in parallel — independent reads. Every
+  // mission/task read is scoped to the SESSION userId; categories are global.
   const [mission, taskRows, depRows, categoryRows] = await Promise.all([
-    getMission(activeMissionSummary.id, db),
-    getTasks(activeMissionSummary.id, db),
-    getTaskDependencies(activeMissionSummary.id, db),
+    getMission(activeMissionSummary.id, userId, db),
+    getTasks(activeMissionSummary.id, userId, db),
+    getTaskDependencies(activeMissionSummary.id, userId, db),
     getCategories(db),
   ]);
 
