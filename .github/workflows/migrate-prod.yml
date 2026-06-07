@@ -12,11 +12,11 @@ name: Migrate production DB
 # records applied migrations in __drizzle_migrations and no-ops when nothing is
 # pending — so re-runs / the manual button are safe.
 #
-# REQUIRES the PRODUCTION_DATABASE_URL repo secret = the Neon DIRECT (unpooled)
-# connection string for the production database (Neon Console → Connect → Direct
-# connection, or copy DATABASE_URL_UNPOOLED from Vercel's prod env). This is a
-# GitHub secret, separate from the Vercel runtime env vars. The job SKIPS
-# cleanly until the secret is set.
+# REQUIRES the DATABASE_URL_UNPOOLED repo secret = the Neon DIRECT (unpooled)
+# connection string for the production database (the value of Vercel's prod
+# DATABASE_URL_UNPOOLED, or Neon Console → Connect → Direct connection — the host
+# WITHOUT `-pooler`). This is a GitHub Actions secret, separate from the Vercel
+# runtime env vars. The job SKIPS cleanly until the secret is set.
 #
 # Ordering note: this Action and the Vercel production deploy both fire on push
 # to main and run in parallel. Migrations so far are ADDITIVE (new tables /
@@ -54,13 +54,13 @@ jobs:
       - name: Gate on the prod DB secret
         id: gate
         env:
-          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
         run: |
-          if [ -n "${PRODUCTION_DATABASE_URL}" ]; then
+          if [ -n "${DATABASE_URL_UNPOOLED}" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::PRODUCTION_DATABASE_URL not set — skipping prod migration."
+            echo "::notice::DATABASE_URL_UNPOOLED secret not set — skipping prod migration."
           fi
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -80,5 +80,5 @@ jobs:
       - name: Apply pending migrations to production
         if: steps.gate.outputs.enabled == 'true'
         env:
-          DATABASE_URL_UNPOOLED: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
         run: pnpm --filter @opsboard/db db:migrate
