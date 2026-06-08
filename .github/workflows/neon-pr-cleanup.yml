@@ -8,7 +8,7 @@ name: Delete Neon branch for closed PR
 # full name — head-ref slugging can differ between Vercel, the Neon integration,
 # and branch-name actions, so a prefix match is more robust while staying scoped
 # to this PR. (Adopted from camp-404; requires NEON_API_KEY + NEON_PROJECT_ID
-# repo secrets — it SKIPS cleanly until those are set.)
+# repo secrets — the run FAILS loudly if either is missing.)
 
 on:
   pull_request:
@@ -32,11 +32,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Until the Neon secrets are configured, this is a no-op (don't fail
-          # closed-PR runs during project setup).
           if [ -z "${NEON_API_KEY:-}" ] || [ -z "${NEON_PROJECT_ID:-}" ]; then
-            echo "::notice::NEON_API_KEY/NEON_PROJECT_ID not set — skipping Neon branch cleanup."
-            exit 0
+            echo "::error::NEON_API_KEY or NEON_PROJECT_ID is empty"
+            exit 1
           fi
 
           prefix="preview/${HEAD_REF}"
