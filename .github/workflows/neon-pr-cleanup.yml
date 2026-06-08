@@ -7,8 +7,9 @@ name: Delete Neon branch for closed PR
 # We match by `preview/<head-branch-name>` PREFIX rather than reconstructing the
 # full name — head-ref slugging can differ between Vercel, the Neon integration,
 # and branch-name actions, so a prefix match is more robust while staying scoped
-# to this PR. (Adopted from camp-404; requires NEON_API_KEY + NEON_PROJECT_ID
-# repo secrets — the run FAILS loudly if either is missing.)
+# to this PR. (Adopted from camp-404. Needs NEON_API_KEY (Actions secret) and
+# NEON_PROJECT_ID (Actions variable or secret); the run FAILS loudly if either
+# is missing.)
 
 on:
   pull_request:
@@ -26,7 +27,10 @@ jobs:
       - name: Delete Neon branch for this PR
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          # Neon's own template stores the project id as a GitHub Actions
+          # *variable* (vars.NEON_PROJECT_ID), not a secret — fall back to a
+          # secret in case it was added there instead.
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID || secrets.NEON_PROJECT_ID }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_REF: ${{ github.head_ref }}
         run: |
