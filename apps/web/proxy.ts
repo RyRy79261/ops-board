@@ -4,26 +4,36 @@ import { auth } from "@/lib/neon-auth";
 /**
  * PAGE GATING + the Neon Auth OAuth verifier exchange.
  *
- * Next.js 16 renamed the middleware file convention: `middleware.ts` →
- * `proxy.ts`, and the exported `middleware` function → `proxy`. The old name
- * is deprecated and NO LONGER RUNS, so this logic has to live in `proxy.ts`
- * or it never executes — which is exactly what silently broke Google sign-in
- * (the verifier exchange below never fired, so social sign-in returned the
- * user with a `?neon_auth_session_verifier=…` in the URL but no session cookie
- * ever got set). camp-404 uses the same `proxy.ts` mechanism.
+ * (Next.js 16 also renamed this file convention `middleware.ts` → `proxy.ts`,
+ * which is why this lives in proxy.ts; on 16.2 the old name still ran with a
+ * deprecation warning, so the rename alone was NOT what fixed Google sign-in.)
  *
  * `auth.middleware()` does two jobs in one pass:
  *   1. Exchanges the `?neon_auth_session_verifier=…` that Neon Auth's hosted
  *      social callback appends to the return URL for a real session cookie on
  *      our origin. This runs nowhere else (NOT in auth.handler()), so it has
- *      to be in the proxy or social sign-in silently 401s afterwards.
- *   2. Redirects unauthenticated requests to `loginUrl` (/auth) — the page
- *      gate.
+ *      to be in the proxy or social sign-in silently never gets a session.
+ *   2. Redirects unauthenticated requests to `loginUrl` (/auth/sign-in) — the
+ *      page gate.
+ *
+ * CRITICAL — why loginUrl is "/auth/sign-in" and NOT "/auth":
+ *   Inside Neon Auth's middleware processor the FIRST thing it does is
+ *   `if (pathname.startsWith(loginUrl)) return { action: "allow" }` — BEFORE
+ *   the verifier-exchange check. Our Google `callbackURL` lands the user back
+ *   on `/auth?neon_auth_session_verifier=…`. If loginUrl were "/auth", that
+ *   `/auth` landing would match the short-circuit and the verifier exchange
+ *   would be SKIPPED — no session cookie ever set, so /auth bounces the user
+ *   straight back to /auth/sign-in ("nothing happens" after Google). Using
+ *   "/auth/sign-in" means the `/auth` callback does NOT match the short-circuit,
+ *   the exchange runs, and the session lands. (This is exactly how camp-404 —
+ *   our working reference — has it.)
  *
  * ALLOW-LIST (never gated):
  *   - /auth and /auth/*  — the sign-in surface itself + the OAuth landing.
- *     We STILL run auth.middleware here so the verifier exchange fires; with
- *     loginUrl === "/auth" it won't redirect /auth to itself (no loop).
+ *     We STILL run auth.middleware here so the verifier exchange fires on the
+ *     /auth callback. /auth/sign-in matches loginUrl so it never loops; the
+ *     bare /auth (no session, no verifier) is redirected to /auth/sign-in,
+ *     same as /auth/page.tsx would do.
  *   - /api/*  — API routes do their own auth via withAuth() and answer with a
  *     JSON 401 { requiresAuth: true }, not a page redirect. (This includes
  *     /api/auth/*, the Better Auth handler, which must stay open.)
@@ -41,7 +51,7 @@ import { auth } from "@/lib/neon-auth";
  * /setup — right here, after the auth.middleware() pass below. Do NOT add it
  * now; this PR only lands the auth foundation.
  */
-const protect = auth.middleware({ loginUrl: "/auth" });
+const protect = auth.middleware({ loginUrl: "/auth/sign-in" });
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
@@ -75,9 +85,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Everything else (the board pages + /auth itself) goes through the Neon
-  // Auth proxy: verifier exchange always, plus the unauth→/auth redirect
-  // for protected pages. loginUrl === "/auth" means /auth never redirects to
-  // itself, so the sign-in page stays reachable while logged out.
+  // Auth proxy: verifier exchange on the /auth callback, plus the
+  // unauth→/auth/sign-in redirect for protected pages. loginUrl is
+  // "/auth/sign-in" (NOT "/auth") so the /auth OAuth landing is NOT
+  // short-circuited before the verifier exchange — see the header comment.
   return protect(request);
 }
 
