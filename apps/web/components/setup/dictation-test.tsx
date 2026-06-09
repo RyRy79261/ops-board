@@ -84,7 +84,15 @@ export function DictationTest({ onSuccess, onKeyProblem }: DictationTestProps) {
       form.append("audio", new File([blob], `setup-test.${ext}`, { type: mimeType }));
       form.append("tz", tz);
 
-      const res = await fetch(ENDPOINT, { method: "POST", body: form });
+      let res: Response;
+      try {
+        res = await fetch(ENDPOINT, { method: "POST", body: form });
+      } catch {
+        // Transport failure (offline, DNS, aborted) — fetch rejects; surface it
+        // as a retryable inline error instead of an unhandled rejection.
+        setPostError("Network error — check your connection and try again.");
+        return;
+      }
 
       if (!res.ok) {
         const errParse = DictationErrorSchema.safeParse(

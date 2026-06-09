@@ -14,6 +14,7 @@ import {
   INTENT_CLASSIFIER_MODEL,
   type VoiceStateSnapshot,
 } from "@opsboard/ai-prompts";
+import { z } from "zod";
 
 /**
  * POST /api/setup/dictation-test — the setup-wizard "try your keys" step.
@@ -41,6 +42,10 @@ export const runtime = "nodejs"; // Groq + Anthropic SDKs + node:crypto (key-vau
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB — matches the voice route.
 const DEFAULT_TZ = "UTC";
+
+// The browser-supplied IANA tz — Zod-validated at the boundary (shape) before
+// the runtime Intl validity check in sanitizeTz.
+const TzSchema = z.string().trim().min(1).max(64);
 
 // The emit_intent forced tool — identical contract to the voice route's
 // EMIT_INTENT_TOOL. The raw input is Zod-validated via safeParseIntent (the
@@ -89,8 +94,12 @@ interface DictationTestResponse {
  * 5xx / network blip (which we let bubble to the generic 500).
  */
 function isVendorKeyRejection(err: unknown): boolean {
+  // ONLY auth statuses mean "the key itself is wrong". A 429 (rate limit) or a
+  // generic 400 (malformed request — our bug, not the user's key) must NOT be
+  // mislabelled as a bad key, or we'd bounce the user to re-enter a good key.
+  // Those fall through to the generic 502.
   const status = (err as { status?: unknown })?.status;
-  return typeof status === "number" && status >= 400 && status < 500;
+  return status === 401 || status === 403;
 }
 
 function keyRejected(provider: AiProvider): NextResponse {
@@ -112,6 +121,10 @@ export const POST = withAuth(async (request, { userId }) => {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
+  // The multipart `audio` File is validated with explicit guards (not a single
+  // Zod parse) so each failure keeps its correct HTTP status — 400 missing /
+  // 415 unsupported media / 413 too large — which a collapsed Zod error can't
+  // express. The free-form text input (tz) IS Zod-validated (sanitizeTz).
   const file = form.get("audio");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Missing `audio` file" }, { status: 400 });
@@ -295,12 +308,11 @@ function isoTodayInTz(tz: string): string {
 
 /** Validate a browser-supplied IANA tz; fall back to UTC. Mirrors the voice route. */
 function sanitizeTz(value: FormDataEntryValue | null): string {
-  if (typeof value !== "string" || value.length === 0 || value.length > 64) {
-    return DEFAULT_TZ;
-  }
+  const parsed = TzSchema.safeParse(value);
+  if (!parsed.success) return DEFAULT_TZ;
   try {
-    new Intl.DateTimeFormat("en-US", { timeZone: value });
-    return value;
+    new Intl.DateTimeFormat("en-US", { timeZone: parsed.data });
+    return parsed.data;
   } catch {
     return DEFAULT_TZ;
   }

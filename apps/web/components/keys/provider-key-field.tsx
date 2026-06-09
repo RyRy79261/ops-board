@@ -46,6 +46,7 @@ export function ProviderKeyField({
   const [value, setValue] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [confirmingClear, setConfirmingClear] = React.useState(false);
 
   const isConfigured = state?.configured === true;
 
@@ -78,6 +79,7 @@ export function ProviderKeyField({
       setError(err instanceof Error ? err.message : "Couldn't clear that key.");
     } finally {
       setBusy(false);
+      setConfirmingClear(false);
     }
   }
 
@@ -124,15 +126,39 @@ export function ProviderKeyField({
           {busy ? "Saving…" : isConfigured ? "Replace key" : "Save key"}
         </Button>
         {allowClear && isConfigured ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => void handleClear()}
-            disabled={disabled || busy}
-          >
-            Clear
-          </Button>
+          confirmingClear ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-[color:var(--color-destructive)]"
+                onClick={() => void handleClear()}
+                disabled={disabled || busy}
+              >
+                {busy ? "Clearing…" : "Confirm clear"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingClear(false)}
+                disabled={disabled || busy}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmingClear(true)}
+              disabled={disabled || busy}
+            >
+              Clear
+            </Button>
+          )
         ) : null}
       </div>
     </div>
