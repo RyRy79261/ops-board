@@ -1,6 +1,8 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { createHttpDb } from "@opsboard/db";
+import { getUserSetupCompletedAt } from "@opsboard/db/api-keys";
 import { auth } from "@/lib/neon-auth";
 import { ensureUserSynced } from "@/lib/auth-middleware";
 
@@ -38,6 +40,35 @@ export async function getSessionUser(): Promise<SessionUser> {
   const email = session.user.email?.toLowerCase() ?? null;
 
   await ensureUserSynced(userId, email);
+
+  return { userId, email };
+}
+
+/**
+ * The SETUP-GATED counterpart to getSessionUser, for board pages / server
+ * actions that require a fully-onboarded user (one who finished the BYO-keys
+ * setup wizard). The gate lives HERE, at the RSC layer — NOT in the edge proxy,
+ * which deliberately does no DB read (see apps/web/proxy.ts).
+ *
+ * Flow:
+ *   1. Resolve the verified session via getSessionUser (which redirect("/auth")s
+ *      when unauthenticated — so this never proceeds unauthed).
+ *   2. Read `users.setup_completed_at`. If NULL → redirect("/setup").
+ *   3. Otherwise return the verified principal.
+ *
+ * IMPORTANT: the /setup and /auth pages call getSessionUser (NOT this helper) so
+ * they are reachable WITHOUT the onboarding check — otherwise an un-onboarded
+ * user would be redirected /setup → /setup forever. Only flips via
+ * markUserSetupComplete (driven by /api/setup/complete, which requires BOTH
+ * keys stored), so the gate can't be bypassed without keys.
+ */
+export async function requireOnboardedUser(): Promise<SessionUser> {
+  const { userId, email } = await getSessionUser();
+
+  const completedAt = await getUserSetupCompletedAt(userId, createHttpDb());
+  if (completedAt === null) {
+    redirect("/setup");
+  }
 
   return { userId, email };
 }

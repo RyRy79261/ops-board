@@ -45,11 +45,15 @@ import { auth } from "@/lib/neon-auth";
  * not supported for proxy in Next 16). The Neon Auth cookie/session work runs
  * fine there — camp-404 proves it.
  *
- * TODO(setup-gate): a LATER PR adds the per-user setup wizard (own
- * Anthropic+Groq keys). Once a user is authenticated here, that PR will gate
- * "setup complete" — redirect authenticated-but-unconfigured users to
- * /setup — right here, after the auth.middleware() pass below. Do NOT add it
- * now; this PR only lands the auth foundation.
+ * SETUP-GATE (per-user BYO Anthropic+Groq keys): the "setup complete" gate is
+ * DELIBERATELY NOT here. It lives at the RSC layer — `requireOnboardedUser()`
+ * in apps/web/lib/session.ts, which board pages / server actions call. It reads
+ * `users.setup_completed_at` and redirect("/setup")s an onboarded-but-unconfigured
+ * user. We do NOT add a DB read to this edge proxy: it runs on every navigation
+ * and a per-request DB round-trip in the proxy would tax every page load (and
+ * the proxy has no cheap, verified handle on the user row). The /setup and
+ * /auth pages use getSessionUser (WITHOUT the onboarding check) so there's no
+ * redirect loop; only /api/setup/complete (both keys required) flips the gate.
  */
 const protect = auth.middleware({ loginUrl: "/auth/sign-in" });
 

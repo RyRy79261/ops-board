@@ -1,8 +1,10 @@
 import { EmptyState } from "@opsboard/ui/components/empty-state";
 import { AppHeader } from "@opsboard/ui/components/app-header";
 import { getDashboardData } from "@/lib/dashboard-data";
-import { getSessionUser } from "@/lib/session";
+import { requireOnboardedUser } from "@/lib/session";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { VoiceController } from "@/components/voice/voice-controller";
+import { SettingsLink } from "@/components/settings-link";
 
 // The read-only board entry point. force-dynamic: the board is live (status
 // cycling + window-state ticking), never statically cached. Reads the active
@@ -23,17 +25,23 @@ export default async function HomePage({
     ? params.mission[0]
     : params.mission;
 
-  // Resolve the verified session principal (redirects to /auth if none), then
+  // Resolve the verified, FULLY-ONBOARDED principal — un-onboarded users are
+  // redirected to /setup (requireOnboardedUser), unauthed ones to /auth. Then
   // scope the board read to it — never to anything from the request.
-  const { userId } = await getSessionUser();
+  const { userId } = await requireOnboardedUser();
   const data = await getDashboardData(missionParam, userId);
 
   // No missions at all → the no-missions empty state, framed by the header so
-  // the chrome stays consistent. Voice-first: tells the operator what to say.
+  // the chrome stays consistent. Voice-first: tells the operator what to say,
+  // and the VoiceController FAB lets them actually say it — without this a
+  // brand-new user has no way to create their first mission (the FAB otherwise
+  // only mounts inside DashboardShell once a mission exists). The command route
+  // handles create_mission globally + user-scoped, so no mission context is
+  // needed here.
   if (!data) {
     return (
       <div className="flex min-h-dvh flex-col bg-background">
-        <AppHeader />
+        <AppHeader right={<SettingsLink />} />
         <main className="flex flex-1 items-center justify-center p-6">
           <EmptyState
             variant="no-missions"
@@ -41,6 +49,7 @@ export default async function HomePage({
             className="w-full max-w-md"
           />
         </main>
+        <VoiceController />
       </div>
     );
   }

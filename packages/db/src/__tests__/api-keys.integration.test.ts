@@ -4,6 +4,9 @@ import * as schema from "../schema";
 import {
   clearUserApiKey,
   getUserApiKeyRow,
+  getUserRow,
+  getUserSetupCompletedAt,
+  markUserSetupComplete,
   setUserApiKey,
 } from "../api-keys";
 import { createTestDb, TEST_USER_ID, type TestDb } from "./db-harness";
@@ -125,6 +128,49 @@ describe.skipIf(!hasDb)("@opsboard/db api-keys access module (real Postgres)", (
       .where(eq(schema.users.id, TEST_USER_ID));
 
     expect(await getUserApiKeyRow(TEST_USER_ID, h.db)).toBeNull();
+  });
+
+  // --- Setup-wizard gate ----------------------------------------------------
+  it("getUserSetupCompletedAt is null for a freshly-seeded user", async () => {
+    expect(await getUserSetupCompletedAt(TEST_USER_ID, h.db)).toBeNull();
+  });
+
+  it("getUserSetupCompletedAt is null when the user row is absent", async () => {
+    expect(await getUserSetupCompletedAt("user_does_not_exist", h.db)).toBeNull();
+  });
+
+  it("markUserSetupComplete stamps setup_completed_at with a Date", async () => {
+    const before = new Date();
+    await markUserSetupComplete(TEST_USER_ID, h.db);
+
+    const stamped = await getUserSetupCompletedAt(TEST_USER_ID, h.db);
+    expect(stamped).toBeInstanceOf(Date);
+    // Stamped at/after the call started (allow a small clock skew margin).
+    expect(stamped!.getTime()).toBeGreaterThanOrEqual(before.getTime() - 1000);
+  });
+
+  it("markUserSetupComplete is idempotent — re-stamping just refreshes it", async () => {
+    await markUserSetupComplete(TEST_USER_ID, h.db);
+    const first = await getUserSetupCompletedAt(TEST_USER_ID, h.db);
+    await markUserSetupComplete(TEST_USER_ID, h.db);
+    const second = await getUserSetupCompletedAt(TEST_USER_ID, h.db);
+    expect(first).toBeInstanceOf(Date);
+    expect(second).toBeInstanceOf(Date);
+    expect(second!.getTime()).toBeGreaterThanOrEqual(first!.getTime());
+  });
+
+  it("markUserSetupComplete is a no-op when the user row is absent", async () => {
+    await expect(
+      markUserSetupComplete("user_does_not_exist", h.db),
+    ).resolves.toBeUndefined();
+    expect(await getUserRow("user_does_not_exist", h.db)).toBeNull();
+  });
+
+  it("getUserRow returns the seeded user with a null setup flag", async () => {
+    const row = await getUserRow(TEST_USER_ID, h.db);
+    expect(row).not.toBeNull();
+    expect(row!.id).toBe(TEST_USER_ID);
+    expect(row!.setupCompletedAt).toBeNull();
   });
 
   // --- Cross-user isolation -------------------------------------------------

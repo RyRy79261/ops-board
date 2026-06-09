@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
-import type { UserApiKeyRow } from "./schema";
+import type { User, UserApiKeyRow } from "./schema";
 
 // @opsboard/db/api-keys — the crypto-FREE access layer for the per-user BYO
 // API-key vault (the `user_api_keys` table). This package NEVER touches
@@ -96,6 +96,76 @@ export async function setUserApiKey(
         },
       });
   }
+}
+
+// --- Setup-wizard gate (model B BYO onboarding) ---------------------------
+// The `users.setup_completed_at` flag is what the RSC gate
+// (requireOnboardedUser, apps/web/lib/session.ts) reads to decide whether to
+// redirect an authenticated-but-unconfigured user to /setup. These helpers are
+// crypto-FREE like the rest of this module — they only flip / read the
+// timestamp. The /api/setup/complete route is the only caller of the mark
+// helper, and it ONLY calls it after asserting BOTH keys are stored, so the
+// gate can never open without keys.
+
+/**
+ * Mark the user's setup wizard as complete by stamping `setup_completed_at`
+ * with now(). Idempotent: a no-op (zero rows updated) when the user row is
+ * absent, and re-stamping an already-complete user just refreshes the
+ * timestamp — both harmless. `updated_at` is bumped too. Bumping a NON-existent
+ * row is fine because the caller (an authenticated route) has already had its
+ * user mirrored via ensureUserSynced.
+ */
+export async function markUserSetupComplete(
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<void> {
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError(
+      "markUserSetupComplete: `userId` must be a non-empty string.",
+    );
+  }
+  const now = new Date();
+  await db
+    .update(schema.users)
+    .set({ setupCompletedAt: now, updatedAt: now })
+    .where(eq(schema.users.id, userId));
+}
+
+/**
+ * Read the user's `setup_completed_at` so callers can check onboarding status.
+ * Returns the timestamp (a `Date`) when set, `null` when the wizard hasn't been
+ * completed, and `null` when there's no user row at all (treated as
+ * not-onboarded). The RSC gate (requireOnboardedUser) calls this right after
+ * resolving the verified session principal.
+ */
+export async function getUserSetupCompletedAt(
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<Date | null> {
+  const [row] = await db
+    .select({ setupCompletedAt: schema.users.setupCompletedAt })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  return row?.setupCompletedAt ?? null;
+}
+
+/**
+ * Read the full `users` row for `userId`, or null when absent. A small
+ * convenience for callers that want more than just the setup flag (the gate
+ * uses getUserSetupCompletedAt; this is here for completeness / future
+ * read-side use).
+ */
+export async function getUserRow(
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<User | null> {
+  const [row] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  return row ?? null;
 }
 
 /**
