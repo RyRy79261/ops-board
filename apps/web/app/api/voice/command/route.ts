@@ -128,9 +128,9 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // --- Shape A: multipart audio → full pipeline ----------------------------
-  // The full principal (id + verified email) flows in so the BYO key resolver
-  // can apply its ALLOWED_EMAILS env-var fallback against the SESSION email.
-  return handleAudio(req, user.id, user.email);
+  // PURE BYO: the resolver keys off the SESSION userId only — there is no env /
+  // whitelist fallback, so the email is no longer threaded into resolution.
+  return handleAudio(req, user.id);
 }
 
 /**
@@ -182,7 +182,6 @@ async function handleReissue(req: Request, userId: string): Promise<Response> {
 async function handleAudio(
   req: Request,
   userId: string,
-  email: string | null,
 ): Promise<Response> {
   let form: FormData;
   try {
@@ -204,12 +203,11 @@ async function handleAudio(
 
   const tz = sanitizeTz(form.get("tz"));
 
-  // 0. Resolve the SESSION user's Groq key. FAIL CLOSED: a user with no key
-  //    gets a 402 NO_AI_KEY (the resolver's ALLOWED_EMAILS env branch is the
-  //    only env path — there is NO silent direct-env fallback here).
+  // 0. Resolve the SESSION user's Groq key. FAIL CLOSED: a user with no stored
+  //    key gets a 402 NO_AI_KEY (pure BYO — there is NO env fallback at all).
   let groqKey: string;
   try {
-    groqKey = await resolveAiKey(userId, email, "groq");
+    groqKey = await resolveAiKey(userId, "groq");
   } catch (err) {
     const failClosed = aiKeyErrorResponse(err);
     if (failClosed) return failClosed;
@@ -251,11 +249,11 @@ async function handleAudio(
   const snapshot = await buildSnapshot(tz, userId);
 
   // 3. Resolve the SESSION user's Anthropic key, then classify via Claude
-  //    (pinned Haiku, forced tool_use, temp 0, ~30s). FAIL CLOSED on no key
-  //    with a 402 NO_AI_KEY — same single env path as transcription.
+  //    (pinned Haiku, forced tool_use, temp 0, ~30s). FAIL CLOSED on no stored
+  //    key with a 402 NO_AI_KEY — pure BYO, same as transcription.
   let anthropicKey: string;
   try {
-    anthropicKey = await resolveAiKey(userId, email, "anthropic");
+    anthropicKey = await resolveAiKey(userId, "anthropic");
   } catch (err) {
     const failClosed = aiKeyErrorResponse(err);
     if (failClosed) return failClosed;

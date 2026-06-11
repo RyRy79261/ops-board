@@ -41,6 +41,13 @@ export const users = pgTable("users", {
   // auth server owns it; we mirror it verbatim.
   id: text("id").primaryKey(),
   email: text("email").notNull(),
+  // The BYO-keys setup-wizard gate (model B). NULL until the user finishes the
+  // wizard with BOTH their Anthropic + Groq keys stored; set to now() by
+  // markUserSetupComplete (./api-keys.ts) when /api/setup/complete confirms
+  // both keys exist. requireOnboardedUser (apps/web/lib/session.ts) reads this
+  // at the RSC layer and redirects an un-onboarded user to /setup. This is the
+  // ONLY flag that opens the gate, so setup can't be bypassed without keys.
+  setupCompletedAt: timestamp("setup_completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

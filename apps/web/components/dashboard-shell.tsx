@@ -21,6 +21,7 @@ import { CategoryView } from "@/components/views/category-view";
 import { TimelineView } from "@/components/views/timeline-view";
 import { DependenciesView } from "@/components/views/dependencies-view";
 import { VoiceController } from "@/components/voice/voice-controller";
+import { SettingsLink } from "@/components/settings-link";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
 // desktop 3-pane). Holds the active-view state (ViewTabs), provides each view a
@@ -167,7 +168,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <AppHeader />
+      <AppHeader right={<SettingsLink />} />
       <div
         className={cn(
           "flex min-h-0 flex-1",

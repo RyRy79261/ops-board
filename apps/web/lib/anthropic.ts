@@ -50,6 +50,40 @@ export interface ToolCallOptions {
 }
 
 /**
+ * Run a forced single-tool Claude call and return the raw `tool_use.input` (an
+ * `unknown` the caller MUST validate with Zod — e.g. `safeParseIntent` from
+ * @opsboard/types). THROWS on any SDK/API/timeout error and returns `null` only
+ * on a clean "no matching tool_use block" outcome. Most callers want the
+ * fail-safe `callForcedTool` wrapper instead; this strict form exists so a
+ * caller that must distinguish a bad-KEY vendor 4xx from a model that simply
+ * produced nothing (the setup dictation-test) can inspect the thrown error's
+ * HTTP status. `temperature` is pinned to 0 for deterministic classification.
+ */
+export async function callForcedToolStrict(
+  opts: ToolCallOptions,
+): Promise<unknown | null> {
+  const client = new Anthropic({ apiKey: opts.apiKey });
+  const response = await client.messages.create(
+    {
+      model: opts.model,
+      max_tokens: opts.maxTokens ?? 1024,
+      temperature: 0,
+      system: opts.system,
+      tools: [opts.tool],
+      tool_choice: { type: "tool", name: opts.tool.name },
+      messages: [{ role: "user", content: opts.userMessage }],
+    },
+    { timeout: opts.timeoutMs ?? 30_000 },
+  );
+
+  const block = response.content.find(
+    (b) => b.type === "tool_use" && b.name === opts.tool.name,
+  );
+  if (!block || block.type !== "tool_use") return null;
+  return block.input;
+}
+
+/**
  * Run a forced single-tool Claude call and return the raw `tool_use.input`
  * (an `unknown` the caller MUST validate with Zod — e.g. `safeParseIntent`
  * from @opsboard/types). Fail-safe: returns `null` on a missing key, an API
@@ -61,25 +95,7 @@ export async function callForcedTool(
   opts: ToolCallOptions,
 ): Promise<unknown | null> {
   try {
-    const client = new Anthropic({ apiKey: opts.apiKey });
-    const response = await client.messages.create(
-      {
-        model: opts.model,
-        max_tokens: opts.maxTokens ?? 1024,
-        temperature: 0,
-        system: opts.system,
-        tools: [opts.tool],
-        tool_choice: { type: "tool", name: opts.tool.name },
-        messages: [{ role: "user", content: opts.userMessage }],
-      },
-      { timeout: opts.timeoutMs ?? 30_000 },
-    );
-
-    const block = response.content.find(
-      (b) => b.type === "tool_use" && b.name === opts.tool.name,
-    );
-    if (!block || block.type !== "tool_use") return null;
-    return block.input;
+    return await callForcedToolStrict(opts);
   } catch (err) {
     // Never leak SDK internals to the boundary; the route maps null → a clean
     // "couldn't understand that" error.
