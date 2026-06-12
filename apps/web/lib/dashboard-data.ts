@@ -14,15 +14,52 @@ import type {
   TaskVM,
   CategoryVM,
   DependencyEdgeVM,
+  MissionTaskWindow,
 } from "./dashboard-types";
 
-// Server-side read assembly for the read-only board. Fetches missions + the
-// active mission (default = first) + its tasks/deps/categories via @opsboard/db
-// services, then server-derives the TWO tz-INDEPENDENT facts:
+// Server-side read assembly for the read-only board. Fetches missions + EVERY
+// mission's tasks/deps (the sidebar NavCards each need their own count +
+// nearest-cliff aggregate) + the global category catalogue via @opsboard/db
+// services, then server-derives the TWO tz-INDEPENDENT facts per mission:
 //   • blocked + blockedByNames (deriveBlocked over the dependency graph)
-//   • criticalPathIds (criticalPath toward the mission target chain)
+//   • criticalPathIds (criticalPath toward the mission target chain) — active only
 // windowState is deliberately NOT computed here — it is tz-DEPENDENT and lives
-// client-side in TaskCard (fed `now` + the browser tz), so the board stays live.
+// client-side (fed `now` + the browser tz), so the board stays live. The
+// per-mission `MissionTaskWindow[]` carries just the window INPUTS so each
+// NavCard derives its chip client-side.
+
+type TaskRow = Awaited<ReturnType<typeof getTasks>>[number];
+type DepRow = Awaited<ReturnType<typeof getTaskDependencies>>[number];
+
+/** snake_case edges for @opsboard/core (its DependencyEdge is snake_case). */
+function toCoreEdges(depRows: DepRow[]): CoreDependencyEdge[] {
+  return depRows.map((e) => ({
+    task_id: e.taskId,
+    depends_on_id: e.dependsOnId,
+  }));
+}
+
+/**
+ * The minimal per-task window inputs for a mission's sidebar aggregate. `blocked`
+ * is derived here (tz-independent) so each NavCard's nearest-cliff chip is
+ * faithful — windowState ranks not-yet(blocked) ABOVE closing, so a blocked task
+ * must not be counted as closing.
+ */
+function deriveMissionTaskWindows(
+  taskRows: TaskRow[],
+  depRows: DepRow[],
+): MissionTaskWindow[] {
+  const blockedMap = deriveBlocked(
+    taskRows.map((t) => ({ id: t.id, status: t.status as TaskStatus })),
+    toCoreEdges(depRows),
+  );
+  return taskRows.map((t) => ({
+    status: t.status as TaskStatus,
+    too_late_by: t.tooLateBy,
+    not_before: t.notBefore,
+    blocked: blockedMap.get(t.id) === true,
+  }));
+}
 
 /**
  * Assemble the dashboard payload for one mission (default: the first mission
@@ -46,15 +83,34 @@ export async function getDashboardData(
     missionId != null ? missions.find((m) => m.id === missionId) : undefined;
   const activeMissionSummary = requested ?? firstMission;
 
-  // Load the active mission's full detail + its tasks, deps, and the category
-  // catalogue (sorted by sort_order) in parallel — independent reads. Every
-  // mission/task read is scoped to the SESSION userId; categories are global.
-  const [mission, taskRows, depRows, categoryRows] = await Promise.all([
+  // One parallel batch: the active mission's detail, the global category
+  // catalogue, and — for the sidebar aggregates — EVERY mission's tasks + deps
+  // (each mission read is scoped to the SESSION userId; categories are global).
+  const [mission, categoryRows, perMission] = await Promise.all([
     getMission(activeMissionSummary.id, userId, db),
-    getTasks(activeMissionSummary.id, userId, db),
-    getTaskDependencies(activeMissionSummary.id, userId, db),
     getCategories(db),
+    Promise.all(
+      missions.map(async (m) => {
+        const [taskRows, depRows] = await Promise.all([
+          getTasks(m.id, userId, db),
+          getTaskDependencies(m.id, userId, db),
+        ]);
+        return { id: m.id, name: m.name, taskRows, depRows };
+      }),
+    ),
   ]);
+
+  // The active mission's rows come from the per-mission batch (no double fetch).
+  const activeRows = perMission.find((p) => p.id === activeMissionSummary.id);
+  const taskRows = activeRows?.taskRows ?? [];
+  const depRows = activeRows?.depRows ?? [];
+
+  // Per-mission sidebar summaries — counts + nearest-cliff inputs for each NavCard.
+  const missionSummaries = perMission.map((p) => ({
+    id: p.id,
+    name: p.name,
+    taskWindows: deriveMissionTaskWindows(p.taskRows, p.depRows),
+  }));
 
   // Defensive: getMission can race a deletion. Fall back to the summary row so
   // the header still renders rather than throwing.
@@ -68,7 +124,6 @@ export async function getDashboardData(
   // by slug). One pass over the category catalogue.
   const slugByCategoryId = new Map<string, string>();
   for (const c of categoryRows) {
-    // CategoryView has no `id`→slug pairing exposed beyond the row itself.
     slugByCategoryId.set(c.id, c.slug);
   }
 
@@ -82,13 +137,7 @@ export async function getDashboardData(
     dependsOnId: e.dependsOnId,
   }));
 
-  // @opsboard/core's DependencyEdge is snake_case (task_id / depends_on_id) —
-  // re-shape once for the core derivations. (The VM stays camelCase per the
-  // shared contract.)
-  const coreEdges: CoreDependencyEdge[] = depRows.map((e) => ({
-    task_id: e.taskId,
-    depends_on_id: e.dependsOnId,
-  }));
+  const coreEdges = toCoreEdges(depRows);
 
   // ── tz-INDEPENDENT derivation #1: blocked (one-hop, cycle-safe in core).
   const blockedMap = deriveBlocked(
@@ -97,9 +146,6 @@ export async function getDashboardData(
   );
 
   // Pre-compute, per task, the names of its not-done direct prerequisites.
-  // Group the edges by taskId once, then resolve blocker names against the
-  // task-name map (unknown / dangling blockers are skipped from the caption —
-  // they still flip `blocked`, they just have no nameable label).
   const depsByTaskId = new Map<string, string[]>();
   for (const e of deps) {
     const list = depsByTaskId.get(e.taskId);
@@ -123,7 +169,9 @@ export async function getDashboardData(
       id: t.id,
       name: t.name,
       status: t.status as TaskStatus,
-      categorySlug: t.categoryId ? (slugByCategoryId.get(t.categoryId) ?? null) : null,
+      categorySlug: t.categoryId
+        ? (slugByCategoryId.get(t.categoryId) ?? null)
+        : null,
       too_late_by: t.tooLateBy,
       not_before: t.notBefore,
       blocked,
@@ -132,9 +180,7 @@ export async function getDashboardData(
     };
   });
 
-  // ── tz-INDEPENDENT derivation #2: the longest dependency chain. When the
-  // mission names a "target" we'd thread it through; with no per-mission target
-  // task, we ask for the global longest chain (the board highlights it).
+  // ── tz-INDEPENDENT derivation #2: the longest dependency chain (active mission).
   const criticalPathIds = criticalPath(
     taskRows.map((t) => ({ id: t.id })),
     coreEdges,
@@ -149,7 +195,7 @@ export async function getDashboardData(
   }));
 
   return {
-    missions: missions.map((m) => ({ id: m.id, name: m.name })),
+    missions: missionSummaries,
     activeMissionId: activeMission.id,
     mission: {
       id: activeMission.id,
