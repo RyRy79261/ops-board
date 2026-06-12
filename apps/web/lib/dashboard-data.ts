@@ -3,8 +3,8 @@ import { createHttpDb } from "@opsboard/db";
 import { getMissions, getMission } from "@opsboard/db/missions";
 import {
   getCategories,
-  getTasks,
-  getTaskDependencies,
+  getTasksByMissionIds,
+  getTaskDependenciesByMissionIds,
 } from "@opsboard/db/tasks";
 import { deriveBlocked, criticalPath } from "@opsboard/core";
 import type { DependencyEdge as CoreDependencyEdge } from "@opsboard/core";
@@ -17,10 +17,10 @@ import type {
   MissionTaskWindow,
 } from "./dashboard-types";
 
-// Server-side read assembly for the read-only board. Fetches missions + EVERY
-// mission's tasks/deps (the sidebar NavCards each need their own count +
-// nearest-cliff aggregate) + the global category catalogue via @opsboard/db
-// services, then server-derives the TWO tz-INDEPENDENT facts per mission:
+// Server-side read assembly for the read-only board. Reads ALL the user's tasks
+// + dependency edges in TWO bulk queries (not a per-mission fan-out), groups
+// them by mission server-side, + the global category catalogue, then derives the
+// TWO tz-INDEPENDENT facts per mission:
 //   • blocked + blockedByNames (deriveBlocked over the dependency graph)
 //   • criticalPathIds (criticalPath toward the mission target chain) — active only
 // windowState is deliberately NOT computed here — it is tz-DEPENDENT and lives
@@ -28,8 +28,10 @@ import type {
 // per-mission `MissionTaskWindow[]` carries just the window INPUTS so each
 // NavCard derives its chip client-side.
 
-type TaskRow = Awaited<ReturnType<typeof getTasks>>[number];
-type DepRow = Awaited<ReturnType<typeof getTaskDependencies>>[number];
+type TaskRow = Awaited<ReturnType<typeof getTasksByMissionIds>>[number];
+type DepRow = Awaited<
+  ReturnType<typeof getTaskDependenciesByMissionIds>
+>[number];
 
 /** snake_case edges for @opsboard/core (its DependencyEdge is snake_case). */
 function toCoreEdges(depRows: DepRow[]): CoreDependencyEdge[] {
@@ -83,33 +85,48 @@ export async function getDashboardData(
     missionId != null ? missions.find((m) => m.id === missionId) : undefined;
   const activeMissionSummary = requested ?? firstMission;
 
-  // One parallel batch: the active mission's detail, the global category
-  // catalogue, and — for the sidebar aggregates — EVERY mission's tasks + deps
-  // (each mission read is scoped to the SESSION userId; categories are global).
-  const [mission, categoryRows, perMission] = await Promise.all([
+  // One parallel batch — all reads are independent and userId-scoped: the active
+  // mission detail, the global category catalogue, and (in BULK, not a
+  // per-mission fan-out) every owned task + dependency edge across all missions.
+  const missionIds = missions.map((m) => m.id);
+  const [mission, categoryRows, allTasks, allDeps] = await Promise.all([
     getMission(activeMissionSummary.id, userId, db),
     getCategories(db),
-    Promise.all(
-      missions.map(async (m) => {
-        const [taskRows, depRows] = await Promise.all([
-          getTasks(m.id, userId, db),
-          getTaskDependencies(m.id, userId, db),
-        ]);
-        return { id: m.id, name: m.name, taskRows, depRows };
-      }),
-    ),
+    getTasksByMissionIds(missionIds, userId, db),
+    getTaskDependenciesByMissionIds(missionIds, userId, db),
   ]);
 
-  // The active mission's rows come from the per-mission batch (no double fetch).
-  const activeRows = perMission.find((p) => p.id === activeMissionSummary.id);
-  const taskRows = activeRows?.taskRows ?? [];
-  const depRows = activeRows?.depRows ?? [];
+  // Group the bulk rows by mission server-side. Deps carry no missionId, so map
+  // each edge to its task's mission via a taskId→missionId lookup.
+  const tasksByMission = new Map<string, TaskRow[]>();
+  const missionByTaskId = new Map<string, string>();
+  for (const t of allTasks) {
+    const list = tasksByMission.get(t.missionId);
+    if (list) list.push(t);
+    else tasksByMission.set(t.missionId, [t]);
+    missionByTaskId.set(t.id, t.missionId);
+  }
+  const depsByMission = new Map<string, DepRow[]>();
+  for (const e of allDeps) {
+    const mid = missionByTaskId.get(e.taskId);
+    if (mid == null) continue;
+    const list = depsByMission.get(mid);
+    if (list) list.push(e);
+    else depsByMission.set(mid, [e]);
+  }
+
+  // The active mission's rows come from the grouped maps (no extra fetch).
+  const taskRows = tasksByMission.get(activeMissionSummary.id) ?? [];
+  const depRows = depsByMission.get(activeMissionSummary.id) ?? [];
 
   // Per-mission sidebar summaries — counts + nearest-cliff inputs for each NavCard.
-  const missionSummaries = perMission.map((p) => ({
-    id: p.id,
-    name: p.name,
-    taskWindows: deriveMissionTaskWindows(p.taskRows, p.depRows),
+  const missionSummaries = missions.map((m) => ({
+    id: m.id,
+    name: m.name,
+    taskWindows: deriveMissionTaskWindows(
+      tasksByMission.get(m.id) ?? [],
+      depsByMission.get(m.id) ?? [],
+    ),
   }));
 
   // Defensive: getMission can race a deletion. Fall back to the summary row so

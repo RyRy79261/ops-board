@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { windowState } from "@opsboard/core";
+import { windowState, windowStateDetail } from "@opsboard/core";
 import { useNowTick } from "@opsboard/ui/hooks/use-now-tick";
 import { useMediaQuery } from "@opsboard/ui/hooks/use-media-query";
 import { AppHeader } from "@opsboard/ui/components/app-header";
@@ -107,9 +107,16 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     [data.mission.targetDate],
   );
   const targetDaysOut = useMemo(() => {
-    const days = daysUntil(data.mission.targetDate, now);
+    // tz-AWARE days-out: reuse core's windowStateDetail (whole days to the
+    // target's LOCAL end-of-day in `tz`) rather than the UTC chip helper, so the
+    // header countdown doesn't skew a day near midnight UTC.
+    const days = windowStateDetail(
+      now,
+      { too_late_by: data.mission.targetDate },
+      tz,
+    ).daysUntilClose;
     return days != null && days >= 0 ? days : null;
-  }, [data.mission.targetDate, now]);
+  }, [data.mission.targetDate, now, tz]);
 
   const viewProps: ViewProps = {
     tasks: data.tasks,
@@ -192,10 +199,12 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         aria-labelledby={`view-tab-${view}`}
         className="flex min-w-0 flex-1 flex-col overflow-y-auto"
       >
-        {/* Keyed by view so a tab switch remounts the boundary, clearing any
-            stuck error from the previous view. A view crash shows the RETRY
-            fallback while the header/sidebar/tabs stay mounted. */}
-        <ErrorBoundary key={view}>{activeView}</ErrorBoundary>
+        {/* Keyed by mission + view so switching EITHER remounts the boundary,
+            clearing a stuck error from the previous mission/view. A view crash
+            shows the RETRY fallback while the header/sidebar/tabs stay mounted. */}
+        <ErrorBoundary key={`${data.activeMissionId}:${view}`}>
+          {activeView}
+        </ErrorBoundary>
       </div>
     </div>
   );
@@ -266,8 +275,11 @@ function deriveMissionChip(
   let soonestDays: number | null = null;
   for (const task of tasks) {
     if (task.status === "done") continue;
-    if (windowState(now, toWindowInput(task), tz) !== "closing") continue;
-    const days = daysUntil(task.too_late_by, now);
+    // tz-AWARE: windowStateDetail gives both the state AND the local days-to-cliff
+    // in one pass, so the chip's countdown matches the per-task pill's tz boundary.
+    const detail = windowStateDetail(now, toWindowInput(task), tz);
+    if (detail.state !== "closing") continue;
+    const days = detail.daysUntilClose;
     if (days != null && (soonestDays == null || days < soonestDays)) {
       soonestDays = days;
     }
@@ -296,22 +308,4 @@ function formatIsoToHuman(iso: string | null): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
   if (!m) return iso;
   return `${m[3]} ${MONTHS_UPPER[Number(m[2]) - 1]} ${m[1]}`;
-}
-
-/** Whole days from `now` to the end-of-the cliff date (UTC-day floor; coarse — the
- *  chip is a summary cue, the per-task pill carries the precise countdown). */
-function daysUntil(iso: string | null, now: number): number | null {
-  if (iso == null) return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
-  if (!match) return null;
-  const cliff = Date.UTC(
-    Number(match[1]),
-    Number(match[2]) - 1,
-    Number(match[3]),
-    23,
-    59,
-    59,
-    999,
-  );
-  return Math.floor((cliff - now) / 86_400_000);
 }

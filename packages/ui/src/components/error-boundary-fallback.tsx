@@ -22,9 +22,7 @@ import { cn } from "../lib/utils";
  */
 export type ErrorBoundaryVariant = "retry" | "full";
 
-export interface ErrorBoundaryFallbackProps
-  extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: ErrorBoundaryVariant;
+type ErrorBoundaryFallbackBaseProps = React.HTMLAttributes<HTMLDivElement> & {
   /** Headline. Defaults per variant (`SOMETHING BROKE` / `Something broke`). */
   title?: string;
   /** Body sentence. Defaults per variant. */
@@ -33,13 +31,31 @@ export interface ErrorBoundaryFallbackProps
   errorCode?: string;
   /** `full` only — a monospace trace/build line. */
   trace?: string;
-  /** `retry` — primary action; resets the boundary / re-fetches. */
-  onRetry?: () => void;
-  /** `full` — primary action; reloads the app. */
-  onReload?: () => void;
-  /** `full` — optional secondary outline action; opens the report flow. */
+};
+
+/** retry variant — the primary RETRY handler is REQUIRED (no dead-end button). */
+type RetryVariantProps = {
+  variant?: "retry";
+  /** Primary action; resets the boundary / re-fetches. */
+  onRetry: () => void;
+  onReload?: never;
+  onReport?: never;
+};
+
+/** full variant — the primary Reload handler is REQUIRED; Report is optional. */
+type FullVariantProps = {
+  variant: "full";
+  /** Primary action; reloads the app. */
+  onReload: () => void;
+  /** Optional secondary outline action; opens the report flow. */
   onReport?: () => void;
-}
+  onRetry?: never;
+};
+
+// Discriminated union: every RENDERED recovery button has a required handler, so
+// no variant can produce a no-op dead-end button.
+export type ErrorBoundaryFallbackProps = ErrorBoundaryFallbackBaseProps &
+  (RetryVariantProps | FullVariantProps);
 
 const RETRY_TITLE = "SOMETHING BROKE";
 const RETRY_BODY = "An unexpected error occurred while loading the board.";
