@@ -145,6 +145,29 @@ export function SettingsHub({
               />
             </Link>
           </SettingsGroup>
+
+          <SettingsGroup title="About">
+            <Link
+              href="/manual"
+              className="outline-none focus-visible:bg-card-elevated"
+            >
+              <SettingsRow
+                label="Manual"
+                description="How OpsBoard works."
+                chevron
+              />
+            </Link>
+            <Link
+              href="/legal"
+              className="outline-none focus-visible:bg-card-elevated"
+            >
+              <SettingsRow
+                label="Legal"
+                description="Privacy and terms."
+                chevron
+              />
+            </Link>
+          </SettingsGroup>
         </div>
       </main>
     </div>
