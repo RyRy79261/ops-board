@@ -211,6 +211,20 @@ export async function updateResearchJob(
   if (patch.result !== undefined && !ResearchResult.safeParse(patch.result).success) {
     throw new TypeError("updateResearchJob: `result` is malformed.");
   }
+  // Terminal transitions must carry their payload: completing a job requires a
+  // `result`, failing one requires an `errorMessage`. This keeps the lifecycle
+  // honest (no `complete` row without findings, no `error` row without a reason)
+  // and means `completed_at` is only stamped once the terminal payload exists.
+  if (patch.state === "complete" && patch.result === undefined) {
+    throw new TypeError(
+      "updateResearchJob: completing a job requires `result`.",
+    );
+  }
+  if (patch.state === "error" && !isNonEmptyString(patch.errorMessage)) {
+    throw new TypeError(
+      "updateResearchJob: failing a job requires a non-empty `errorMessage`.",
+    );
+  }
 
   const set: Partial<typeof schema.researchJobs.$inferInsert> = {
     updatedAt: new Date(),
@@ -274,6 +288,26 @@ export async function appendResearchNote(
     .limit(1);
   if (!task) {
     return { ok: false, error: "Unknown task — notes not saved." };
+  }
+
+  // If a job is cited as provenance, it must belong to THIS user and THIS task —
+  // the FK only enforces existence, so without this a note could be linked to an
+  // unrelated (or another user's) job, corrupting attribution.
+  if (input.jobId != null) {
+    const [job] = await db
+      .select({ id: schema.researchJobs.id })
+      .from(schema.researchJobs)
+      .where(
+        and(
+          eq(schema.researchJobs.id, input.jobId),
+          eq(schema.researchJobs.userId, userId),
+          eq(schema.researchJobs.taskId, input.taskId),
+        ),
+      )
+      .limit(1);
+    if (!job) {
+      return { ok: false, error: "Unknown research job — notes not saved." };
+    }
   }
 
   const [note] = await db

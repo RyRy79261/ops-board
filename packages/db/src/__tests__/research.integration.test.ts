@@ -265,6 +265,31 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       expect(await getResearchNotes(taskId, USER_A, h.db)).toHaveLength(0);
     });
 
+    it("refuses a jobId that belongs to a different task (provenance)", async () => {
+      const { missionId, taskId: taskA } = await seedTask(USER_A);
+      const taskB = await createTask(
+        { missionId, name: "Vehicle Pass Permit" },
+        USER_A,
+        h.db,
+      );
+      if (!taskB.ok) throw new Error(taskB.error);
+      const jobOnA = await createResearchJob(
+        { missionId, taskId: taskA, query: "q" },
+        USER_A,
+        h.db,
+      );
+      if (!jobOnA.ok) throw new Error(jobOnA.error);
+
+      // Citing task A's job while attaching to task B must be refused.
+      const res = await appendResearchNote(
+        { taskId: taskB.task.id, jobId: jobOnA.job.id, content: RESULT },
+        USER_A,
+        h.db,
+      );
+      expect(res.ok).toBe(false);
+      expect(await getResearchNotes(taskB.task.id, USER_A, h.db)).toHaveLength(0);
+    });
+
     it("survives a deleted job via ON DELETE SET NULL", async () => {
       const { missionId, taskId } = await seedTask(USER_A);
       const created = await createResearchJob(

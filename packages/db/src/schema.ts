@@ -361,6 +361,22 @@ export const researchJobs = pgTable(
     userIdx: index("research_jobs_user_idx").on(j.userId),
     taskIdx: index("research_jobs_task_idx").on(j.taskId),
     stateIdx: index("research_jobs_state_idx").on(j.state),
+    // Lifecycle invariants enforced at the DB boundary (defense-in-depth behind
+    // the service guards): a `complete` job must carry a `result`, an `error`
+    // job must carry an `error_message`, and any terminal state must have a
+    // `completed_at`. A `running` job may have all three NULL.
+    completeHasResult: check(
+      "research_jobs_complete_has_result_check",
+      sql`${j.state} <> 'complete' OR ${j.result} IS NOT NULL`,
+    ),
+    errorHasMessage: check(
+      "research_jobs_error_has_message_check",
+      sql`${j.state} <> 'error' OR ${j.errorMessage} IS NOT NULL`,
+    ),
+    terminalHasCompletedAt: check(
+      "research_jobs_terminal_completed_at_check",
+      sql`${j.state} = 'running' OR ${j.completedAt} IS NOT NULL`,
+    ),
   }),
 );
 

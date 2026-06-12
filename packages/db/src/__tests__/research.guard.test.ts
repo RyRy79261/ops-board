@@ -102,4 +102,43 @@ describe("research input guards (no DB)", () => {
       ),
     ).rejects.toThrow(/content/);
   });
+
+  it("rejects a result whose citation points to no source", async () => {
+    // Shape is valid but citation 5 has no matching source (only 1 source) —
+    // ResearchResult's referential-integrity refinement must reject it.
+    const danglingCitation = {
+      summary: "A summary.",
+      steps: [{ index: 1, text: "Step one.", citations: [5] }],
+      sources: [
+        {
+          index: 1,
+          domain: "example.org",
+          title: "Source",
+          url: "https://example.org/a",
+        },
+      ],
+    };
+    await expect(
+      appendResearchNote(
+        { taskId: UUID, content: danglingCitation as never },
+        USER,
+      ),
+    ).rejects.toThrow(/content/);
+    await expect(
+      updateResearchJob(UUID, USER, { result: danglingCitation as never }),
+    ).rejects.toThrow(/result/);
+  });
+
+  it("rejects terminal transitions missing their payload", async () => {
+    // Completing requires a result; failing requires an errorMessage.
+    await expect(
+      updateResearchJob(UUID, USER, { state: "complete" }),
+    ).rejects.toThrow(/result/);
+    await expect(
+      updateResearchJob(UUID, USER, { state: "error" }),
+    ).rejects.toThrow(/errorMessage/);
+    await expect(
+      updateResearchJob(UUID, USER, { state: "error", errorMessage: "  " }),
+    ).rejects.toThrow(/errorMessage/);
+  });
 });

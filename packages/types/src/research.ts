@@ -84,7 +84,24 @@ export const ResearchResult = z
     steps: z.array(ResearchNoteStep).max(50),
     sources: z.array(ResearchSource).max(50),
   })
-  .strict();
+  .strict()
+  // Referential integrity: every step citation must point to a real source (a
+  // 1-based index within `sources`). Shape-only validation would let a model
+  // draft a citation to a non-existent source and persist a broken reference.
+  .superRefine((result, ctx) => {
+    const sourceCount = result.sources.length;
+    result.steps.forEach((step, stepIdx) => {
+      step.citations.forEach((citation, citationIdx) => {
+        if (citation < 1 || citation > sourceCount) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `citation ${citation} has no matching source (1..${sourceCount})`,
+            path: ["steps", stepIdx, "citations", citationIdx],
+          });
+        }
+      });
+    });
+  });
 export type ResearchResult = z.infer<typeof ResearchResult>;
 
 /** Note count shown in the AINotesBlock attribution row ("AI RESEARCH · N NOTES"). */
