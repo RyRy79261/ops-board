@@ -20,10 +20,12 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
   children: React.ReactNode;
   /** Eyebrow header label. Defaults to "MISSIONS". */
   title?: string;
+  /** Optional mission count, rendered zero-padded beside the header label. */
+  count?: number;
 }
 
 const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
-  ({ children, title = "MISSIONS", className, ...props }, ref) => {
+  ({ children, title = "MISSIONS", count, className, ...props }, ref) => {
     return (
       <nav
         ref={ref}
@@ -36,11 +38,17 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
         )}
         {...props}
       >
-        {/* SidebarHeader — padding 18, MISSIONS eyebrow mono 11/700 ls2 subtle. */}
-        <div className="p-[18px]">
+        {/* SidebarHeader — padding 18, MISSIONS eyebrow mono 11/700 ls2 subtle,
+            with an optional zero-padded count on the right. */}
+        <div className="flex items-center justify-between p-[18px]">
           <Eyebrow as="h2" tone="subtle" weight={700} tracking={2}>
             {title}
           </Eyebrow>
+          {count != null ? (
+            <span className="font-mono text-[11px] font-bold tracking-[2px] text-muted-foreground-subtle tabular-nums">
+              {String(Math.max(0, count)).padStart(2, "0")}
+            </span>
+          ) : null}
         </div>
         {/* MissionList — gap 8, padding [0,8], scrolls on overflow. */}
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
