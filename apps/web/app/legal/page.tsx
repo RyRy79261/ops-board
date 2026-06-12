@@ -6,7 +6,7 @@ import { Button } from "@opsboard/ui/components/button";
 import { Eyebrow } from "@opsboard/ui/components/eyebrow";
 import { LegalIndexRow } from "@opsboard/ui/components/legal-index-row";
 
-import { LEGAL_INDEX } from "./content";
+import { LEGAL_DOC_ENTRIES } from "./content";
 
 // /legal — the legal document index. Static content (gated by the proxy like the
 // rest of the app); links to each document at /legal/{slug}.
@@ -36,10 +36,10 @@ export default function LegalIndexPage() {
           </div>
 
           <div className="flex flex-col divide-y divide-border border border-border">
-            {LEGAL_INDEX.map((doc) => (
+            {LEGAL_DOC_ENTRIES.map(([slug, doc]) => (
               <Link
-                key={doc.slug}
-                href={`/legal/${doc.slug}`}
+                key={slug}
+                href={`/legal/${slug}`}
                 className="outline-none focus-visible:bg-card-elevated"
               >
                 <LegalIndexRow
