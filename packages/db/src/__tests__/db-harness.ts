@@ -38,6 +38,7 @@ export const EXPECTED_TABLES = [
   "task_dependencies",
   "tasks",
   "user_api_keys",
+  "user_preferences",
   "users",
 ] as const;
 

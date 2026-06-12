@@ -18,7 +18,13 @@ import { Switch } from "@opsboard/ui/components/switch";
 // — flip locally, PATCH, revert on failure), and a Manage group of nav rows to
 // the existing /settings/keys + /account surfaces. The board header links here.
 
-/** The preferences shape the server resolves (defaults applied). */
+// The preferences shape the server resolves (defaults applied). Intentionally
+// STRICT (strips unknown keys): this is the client's consumer contract for the
+// fields it renders, and `Preferences` must stay assignable from the db
+// `UserPreferences` type the RSC page seeds as `initialPrefs` — `.passthrough()`
+// would add a `[k: string]: unknown` index signature and break that. The server
+// (monorepo, same field set) remains the source of truth, so no data is lost:
+// unmodelled fields simply aren't surfaced in this client.
 const PreferencesSchema = z.object({
   voiceConfirmDestructive: z.boolean(),
   notifyClosingWindows: z.boolean(),
