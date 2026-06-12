@@ -39,6 +39,9 @@ export function DebugSurface({ server }: { server: ServerDiag }) {
   const [client, setClient] = React.useState<Record<string, string>>({});
   const [errors, setErrors] = React.useState<ClientErrorEntry[]>([]);
   const [copied, setCopied] = React.useState(false);
+  // Track the "Copied" reset timer so it's cleared on unmount (no setState on an
+  // unmounted component).
+  const copyTimer = React.useRef<number | undefined>(undefined);
 
   React.useEffect(() => {
     setClient({
@@ -49,6 +52,9 @@ export function DebugSurface({ server }: { server: ServerDiag }) {
       "User agent": navigator.userAgent,
     });
     setErrors(readErrorLog());
+    return () => {
+      if (copyTimer.current) window.clearTimeout(copyTimer.current);
+    };
   }, []);
 
   const diagnostics = React.useMemo(
@@ -66,7 +72,8 @@ export function DebugSurface({ server }: { server: ServerDiag }) {
     try {
       await navigator.clipboard.writeText(JSON.stringify(diagnostics, null, 2));
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
+      if (copyTimer.current) window.clearTimeout(copyTimer.current);
+      copyTimer.current = window.setTimeout(() => setCopied(false), 1500);
     } catch {
       /* clipboard blocked — no-op */
     }
