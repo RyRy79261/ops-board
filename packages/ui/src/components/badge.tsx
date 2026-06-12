@@ -17,6 +17,10 @@ const badgeVariants = cva(
         outline: "border border-border text-muted-foreground hover:border-border-hover",
         muted: "border-transparent bg-muted text-muted-foreground",
         accent: "border-transparent bg-primary/12 text-primary hover:bg-primary/18",
+        // AI Research additions: the parsed-intent "RESEARCH" pill ($muted fill +
+        // $primary text) and the "92% MATCH" confidence chip ($success/12 tint).
+        intent: "border-transparent bg-muted text-primary",
+        success: "border-transparent bg-success/12 text-success",
       },
     },
     defaultVariants: { variant: "outline" },
