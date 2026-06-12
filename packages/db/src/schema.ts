@@ -276,6 +276,35 @@ export const userApiKeys = pgTable("user_api_keys", {
     .defaultNow(),
 });
 
+// --- User preferences (server-only) --------------------------------------
+// Per-user app preferences (one row per user; the userId PK FKs into `users`
+// ON DELETE CASCADE, so deleting a user sweeps their prefs). Defaults live BOTH
+// here (column defaults) and in the read service (so a user with no row yet
+// resolves to the same defaults). Kept deliberately small — add a column per
+// real preference, never a free-form blob.
+export const userPreferences = pgTable("user_preferences", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // Voice & Microphone: ask before a voice command deletes a task/mission. The
+  // voice pipeline's needsConfirmation gate can consult this (default ON = safe).
+  voiceConfirmDestructive: boolean("voice_confirm_destructive")
+    .notNull()
+    .default(true),
+  // Notifications: opt in to "a task's window is closing" reminders. Forward-
+  // looking — no notification channel ships yet (the reminder runtime is
+  // deferred), but the preference persists so it's ready when it does.
+  notifyClosingWindows: boolean("notify_closing_windows")
+    .notNull()
+    .default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- MCP OAuth (server-only) --------------------------------------------
 // Pure auth-server state for Claude.ai (and other MCP clients) connecting
 // over OAuth 2.1 + Dynamic Client Registration. Nothing here is rendered or
@@ -437,6 +466,9 @@ export type NewTaskDependency = typeof taskDependencies.$inferInsert;
 
 export type UserApiKeyRow = typeof userApiKeys.$inferSelect;
 export type NewUserApiKeyRow = typeof userApiKeys.$inferInsert;
+
+export type UserPreferencesRow = typeof userPreferences.$inferSelect;
+export type NewUserPreferencesRow = typeof userPreferences.$inferInsert;
 
 export type McpOauthClient = typeof mcpOauthClients.$inferSelect;
 export type NewMcpOauthClient = typeof mcpOauthClients.$inferInsert;

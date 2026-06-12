@@ -11,7 +11,9 @@ import {
   getCategories,
   getTask,
   getTaskDependencies,
+  getTaskDependenciesByMissionIds,
   getTasks,
+  getTasksByMissionIds,
   updateTaskStatus,
 } from "../tasks";
 import {
@@ -46,14 +48,14 @@ describe.skipIf(!hasDb)("@opsboard/db integration (real Postgres)", () => {
 
   // --- Migration --------------------------------------------------------
   describe("migration", () => {
-    it("applies cleanly and creates the 10 expected tables", async () => {
+    it("applies cleanly and creates the 11 expected tables", async () => {
       const tables = await h.listTables();
       for (const expected of EXPECTED_TABLES) {
         expect(tables).toContain(expected);
       }
-      // The four domain + four MCP tables + users + user_api_keys are present.
+      // 4 domain + 4 MCP + users + user_api_keys + user_preferences are present.
       const present = EXPECTED_TABLES.filter((t) => tables.includes(t));
-      expect(present).toHaveLength(10);
+      expect(present).toHaveLength(11);
     });
   });
 
@@ -353,6 +355,34 @@ describe.skipIf(!hasDb)("@opsboard/db integration (real Postgres)", () => {
       // Mission B has no edges.
       const edgesB = await getTaskDependencies(missionBId, USER_A, h.db);
       expect(edgesB).toHaveLength(0);
+    });
+
+    it("getTasksByMissionIds bulk-reads across missions, userId-scoped", async () => {
+      const all = await getTasksByMissionIds(
+        [missionAId, missionBId],
+        USER_A,
+        h.db,
+      );
+      expect(all.map((t) => t.name).sort()).toEqual(["A-1", "A-2", "B-1"]);
+      // Empty input → no query, empty result.
+      expect(await getTasksByMissionIds([], USER_A, h.db)).toEqual([]);
+      // A foreign principal reads nothing, even for a real mission id.
+      expect(await getTasksByMissionIds([missionAId], USER_B, h.db)).toEqual([]);
+    });
+
+    it("getTaskDependenciesByMissionIds bulk-reads edges across missions", async () => {
+      const edges = await getTaskDependenciesByMissionIds(
+        [missionAId, missionBId],
+        USER_A,
+        h.db,
+      );
+      expect(edges).toHaveLength(1);
+      expect(edges[0]!.taskId).toBe(taskA1Id);
+      expect(edges[0]!.dependsOnId).toBe(taskA2Id);
+      // Empty input → empty result.
+      expect(
+        await getTaskDependenciesByMissionIds([], USER_A, h.db),
+      ).toEqual([]);
     });
 
     it("updateTaskStatus transitions status and returns {ok:true,task}", async () => {

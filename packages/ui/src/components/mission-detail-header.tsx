@@ -36,8 +36,18 @@ export interface MissionDetailHeaderProps
   extends React.HTMLAttributes<HTMLElement> {
   /** Mission name (DM Sans title). */
   title: string;
-  /** Real-world target/cliff date (already formatted), or null when none set. */
+  /**
+   * Real-world target/cliff date, already formatted to the human `DD MON YYYY`
+   * form (e.g. `27 APR 2026`), or null when none set. Rendered uppercase after
+   * the `TARGET:` label.
+   */
   targetDate: string | null;
+  /**
+   * Live days-out countdown to the target date (whole days from `now`). When
+   * supplied alongside a `targetDate`, the line reads
+   * `TARGET: 27 APR 2026 · 328 DAYS OUT`. Omit/null to render the date alone.
+   */
+  daysOut?: number | null;
   /** The 4 stat-tile counts. */
   stats: MissionStats;
   /** 3-segment ProgressBar inputs (success / warning / destructive over total). */
@@ -47,7 +57,7 @@ export interface MissionDetailHeaderProps
 const MissionDetailHeader = React.forwardRef<
   HTMLElement,
   MissionDetailHeaderProps
->(({ title, targetDate, stats, progress, className, ...props }, ref) => {
+>(({ title, targetDate, daysOut, stats, progress, className, ...props }, ref) => {
   // 3-segment window-state bar: done → closing → blocked, remainder = bare track.
   const segments: ProgressSegment[] = [
     { tone: "success", value: progress.done },
@@ -68,9 +78,14 @@ const MissionDetailHeader = React.forwardRef<
     >
       {/* Title — DM Sans 26/700. */}
       <h1 className="font-sans text-title font-bold text-foreground">{title}</h1>
-      {/* Target line — mono 13, muted. ISO/human form supplied by the caller. */}
-      <p className="font-mono text-[13px] tracking-[1px] text-muted-foreground">
-        Target: {targetDate ?? "—"}
+      {/* Target line — mono 13, muted, uppercase: `TARGET: 27 APR 2026 · 328 DAYS OUT`.
+          The human date is supplied pre-formatted by the caller; the live days-out
+          countdown is appended only when both a date and a (non-negative) count exist. */}
+      <p className="font-mono text-[13px] uppercase tracking-[1px] text-muted-foreground">
+        TARGET: {targetDate ?? "—"}
+        {targetDate != null && daysOut != null
+          ? ` · ${Math.max(0, daysOut)} DAYS OUT`
+          : null}
       </p>
       {/* 4 StatTiles — DONE / BLOCKED / CLOSING / TOTAL, fixed order + tone. */}
       <div className="flex gap-8">

@@ -2,26 +2,33 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { windowState } from "@opsboard/core";
+import { windowState, windowStateDetail } from "@opsboard/core";
 import { useNowTick } from "@opsboard/ui/hooks/use-now-tick";
 import { useMediaQuery } from "@opsboard/ui/hooks/use-media-query";
 import { AppHeader } from "@opsboard/ui/components/app-header";
 import { Sidebar } from "@opsboard/ui/components/sidebar";
 import { NavCard, type NavCardChip } from "@opsboard/ui/components/nav-card";
 import { MissionDetailHeader } from "@opsboard/ui/components/mission-detail-header";
+import { SyncStatus } from "@opsboard/ui/components/sync-status";
 import {
   ViewTabs,
   type ViewTabValue,
 } from "@opsboard/ui/components/view-tabs";
+import { EmptyState } from "@opsboard/ui/components/empty-state";
 import { cn } from "@opsboard/ui/lib/utils";
 import type { TaskStatus } from "@opsboard/types";
-import type { DashboardData, TaskVM, ViewProps } from "@/lib/dashboard-types";
+import type {
+  DashboardData,
+  MissionTaskWindow,
+  ViewProps,
+} from "@/lib/dashboard-types";
 import { updateTaskStatusAction } from "@/app/actions";
 import { CategoryView } from "@/components/views/category-view";
 import { TimelineView } from "@/components/views/timeline-view";
 import { DependenciesView } from "@/components/views/dependencies-view";
 import { VoiceController } from "@/components/voice/voice-controller";
 import { SettingsLink } from "@/components/settings-link";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
 // desktop 3-pane). Holds the active-view state (ViewTabs), provides each view a
@@ -84,19 +91,32 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     for (const task of data.tasks) {
       if (task.status === "done") done += 1;
       if (task.blocked) blocked += 1;
-      if (windowState(now, taskToWindowInput(task), tz) === "closing") {
+      if (windowState(now, toWindowInput(task), tz) === "closing") {
         closing += 1;
       }
     }
     return { done, blocked, closing, total: data.tasks.length };
   }, [data.tasks, now, tz]);
 
-  // The active mission's window-summary chip for its NavCard: the nearest cliff
-  // among non-done tasks. Closing → warning T-Nd; all done → success; else muted.
-  const activeChip = useMemo(
-    () => deriveMissionChip(data.tasks, now, tz),
-    [data.tasks, now, tz],
+  // Operator/date block for the header (SOLO OPERATOR · live dot · DD MON YYYY)
+  // and the mission target line (`TARGET: 27 APR 2026 · 328 DAYS OUT`). Both are
+  // derived from the live `now` so the date + countdown stay current as it ticks.
+  const operatorDate = useMemo(() => formatHumanDate(now), [now]);
+  const targetLabel = useMemo(
+    () => formatIsoToHuman(data.mission.targetDate),
+    [data.mission.targetDate],
   );
+  const targetDaysOut = useMemo(() => {
+    // tz-AWARE days-out: reuse core's windowStateDetail (whole days to the
+    // target's LOCAL end-of-day in `tz`) rather than the UTC chip helper, so the
+    // header countdown doesn't skew a day near midnight UTC.
+    const days = windowStateDetail(
+      now,
+      { too_late_by: data.mission.targetDate },
+      tz,
+    ).daysUntilClose;
+    return days != null && days >= 0 ? days : null;
+  }, [data.mission.targetDate, now, tz]);
 
   const viewProps: ViewProps = {
     tasks: data.tasks,
@@ -108,8 +128,20 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     onCycle,
   };
 
+  // A mission with zero tasks → the voice-first no-tasks EmptyState (states.md
+  // §3 copy variant: NO TASKS YET / "add a task"), rendered uniformly for all
+  // three views rather than each view showing a bare blank panel.
   const activeView =
-    view === "category" ? (
+    data.tasks.length === 0 ? (
+      <div className="flex flex-1 items-center justify-center p-6">
+        <EmptyState
+          message="NO TASKS YET"
+          hint='Say "add a task" to get started.'
+          hintStyle="tokens"
+          className="w-full max-w-md"
+        />
+      </div>
+    ) : view === "category" ? (
       <CategoryView {...viewProps} />
     ) : view === "timeline" ? (
       <TimelineView {...viewProps} />
@@ -118,10 +150,15 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     );
 
   // Mission rail: each NavCard is wrapped in a plain anchor (?mission=ID) so the
-  // ui kit stays framework-agnostic (the app supplies the href). The active
-  // mission gets the count + window chip; others render a label-only card.
+  // ui kit stays framework-agnostic (the app supplies the href). EVERY card —
+  // active or not — carries its own {done}/{total} count + nearest-cliff window
+  // chip, derived from that mission's server-supplied task-window inputs.
   const missionList = data.missions.map((m) => {
     const isActive = m.id === data.activeMissionId;
+    const done = m.taskWindows.reduce(
+      (n, w) => (w.status === "done" ? n + 1 : n),
+      0,
+    );
     return (
       <a
         key={m.id}
@@ -132,9 +169,9 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         <NavCard
           name={m.name}
           active={isActive}
-          done={isActive ? stats.done : 0}
-          total={isActive ? stats.total : 0}
-          chip={isActive ? activeChip : undefined}
+          done={done}
+          total={m.taskWindows.length}
+          chip={deriveMissionChip(m.taskWindows, now, tz)}
           tabIndex={-1}
         />
       </a>
@@ -145,7 +182,8 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     <div className="flex min-w-0 flex-1 flex-col">
       <MissionDetailHeader
         title={data.mission.name}
-        targetDate={data.mission.targetDate}
+        targetDate={targetLabel}
+        daysOut={targetDaysOut}
         stats={stats}
         progress={{
           done: stats.done,
@@ -159,16 +197,28 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         role="tabpanel"
         id={`view-panel-${view}`}
         aria-labelledby={`view-tab-${view}`}
-        className="min-w-0 flex-1 overflow-y-auto"
+        className="flex min-w-0 flex-1 flex-col overflow-y-auto"
       >
-        {activeView}
+        {/* Keyed by mission + view so switching EITHER remounts the boundary,
+            clearing a stuck error from the previous mission/view. A view crash
+            shows the RETRY fallback while the header/sidebar/tabs stay mounted. */}
+        <ErrorBoundary key={`${data.activeMissionId}:${view}`}>
+          {activeView}
+        </ErrorBoundary>
       </div>
     </div>
   );
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <AppHeader right={<SettingsLink />} />
+      <AppHeader
+        right={
+          <>
+            <SyncStatus leadingLabel="SOLO OPERATOR" dateLabel={operatorDate} />
+            <SettingsLink />
+          </>
+        }
+      />
       <div
         className={cn(
           "flex min-h-0 flex-1",
@@ -176,7 +226,9 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         )}
       >
         {isDesktop ? (
-          <Sidebar title="MISSIONS">{missionList}</Sidebar>
+          <Sidebar title="MISSIONS" count={data.missions.length}>
+            {missionList}
+          </Sidebar>
         ) : (
           // Mobile: the mission rail collapses to a horizontal strip above the
           // main column (single-column, thumb-reachable).
@@ -195,8 +247,8 @@ export function DashboardShell({ data }: { data: DashboardData }) {
   );
 }
 
-/** Map a TaskVM to the structural subset windowState() consumes. */
-function taskToWindowInput(task: TaskVM) {
+/** The structural subset windowState() consumes (shared by TaskVM + MissionTaskWindow). */
+function toWindowInput(task: MissionTaskWindow) {
   return {
     too_late_by: task.too_late_by,
     not_before: task.not_before,
@@ -208,10 +260,10 @@ function taskToWindowInput(task: TaskVM) {
  * The mission's NavCard window-summary chip. Walks the non-done tasks: if any is
  * `closing`, show the soonest as a warning `T-Nd` chip; if every task is done,
  * a success chip; otherwise no chip (calm). Mirrors the nearest-cliff aggregate
- * the design calls for on the sidebar mission card.
+ * the design calls for on the sidebar mission card. Empty missions get no chip.
  */
 function deriveMissionChip(
-  tasks: TaskVM[],
+  tasks: MissionTaskWindow[],
   now: number,
   tz: string,
 ): NavCardChip | undefined {
@@ -223,8 +275,11 @@ function deriveMissionChip(
   let soonestDays: number | null = null;
   for (const task of tasks) {
     if (task.status === "done") continue;
-    if (windowState(now, taskToWindowInput(task), tz) !== "closing") continue;
-    const days = daysUntil(task.too_late_by, now);
+    // tz-AWARE: windowStateDetail gives both the state AND the local days-to-cliff
+    // in one pass, so the chip's countdown matches the per-task pill's tz boundary.
+    const detail = windowStateDetail(now, toWindowInput(task), tz);
+    if (detail.state !== "closing") continue;
+    const days = detail.daysUntilClose;
     if (days != null && (soonestDays == null || days < soonestDays)) {
       soonestDays = days;
     }
@@ -235,20 +290,22 @@ function deriveMissionChip(
   return undefined;
 }
 
-/** Whole days from `now` to the end-of-the cliff date (UTC-day floor; coarse — the
- *  chip is a summary cue, the per-task pill carries the precise countdown). */
-function daysUntil(iso: string | null, now: number): number | null {
+const MONTHS_UPPER = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+] as const;
+
+/** Format an epoch (ms) as the operator-block date `DD MON YYYY` in local time. */
+function formatHumanDate(now: number): string {
+  const d = new Date(now);
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${day} ${MONTHS_UPPER[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** Format an ISO `YYYY-MM-DD` to the uppercase human `DD MON YYYY`; null/garbage → as-is/null. */
+function formatIsoToHuman(iso: string | null): string | null {
   if (iso == null) return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
-  if (!match) return null;
-  const cliff = Date.UTC(
-    Number(match[1]),
-    Number(match[2]) - 1,
-    Number(match[3]),
-    23,
-    59,
-    59,
-    999,
-  );
-  return Math.floor((cliff - now) / 86_400_000);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return iso;
+  return `${m[3]} ${MONTHS_UPPER[Number(m[2]) - 1]} ${m[1]}`;
 }
