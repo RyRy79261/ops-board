@@ -167,6 +167,16 @@ export function SettingsHub({
                 chevron
               />
             </Link>
+            <Link
+              href="/debug"
+              className="outline-none focus-visible:bg-card-elevated"
+            >
+              <SettingsRow
+                label="Diagnostics"
+                description="System info + recent errors, for issue reports."
+                chevron
+              />
+            </Link>
           </SettingsGroup>
         </div>
       </main>
