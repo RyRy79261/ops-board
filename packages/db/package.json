@@ -15,6 +15,7 @@
     "./mcp": "./src/mcp.ts",
     "./missions": "./src/missions.ts",
     "./mutations": "./src/mutations.ts",
+    "./research": "./src/research.ts",
     "./tasks": "./src/tasks.ts"
   },
   "scripts": {
