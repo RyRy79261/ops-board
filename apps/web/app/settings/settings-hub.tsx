@@ -128,6 +128,16 @@ export function SettingsHub({
                 chevron
               />
             </Link>
+            <Link
+              href="/account"
+              className="outline-none focus-visible:bg-card-elevated"
+            >
+              <SettingsRow
+                label="Account"
+                description="Profile, sign-out, export, and account deletion."
+                chevron
+              />
+            </Link>
           </SettingsGroup>
         </div>
       </main>
