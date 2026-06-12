@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
+    "./account": "./src/account.ts",
     "./api-keys": "./src/api-keys.ts",
     "./preferences": "./src/preferences.ts",
     "./testing": "./src/__tests__/db-harness.ts",
