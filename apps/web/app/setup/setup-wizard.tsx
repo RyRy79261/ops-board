@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, KeyRound, Mic, Rocket } from "lucide-react";
+import { z } from "zod";
 
 import { Alert } from "@opsboard/ui/components/alert";
 import { Button } from "@opsboard/ui/components/button";
@@ -29,6 +30,15 @@ import type {
 // The steps gate forward: TEST is reachable only once BOTH keys are stored;
 // FINISH is reachable only once a test has succeeded. A 402/key-rejection from
 // the test bounces the user back to KEYS with the offending provider flagged.
+
+// Validate the /api/setup/complete error payload at the boundary (repo guideline:
+// validate external input with Zod rather than type-asserting the JSON).
+const SetupCompleteErrorSchema = z.object({
+  error: z.string().optional(),
+  missing: z
+    .object({ anthropic: z.boolean(), groq: z.boolean() })
+    .optional(),
+});
 
 type Step = "keys" | "test" | "finish";
 
@@ -73,10 +83,10 @@ export function SetupWizard({ initialKeys }: { initialKeys: ApiKeysSnapshot }) {
     try {
       const res = await fetch("/api/setup/complete", { method: "POST" });
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-          missing?: { anthropic: boolean; groq: boolean };
-        } | null;
+        const parsed = SetupCompleteErrorSchema.safeParse(
+          await res.json().catch(() => null),
+        );
+        const data = parsed.success ? parsed.data : null;
         // The gate route says a key is missing — go back to KEYS.
         if (res.status === 400 && data?.missing) {
           setKeysNotice(data.error ?? "Add both keys first.");
