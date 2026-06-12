@@ -59,9 +59,12 @@ const SyncStatus = React.forwardRef<HTMLDivElement, SyncStatusProps>(
     ref,
   ) => {
     // The operator block (leading and/or trailing date) uses 11/normal/ls1; the
-    // plain dot+label uses the showcase 10/500/ls1.5.
+    // plain dot+label uses the showcase 10/500/ls1.5. The trailing label prefers
+    // the explicit date, then an explicit label, then the state default — so an
+    // operator block with only a `leadingLabel` still shows the sync label
+    // rather than a bare dot.
     const isOperator = leadingLabel != null || dateLabel != null;
-    const trailing = isOperator ? dateLabel : (label ?? STATE_LABEL[state]);
+    const trailing = dateLabel ?? label ?? STATE_LABEL[state];
 
     return (
       <div
@@ -75,18 +78,16 @@ const SyncStatus = React.forwardRef<HTMLDivElement, SyncStatusProps>(
           </span>
         ) : null}
         <span aria-hidden="true" className={cn(dotVariants({ state }))} />
-        {trailing != null ? (
-          <span
-            className={cn(
-              "font-mono uppercase text-muted-foreground",
-              isOperator
-                ? "text-[11px] font-normal tracking-[1px]"
-                : "text-[10px] font-medium tracking-[1.5px]",
-            )}
-          >
-            {trailing}
-          </span>
-        ) : null}
+        <span
+          className={cn(
+            "font-mono uppercase text-muted-foreground",
+            isOperator
+              ? "text-[11px] font-normal tracking-[1px]"
+              : "text-[10px] font-medium tracking-[1.5px]",
+          )}
+        >
+          {trailing}
+        </span>
       </div>
     );
   },
