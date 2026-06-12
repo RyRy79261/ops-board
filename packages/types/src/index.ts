@@ -7,3 +7,4 @@ export type TaskStatus = "not-started" | "in-progress" | "done";
 export type WindowState = "open" | "closing" | "closed" | "not-yet";
 
 export * from "./voice-intent";
+export * from "./research";

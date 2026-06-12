@@ -14,6 +14,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { ResearchStep, ResearchResult } from "@opsboard/types";
 
 // OpsBoard schema — a voice-first, READ-ONLY single-user mission planner.
 // `packages/db/src/schema.ts` is the single hand-authored source of truth;
@@ -305,6 +306,91 @@ export const userPreferences = pgTable("user_preferences", {
     .defaultNow(),
 });
 
+// --- AI Research (Task Agent) --------------------------------------------
+// The research flow is the ONE place voice WRITES. A `research_jobs` row tracks
+// one async, mission+task-bound web-research job run by the durable runner
+// (Inngest): `steps` is the streaming LIVE STEP LOG, `result` is the finished
+// AINotesBlock payload (NULL until `state` = 'complete'). NOTHING here is written
+// to a task automatically — the job only proposes; the user reviews and keeps.
+//
+// `task_research_notes` is the PERSISTED append target: one row per KEEP NOTES
+// confirmation, holding the structured ResearchResult (summary + numbered steps
+// + citations + sources) the plain `tasks.notes` text column can't represent.
+// Both FK to users ON DELETE CASCADE (a user delete sweeps their research).
+
+export const researchJobStateEnum = pgEnum("research_job_state", [
+  "running",
+  "complete",
+  "error",
+]);
+
+export const researchJobs = pgTable(
+  "research_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // The owning user — every read/write is scoped to it. ON DELETE CASCADE.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // The mission the research is scoped to (the locked ScopeChip taxonomy).
+    missionId: uuid("mission_id")
+      .notNull()
+      .references(() => missions.id, { onDelete: "cascade" }),
+    // The task the findings are bound to and will be appended to on KEEP NOTES.
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    // The research question the user confirmed via CUE RESEARCH.
+    query: text("query").notNull(),
+    state: researchJobStateEnum("state").notNull().default("running"),
+    // The streaming LIVE STEP LOG the runner advances. Defaults to an empty log.
+    steps: jsonb("steps")
+      .$type<ResearchStep[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    // The finished AINotesBlock payload. NULL until `state` = 'complete'.
+    result: jsonb("result").$type<ResearchResult>(),
+    // A client-safe failure reason when `state` = 'error'. NULL otherwise.
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    // Set when the job reaches a terminal state (complete or error).
+    completedAt: timestamp("completed_at", { mode: "date" }),
+  },
+  (j) => ({
+    userIdx: index("research_jobs_user_idx").on(j.userId),
+    taskIdx: index("research_jobs_task_idx").on(j.taskId),
+    stateIdx: index("research_jobs_state_idx").on(j.state),
+  }),
+);
+
+export const taskResearchNotes = pgTable(
+  "task_research_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    // The owning user — DENORMALIZED from the task (mirrors tasks.userId) so a
+    // note can be scoped/swept directly. ON DELETE CASCADE on the user.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // The job that produced these notes. ON DELETE SET NULL so pruning an old
+    // job never deletes the notes the user chose to keep.
+    jobId: uuid("job_id").references(() => researchJobs.id, {
+      onDelete: "set null",
+    }),
+    // The kept ResearchResult (summary + numbered steps + citations + sources).
+    content: jsonb("content").$type<ResearchResult>().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (n) => ({
+    taskIdx: index("task_research_notes_task_idx").on(n.taskId),
+    userIdx: index("task_research_notes_user_idx").on(n.userId),
+  }),
+);
+
 // --- MCP OAuth (server-only) --------------------------------------------
 // Pure auth-server state for Claude.ai (and other MCP clients) connecting
 // over OAuth 2.1 + Dynamic Client Registration. Nothing here is rendered or
@@ -469,6 +555,12 @@ export type NewUserApiKeyRow = typeof userApiKeys.$inferInsert;
 
 export type UserPreferencesRow = typeof userPreferences.$inferSelect;
 export type NewUserPreferencesRow = typeof userPreferences.$inferInsert;
+
+export type ResearchJob = typeof researchJobs.$inferSelect;
+export type NewResearchJob = typeof researchJobs.$inferInsert;
+
+export type TaskResearchNote = typeof taskResearchNotes.$inferSelect;
+export type NewTaskResearchNote = typeof taskResearchNotes.$inferInsert;
 
 export type McpOauthClient = typeof mcpOauthClients.$inferSelect;
 export type NewMcpOauthClient = typeof mcpOauthClients.$inferInsert;
