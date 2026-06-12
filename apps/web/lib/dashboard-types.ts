@@ -50,10 +50,31 @@ export interface DependencyEdgeVM {
   dependsOnId: string;
 }
 
+/**
+ * Per-task window inputs for the sidebar aggregates — the minimal structural
+ * subset `windowState` consumes, carried for EVERY mission (not just the active
+ * one) so each NavCard can derive its own `{done}/{total}` count + nearest-cliff
+ * chip CLIENT-side (window state is tz-dependent). No names/notes — counts only.
+ */
+export interface MissionTaskWindow {
+  status: TaskStatus;
+  too_late_by: string | null;
+  not_before: string | null;
+  /** Server-derived (deriveBlocked) — folds into not-yet, so the chip is faithful. */
+  blocked: boolean;
+}
+
+/** A mission for the sidebar list, with the window inputs its NavCard needs. */
+export interface MissionSummaryVM {
+  id: string;
+  name: string;
+  taskWindows: MissionTaskWindow[];
+}
+
 /** The full payload the RSC page hands to the client shell. */
 export interface DashboardData {
-  /** Every mission, for the sidebar list. */
-  missions: { id: string; name: string }[];
+  /** Every mission, for the sidebar list (with per-mission task-window aggregates). */
+  missions: MissionSummaryVM[];
   /** The mission whose board is rendered. */
   activeMissionId: string;
   /** Active mission detail (drives the MissionDetailHeader title + target). */

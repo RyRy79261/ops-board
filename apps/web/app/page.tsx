@@ -1,5 +1,6 @@
 import { EmptyState } from "@opsboard/ui/components/empty-state";
 import { AppHeader } from "@opsboard/ui/components/app-header";
+import { SyncStatus } from "@opsboard/ui/components/sync-status";
 import { getDashboardData } from "@/lib/dashboard-data";
 import { requireOnboardedUser } from "@/lib/session";
 import { DashboardShell } from "@/components/dashboard-shell";
@@ -41,7 +42,14 @@ export default async function HomePage({
   if (!data) {
     return (
       <div className="flex min-h-dvh flex-col bg-background">
-        <AppHeader right={<SettingsLink />} />
+        <AppHeader
+          right={
+            <>
+              <SyncStatus leadingLabel="SOLO OPERATOR" />
+              <SettingsLink />
+            </>
+          }
+        />
         <main className="flex flex-1 items-center justify-center p-6">
           <EmptyState
             variant="no-missions"
