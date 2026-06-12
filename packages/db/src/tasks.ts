@@ -121,6 +121,65 @@ export async function getTaskDependencies(
   }));
 }
 
+/**
+ * BULK read: all of a user's tasks across the given missions, in ONE query
+ * (userId-scoped + missionId IN …). The dashboard groups the rows by
+ * `missionId` server-side, replacing a per-mission fan-out (2×N remote reads)
+ * with a single round-trip. Empty `missionIds` → no query, `[]`.
+ */
+export async function getTasksByMissionIds(
+  missionIds: string[],
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<Task[]> {
+  if (missionIds.length === 0) return [];
+  return db
+    .select()
+    .from(schema.tasks)
+    .where(
+      and(
+        inArray(schema.tasks.missionId, missionIds),
+        eq(schema.tasks.userId, userId),
+      ),
+    )
+    .orderBy(asc(schema.tasks.sortOrder), asc(schema.tasks.name));
+}
+
+/**
+ * BULK read: all dependency edges among a user's tasks across the given missions,
+ * in (at most) two queries — the owned task ids, then the edges on them. The
+ * dashboard groups edges by their task's mission server-side. Empty → `[]`.
+ */
+export async function getTaskDependenciesByMissionIds(
+  missionIds: string[],
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<DependencyEdge[]> {
+  if (missionIds.length === 0) return [];
+  const taskRows = await db
+    .select({ id: schema.tasks.id })
+    .from(schema.tasks)
+    .where(
+      and(
+        inArray(schema.tasks.missionId, missionIds),
+        eq(schema.tasks.userId, userId),
+      ),
+    );
+  const taskIds = taskRows.map((t) => t.id);
+  if (taskIds.length === 0) return [];
+
+  const edges = await db
+    .select()
+    .from(schema.taskDependencies)
+    .where(inArray(schema.taskDependencies.taskId, taskIds));
+
+  return edges.map((e) => ({
+    id: e.id,
+    taskId: e.taskId,
+    dependsOnId: e.dependsOnId,
+  }));
+}
+
 /** Result of a status-cycle mutation: the updated task, or null if not found. */
 export type UpdateTaskStatusResult =
   | { ok: true; task: Task }
