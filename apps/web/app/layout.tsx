@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { ErrorLogCollector } from "@/components/error-log-collector";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ops-board.ryanjnoble.dev"),
@@ -26,7 +27,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-[family-name:var(--font-dm-sans)]">{children}</body>
+      <body className="font-[family-name:var(--font-dm-sans)]">
+        {/* Records uncaught errors/rejections into the diagnostics buffer. */}
+        <ErrorLogCollector />
+        {children}
+      </body>
     </html>
   );
 }
