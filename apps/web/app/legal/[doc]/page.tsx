@@ -18,7 +18,8 @@ export function generateStaticParams() {
 }
 
 function isLegalSlug(s: string): s is LegalDocSlug {
-  return s === "privacy" || s === "terms";
+  // Dynamic so a new doc added to LEGAL_DOCS is routable without touching this guard.
+  return Object.prototype.hasOwnProperty.call(LEGAL_DOCS, s);
 }
 
 export default async function LegalDocPage({
