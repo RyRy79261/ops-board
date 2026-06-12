@@ -1,0 +1,3 @@
+ALTER TABLE "research_jobs" ADD CONSTRAINT "research_jobs_complete_has_result_check" CHECK ("research_jobs"."state" <> 'complete' OR "research_jobs"."result" IS NOT NULL);--> statement-breakpoint
+ALTER TABLE "research_jobs" ADD CONSTRAINT "research_jobs_error_has_message_check" CHECK ("research_jobs"."state" <> 'error' OR "research_jobs"."error_message" IS NOT NULL);--> statement-breakpoint
+ALTER TABLE "research_jobs" ADD CONSTRAINT "research_jobs_terminal_completed_at_check" CHECK ("research_jobs"."state" = 'running' OR "research_jobs"."completed_at" IS NOT NULL);
