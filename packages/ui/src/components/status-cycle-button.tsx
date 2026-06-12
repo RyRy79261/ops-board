@@ -48,7 +48,7 @@ const STATUS_LABEL: Record<StatusCycleStatus, string> = {
 };
 
 /** Next status in the wrapping cycle: not-started → in-progress → done → not-started. */
-const NEXT_STATUS: Record<StatusCycleStatus, StatusCycleStatus> = {
+export const NEXT_STATUS: Record<StatusCycleStatus, StatusCycleStatus> = {
   "not-started": "in-progress",
   "in-progress": "done",
   done: "not-started",

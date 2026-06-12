@@ -15,6 +15,7 @@ import { WindowStatePill } from "@opsboard/ui/components/window-state-pill";
 import { StatusBadge } from "@opsboard/ui/components/status-badge";
 import {
   StatusCycleButton,
+  NEXT_STATUS,
   type StatusCycleStatus,
 } from "@opsboard/ui/components/status-cycle-button";
 
@@ -29,12 +30,6 @@ const SECTIONS = [
   { id: "status", label: "Status" },
   { id: "voice", label: "Voice commands" },
 ] as const;
-
-const NEXT_STATUS: Record<StatusCycleStatus, StatusCycleStatus> = {
-  "not-started": "in-progress",
-  "in-progress": "done",
-  done: "not-started",
-};
 
 export function ManualSurface() {
   const [active, setActive] = React.useState<string>(SECTIONS[0].id);

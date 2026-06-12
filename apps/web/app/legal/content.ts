@@ -14,8 +14,8 @@ export interface LegalSectionData {
   callout?: { tone: CodeCalloutTone; title: string; body: string };
 }
 
+// The slug is the LEGAL_DOCS record KEY — not duplicated here, so the two can't drift.
 export interface LegalDoc {
-  slug: LegalDocSlug;
   title: string;
   description: string;
   /** Pre-formatted "updated" date for the index row + header. */
@@ -26,7 +26,6 @@ export interface LegalDoc {
 
 export const LEGAL_DOCS: Record<LegalDocSlug, LegalDoc> = {
   privacy: {
-    slug: "privacy",
     title: "Privacy Policy",
     description: "What OpsBoard stores, why, and the controls you have.",
     updated: "12 JUN 2026",
@@ -68,7 +67,6 @@ export const LEGAL_DOCS: Record<LegalDocSlug, LegalDoc> = {
     ],
   },
   terms: {
-    slug: "terms",
     title: "Terms of Service",
     description: "The agreement for using OpsBoard.",
     updated: "12 JUN 2026",
@@ -105,4 +103,8 @@ export const LEGAL_DOCS: Record<LegalDocSlug, LegalDoc> = {
   },
 };
 
-export const LEGAL_INDEX: LegalDoc[] = [LEGAL_DOCS.privacy, LEGAL_DOCS.terms];
+/** Index entries as [slug, doc] pairs (slug = the record key), insertion order. */
+export const LEGAL_DOC_ENTRIES = Object.entries(LEGAL_DOCS) as [
+  LegalDocSlug,
+  LegalDoc,
+][];
