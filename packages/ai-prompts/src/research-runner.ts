@@ -10,14 +10,15 @@
 //
 // MODEL DISCIPLINE (project_brief.md §3): ids are PINNED, versioned constants.
 //
-// COST LEVER: the synthesis call runs web_search on the USER'S OWN Anthropic key,
-// so the model choice is their per-job spend. Set to Opus 4.8 — the strongest
-// synthesis + reasoning, for the best research depth. Drop RESEARCH_MODEL to
-// "claude-sonnet-4-6" (~1/3 cost) or "claude-haiku-4-5" (cheapest, fastest — and
-// most likely to finish within the ~60s step budget) to trade depth for spend.
-// The structure step is a cheap mechanical reformat → Haiku.
+// MODEL TIERS (the model-tier rule): the human boundary — the /research parse
+// that interprets the spoken request — runs on Opus. This synthesis call is
+// SECOND-WAVE work delegated by that Opus parse (it researches the already-parsed
+// query), so it runs on Sonnet 4.6 — a strong web-research synthesiser, ~1/3 Opus
+// cost, and faster (helps it finish within the ~60s step budget). The structure
+// step is third-wave → Haiku. (Bump RESEARCH_MODEL only if synthesis depth proves
+// insufficient; it's the user's per-job BYO-key spend.)
 
-export const RESEARCH_MODEL = "claude-opus-4-8" as const;
+export const RESEARCH_MODEL = "claude-sonnet-4-6" as const;
 export type ResearchModel = typeof RESEARCH_MODEL;
 
 export const STRUCTURE_MODEL = "claude-haiku-4-5" as const;

@@ -11,11 +11,14 @@
 // PINNED and VERSIONED — never edit in place; bump the version below.
 
 /**
- * Pinned parse model. Like the intent classifier, this is a cheap Haiku-class
- * extraction (transcript → {query, taskHint}); the heavy lifting (the actual
- * web research) happens later on a research-grade model in the M4 runner.
+ * Pinned parse model. This is the HUMAN BOUNDARY — it interprets the user's
+ * spoken request directly — so per the model-tier rule it runs on Opus (the
+ * strongest model handles raw human input; the downstream research synthesis it
+ * feeds is delegated to Sonnet, and the structure step to Haiku). Extraction is
+ * small, but getting the user's intent right is what everything downstream rides
+ * on. (Opus 4.7+ rejects sampling params — callForcedTool omits temperature for it.)
  */
-export const RESEARCH_PARSE_MODEL = "claude-haiku-4-5-20251001" as const;
+export const RESEARCH_PARSE_MODEL = "claude-opus-4-8" as const;
 export type ResearchParseModel = typeof RESEARCH_PARSE_MODEL;
 
 /**
