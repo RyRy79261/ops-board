@@ -144,8 +144,9 @@ const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>
 
           <ProgressBar indeterminate height={4} label={`Researching ${taskName}`} />
 
-          {/* Log — inline mobile rows (flatter than desktop). */}
-          <div className="flex flex-col gap-[9px]">
+          {/* Log — inline mobile rows (flatter than desktop). role=log +
+              aria-live so screen readers hear each step as it streams in. */}
+          <div role="log" aria-live="polite" className="flex flex-col gap-[9px]">
             {steps.map((step, i) => (
               <MobileStepRow key={i} state={step.state} label={step.label} />
             ))}
@@ -236,7 +237,7 @@ const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>
               </div>
             ) : null}
           </div>
-          <div className="flex flex-col py-2">
+          <div role="log" aria-live="polite" className="flex flex-col py-2">
             {steps.map((step, i) => (
               <ResearchStepRow
                 key={i}

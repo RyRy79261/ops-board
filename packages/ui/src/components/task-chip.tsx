@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { cn } from "../lib/utils";
 import { confidenceTone, CONFIDENCE_TEXT } from "../lib/confidence";
+import { CATEGORY_DOT, CATEGORY_TEXT, type Category } from "../lib/categories";
 
 /**
  * TaskChip — the matched TARGET TASK chip in the desktop ParsedIntentPanel
@@ -12,24 +13,6 @@ import { confidenceTone, CONFIDENCE_TEXT } from "../lib/confidence";
  *
  * Presentational leaf (no state) → server-safe, no "use client".
  */
-type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-
-const DOT_TONE: Record<Category, string> = {
-  medical: "bg-cat-medical",
-  bureaucratic: "bg-cat-bureaucratic",
-  travel: "bg-cat-travel",
-  gear: "bg-cat-gear",
-  tech: "bg-cat-tech",
-};
-
-const CAT_TEXT: Record<Category, string> = {
-  medical: "text-cat-medical",
-  bureaucratic: "text-cat-bureaucratic",
-  travel: "text-cat-travel",
-  gear: "text-cat-gear",
-  tech: "text-cat-tech",
-};
-
 export interface TaskChipProps extends React.HTMLAttributes<HTMLDivElement> {
   /** The matched task name (DM Sans 14/500). */
   name: string;
@@ -55,7 +38,7 @@ const TaskChip = React.forwardRef<HTMLDivElement, TaskChipProps>(
         <div className="flex min-w-0 items-center gap-[11px]">
           <span
             aria-hidden="true"
-            className={cn("size-[9px] shrink-0 rounded-full", DOT_TONE[category])}
+            className={cn("size-[9px] shrink-0 rounded-full", CATEGORY_DOT[category])}
           />
           <div className="flex min-w-0 flex-col gap-[3px]">
             <span className="truncate text-[14px] font-medium text-foreground">
@@ -65,7 +48,7 @@ const TaskChip = React.forwardRef<HTMLDivElement, TaskChipProps>(
               <span
                 className={cn(
                   "truncate font-mono text-[10px] uppercase tracking-[1px]",
-                  CAT_TEXT[category],
+                  CATEGORY_TEXT[category],
                 )}
               >
                 {caption}
