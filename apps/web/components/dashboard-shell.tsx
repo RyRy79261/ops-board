@@ -28,6 +28,7 @@ import { TimelineView } from "@/components/views/timeline-view";
 import { DependenciesView } from "@/components/views/dependencies-view";
 import { VoiceController } from "@/components/voice/voice-controller";
 import { SettingsLink } from "@/components/settings-link";
+import { ResearchLink } from "@/components/research-link";
 import { ErrorBoundary } from "@/components/error-boundary";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
@@ -215,6 +216,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         right={
           <>
             <SyncStatus leadingLabel="SOLO OPERATOR" dateLabel={operatorDate} />
+            <ResearchLink />
             <SettingsLink />
           </>
         }

@@ -14,3 +14,13 @@ export type {
   IntentClassifierModel,
   PromptVersions,
 } from "./voice-intent";
+export {
+  researchParsePrompt,
+  RESEARCH_PARSE_MODEL,
+  RESEARCH_PROMPT_VERSIONS,
+} from "./research-parse";
+export type {
+  ResearchScopeSnapshot,
+  ResearchParseModel,
+  ResearchPromptVersions,
+} from "./research-parse";
