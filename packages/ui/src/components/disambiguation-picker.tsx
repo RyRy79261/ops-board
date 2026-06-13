@@ -1,18 +1,16 @@
 import * as React from "react";
-import {
-  Backpack,
-  ChevronRight,
-  Cpu,
-  FileText,
-  GitFork,
-  Mic,
-  Plane,
-  Stethoscope,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight, GitFork, Mic } from "lucide-react";
 
 import { cn } from "../lib/utils";
 import { confidenceTone, CONFIDENCE_TEXT } from "../lib/confidence";
+import {
+  CATEGORY_DOT,
+  CATEGORY_ICON,
+  CATEGORY_LABEL,
+  CATEGORY_TEXT,
+  CATEGORY_TINT,
+  type Category,
+} from "../lib/categories";
 
 /**
  * DisambiguationPicker — the multi-match "pick one" surface shown when a parse
@@ -33,40 +31,6 @@ import { confidenceTone, CONFIDENCE_TEXT } from "../lib/confidence";
  *
  * Presentational leaf (no state) → server-safe, no "use client".
  */
-type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-
-const CATEGORY_META: Record<Category, { icon: LucideIcon; label: string }> = {
-  medical: { icon: Stethoscope, label: "MEDICAL" },
-  bureaucratic: { icon: FileText, label: "BUREAUCRATIC" },
-  travel: { icon: Plane, label: "TRAVEL" },
-  gear: { icon: Backpack, label: "GEAR" },
-  tech: { icon: Cpu, label: "TECH" },
-};
-
-const DOT_TONE: Record<Category, string> = {
-  medical: "bg-cat-medical",
-  bureaucratic: "bg-cat-bureaucratic",
-  travel: "bg-cat-travel",
-  gear: "bg-cat-gear",
-  tech: "bg-cat-tech",
-};
-
-const CAT_TEXT: Record<Category, string> = {
-  medical: "text-cat-medical",
-  bureaucratic: "text-cat-bureaucratic",
-  travel: "text-cat-travel",
-  gear: "text-cat-gear",
-  tech: "text-cat-tech",
-};
-
-const CAT_PILL: Record<Category, string> = {
-  medical: "bg-cat-medical/12 text-cat-medical",
-  bureaucratic: "bg-cat-bureaucratic/12 text-cat-bureaucratic",
-  travel: "bg-cat-travel/12 text-cat-travel",
-  gear: "bg-cat-gear/12 text-cat-gear",
-  tech: "bg-cat-tech/12 text-cat-tech",
-};
-
 export interface DisambiguationCandidate {
   /** Stable id — passed to `onPick`. */
   id: string;
@@ -131,7 +95,8 @@ const DisambiguationPicker = React.forwardRef<
           {/* Picks: full-width tappable cards with a chevron-right affordance. */}
           <div className="flex flex-col gap-2.5">
             {candidates.map((c) => {
-              const { icon: CatIcon, label } = CATEGORY_META[c.category];
+              const CatIcon = CATEGORY_ICON[c.category];
+              const label = CATEGORY_LABEL[c.category];
               return (
                 <button
                   key={c.id}
@@ -152,7 +117,7 @@ const DisambiguationPicker = React.forwardRef<
                     <span
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full px-2 py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.5px]",
-                        CAT_PILL[c.category],
+                        CATEGORY_TINT[c.category],
                       )}
                     >
                       <CatIcon
@@ -230,7 +195,7 @@ const DisambiguationPicker = React.forwardRef<
                   aria-hidden="true"
                   className={cn(
                     "size-[9px] shrink-0 rounded-full",
-                    DOT_TONE[c.category],
+                    CATEGORY_DOT[c.category],
                   )}
                 />
                 <div className="flex min-w-0 flex-col gap-[3px]">
@@ -240,10 +205,10 @@ const DisambiguationPicker = React.forwardRef<
                   <span
                     className={cn(
                       "truncate font-mono text-[10px] uppercase tracking-[1px]",
-                      CAT_TEXT[c.category],
+                      CATEGORY_TEXT[c.category],
                     )}
                   >
-                    {c.caption ?? CATEGORY_META[c.category].label}
+                    {c.caption ?? CATEGORY_LABEL[c.category]}
                   </span>
                 </div>
               </div>

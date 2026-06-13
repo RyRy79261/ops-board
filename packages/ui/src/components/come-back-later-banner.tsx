@@ -25,9 +25,9 @@ export interface ComeBackLaterBannerProps
   title?: string;
   /** Reassurance body sentence (DM Sans 13, `$muted-foreground`). */
   body?: string;
-  /** MINIMIZE button handler (rendered in the `primary` variant only). */
+  /** MINIMIZE button handler. The `primary` button renders ONLY when this is set. */
   onMinimize?: () => void;
-  /** COME BACK LATER button handler (rendered in the `primary` variant only). */
+  /** COME BACK LATER button handler. The button renders ONLY when this is set. */
   onComeBackLater?: () => void;
 }
 
@@ -97,24 +97,32 @@ const ComeBackLaterBanner = React.forwardRef<
             </span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onMinimize}
-            className="inline-flex items-center gap-[7px] border border-border-hover bg-transparent px-3.5 py-[9px] font-mono text-[11px] font-bold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:border-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Minimize2 aria-hidden="true" className="size-[13px]" />
-            Minimize
-          </button>
-          <button
-            type="button"
-            onClick={onComeBackLater}
-            className="inline-flex items-center gap-[7px] bg-primary px-3.5 py-[9px] font-mono text-[11px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Bell aria-hidden="true" className="size-[13px]" />
-            Come back later
-          </button>
-        </div>
+        {/* Buttons render only when wired — an always-on button with no handler
+            is a dead control. Both handlers omitted → the banner is text-only. */}
+        {onMinimize || onComeBackLater ? (
+          <div className="flex shrink-0 items-center gap-2.5">
+            {onMinimize ? (
+              <button
+                type="button"
+                onClick={onMinimize}
+                className="inline-flex items-center gap-[7px] border border-border-hover bg-transparent px-3.5 py-[9px] font-mono text-[11px] font-bold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:border-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Minimize2 aria-hidden="true" className="size-[13px]" />
+                Minimize
+              </button>
+            ) : null}
+            {onComeBackLater ? (
+              <button
+                type="button"
+                onClick={onComeBackLater}
+                className="inline-flex items-center gap-[7px] bg-primary px-3.5 py-[9px] font-mono text-[11px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Bell aria-hidden="true" className="size-[13px]" />
+                Come back later
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     );
   },

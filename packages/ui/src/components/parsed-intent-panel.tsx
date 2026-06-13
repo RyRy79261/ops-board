@@ -1,22 +1,22 @@
 import * as React from "react";
 import {
-  Backpack,
   CircleCheck,
-  Cpu,
   FilePlus,
-  FileText,
   Globe,
-  Plane,
   ScanSearch,
   Sparkles,
-  Stethoscope,
-  type LucideIcon,
 } from "lucide-react";
 
 import { cn } from "../lib/utils";
 import { Badge } from "./badge";
 import { IntentRow } from "./intent-row";
 import { TaskChip } from "./task-chip";
+import {
+  CATEGORY_ICON,
+  CATEGORY_LABEL,
+  CATEGORY_TINT,
+  type Category,
+} from "../lib/categories";
 
 /**
  * ParsedIntentPanel — the agent's structured understanding of the voice command
@@ -38,28 +38,6 @@ import { TaskChip } from "./task-chip";
  * Presentational leaf (no state) → server-safe, no "use client". Live values
  * (confidence) arrive as props; the panel never computes them.
  */
-type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-
-/** Per-category mobile chip meta: Lucide glyph + tint/text token classes. */
-const CATEGORY_CHIP: Record<
-  Category,
-  { icon: LucideIcon; label: string; chip: string }
-> = {
-  medical: {
-    icon: Stethoscope,
-    label: "MEDICAL",
-    chip: "bg-cat-medical/12 text-cat-medical",
-  },
-  bureaucratic: {
-    icon: FileText,
-    label: "BUREAUCRATIC",
-    chip: "bg-cat-bureaucratic/12 text-cat-bureaucratic",
-  },
-  travel: { icon: Plane, label: "TRAVEL", chip: "bg-cat-travel/12 text-cat-travel" },
-  gear: { icon: Backpack, label: "GEAR", chip: "bg-cat-gear/12 text-cat-gear" },
-  tech: { icon: Cpu, label: "TECH", chip: "bg-cat-tech/12 text-cat-tech" },
-};
-
 export interface ParsedIntentPanelProps
   extends React.HTMLAttributes<HTMLDivElement> {
   /** Resolved intent verb (e.g. `RESEARCH`). */
@@ -98,8 +76,7 @@ const ParsedIntentPanel = React.forwardRef<
     ref,
   ) => {
     if (variant === "mobile") {
-      const cat = CATEGORY_CHIP[target.category];
-      const CatIcon = cat.icon;
+      const CatIcon = CATEGORY_ICON[target.category];
       return (
         <div
           ref={ref}
@@ -149,11 +126,11 @@ const ParsedIntentPanel = React.forwardRef<
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-2 py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.5px]",
-                    cat.chip,
+                    CATEGORY_TINT[target.category],
                   )}
                 >
                   <CatIcon aria-hidden="true" className="size-[11px] shrink-0" />
-                  {cat.label}
+                  {CATEGORY_LABEL[target.category]}
                 </span>
                 {target.confidence != null ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-success/12 px-2 py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.5px] text-success">
