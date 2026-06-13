@@ -50,16 +50,6 @@ export interface ToolCallOptions {
 }
 
 /**
- * Run a forced single-tool Claude call and return the raw `tool_use.input` (an
- * `unknown` the caller MUST validate with Zod — e.g. `safeParseIntent` from
- * @opsboard/types). THROWS on any SDK/API/timeout error and returns `null` only
- * on a clean "no matching tool_use block" outcome. Most callers want the
- * fail-safe `callForcedTool` wrapper instead; this strict form exists so a
- * caller that must distinguish a bad-KEY vendor 4xx from a model that simply
- * produced nothing (the setup dictation-test) can inspect the thrown error's
- * HTTP status. `temperature` is pinned to 0 for deterministic classification.
- */
-/**
  * Opus 4.7+ and Fable/Mythos REJECT sampling params (temperature/top_p/top_k)
  * with a 400; everything else (Haiku, Sonnet, Opus ≤4.6) accepts them. We only
  * send `temperature: 0` (deterministic forced-tool extraction) where it's
@@ -69,6 +59,18 @@ function modelAcceptsSampling(model: string): boolean {
   return !/opus-4-(?:7|8)|fable|mythos/i.test(model);
 }
 
+/**
+ * Run a forced single-tool Claude call and return the raw `tool_use.input` (an
+ * `unknown` the caller MUST validate with Zod — e.g. `safeParseIntent` from
+ * @opsboard/types). THROWS on any SDK/API/timeout error and returns `null` only
+ * on a clean "no matching tool_use block" outcome. Most callers want the
+ * fail-safe `callForcedTool` wrapper instead; this strict form exists so a
+ * caller that must distinguish a bad-KEY vendor 4xx from a model that simply
+ * produced nothing (the setup dictation-test) can inspect the thrown error's
+ * HTTP status. `temperature` 0 is sent only for models that accept sampling
+ * (Haiku/Sonnet/Opus ≤4.6); it is omitted for Opus 4.7+/Fable/Mythos, which
+ * reject it — see modelAcceptsSampling.
+ */
 export async function callForcedToolStrict(
   opts: ToolCallOptions,
 ): Promise<unknown | null> {
@@ -99,7 +101,8 @@ export async function callForcedToolStrict(
  * from @opsboard/types). Fail-safe: returns `null` on a missing key, an API
  * error, a timeout, or no matching tool_use block — the route turns `null`
  * into a clean error response (never a leaked SDK stack, never a wrong
- * mutation). `temperature` is pinned to 0 for deterministic classification.
+ * mutation). `temperature` 0 is sent only where the model accepts it (see
+ * modelAcceptsSampling); it's omitted for Opus 4.7+/Fable/Mythos.
  */
 export async function callForcedTool(
   opts: ToolCallOptions,

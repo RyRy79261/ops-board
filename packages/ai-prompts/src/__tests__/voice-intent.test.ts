@@ -25,6 +25,20 @@ describe("voiceIntentPrompt", () => {
     expect(voiceIntentPrompt.system).toMatch(/confidence/i);
   });
 
+  it("rebalances confidence so clear commands and new names are NOT ambiguity", () => {
+    // The behavioral heart of the Opus switch: a plainly-stated command and a
+    // brand-new (snapshot-absent) name must score HIGH and classify directly —
+    // not get dumped to `unknown`/sub-0.6 and dead-end at the confirm gate.
+    // Lock the wording so a future edit can't silently regress it (the version
+    // is bumped alongside the prompt — see PROMPT_VERSIONS.voiceIntent).
+    const s = voiceIntentPrompt.system;
+    expect(s).toMatch(/scores HIGH \(>= 0\.8\)/);
+    expect(s).toMatch(/A NEW name is not ambiguity/i);
+    expect(s).toMatch(/create_mission and create_task INTRODUCE names/);
+    // Conservatism is reserved for genuine uncertainty between EXISTING entities.
+    expect(s).toMatch(/two EXISTING missions\/tasks/);
+  });
+
   it("system prompt names the five seeded categories", () => {
     for (const cat of ["medical", "bureaucratic", "travel", "gear", "tech"]) {
       expect(voiceIntentPrompt.system).toContain(cat);

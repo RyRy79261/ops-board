@@ -1,7 +1,7 @@
 // @opsboard/ai-prompts — versioned {system, user} prompt constants for the
-// voice-intent classifier (Opus 4.8, behind a Groq transcript cleanup) + the
-// OpsBoard Whisper bias prompt (<224 tokens) + the research-parse prompt.
-// See docs/scaffolding-plan.md S5.
+// voice-intent classifier (Opus 4.8) + the OpsBoard Whisper bias prompt
+// (<224 tokens) + the Groq transcript-cleanup prompt (runs before the
+// classifier) + the research-parse prompt. See docs/scaffolding-plan.md S5.
 
 export {
   voiceIntentPrompt,
