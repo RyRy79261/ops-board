@@ -4,8 +4,13 @@ import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import type { CueResearchResult } from "@/lib/research-types";
+import { inngest } from "@/lib/inngest/client";
 
-import { createResearchJob, getResearchJobsForTask } from "@opsboard/db/research";
+import {
+  createResearchJob,
+  getResearchJobsForTask,
+  updateResearchJob,
+} from "@opsboard/db/research";
 
 // /api/research — the CUE RESEARCH enqueue (the first write-consent gate). Takes
 // a confirmed { missionId, taskId, query }, creates the research_jobs row
@@ -88,7 +93,25 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: res.error }, { status: 404 });
   }
 
-  // M4: inngest.send({ name: "research/job.requested", data: { jobId: res.job.id, userId: user.id } });
+  // Fire the durable runner. If the enqueue fails the job row would dangle in
+  // `running` forever, so fail it (best-effort) and surface a 502 — the user can
+  // re-cue rather than watch a job that will never start.
+  try {
+    await inngest.send({
+      name: "research/job.requested",
+      data: { jobId: res.job.id, userId: user.id },
+    });
+  } catch (err) {
+    console.error("inngest.send research/job.requested failed", err);
+    await updateResearchJob(res.job.id, user.id, {
+      state: "error",
+      errorMessage: "Couldn't start the research runner. Try again.",
+    }).catch(() => {});
+    return NextResponse.json(
+      { error: "Couldn't start the research runner. Try again." },
+      { status: 502 },
+    );
+  }
 
   const body: CueResearchResult = { jobId: res.job.id };
   return NextResponse.json(body, { status: 201 });
