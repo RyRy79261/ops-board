@@ -14,6 +14,17 @@ import {
 // temperature 0; the model id is pinned here (STT is the one model id NOT in
 // @opsboard/ai-prompts — the classifier model lives there).
 
+/**
+ * Hard upper bound on the best-effort transcript-cleanup call. The cleanup is a
+ * tiny llama-3.1-8b-instant pass that normally returns in well under a second;
+ * it sits in the voice-command hot path BEFORE the Opus classifier, so a hung
+ * upstream must not stall the whole command. groq-sdk defaults to a 60s timeout
+ * with 2 retries (up to ~3min worst case) — we cap the per-attempt timeout AND
+ * disable retries so the worst case is a single bounded attempt, after which
+ * cleanTranscript fails open to the raw transcript.
+ */
+const GROQ_CLEANUP_TIMEOUT_MS = 8_000;
+
 export interface TranscribeOptions {
   /**
    * Whisper's domain-biasing prompt. A short paragraph listing the jargon,
@@ -62,15 +73,18 @@ export async function cleanTranscript(
   if (text.length === 0) return text;
   try {
     const client = new Groq({ apiKey });
-    const res = await client.chat.completions.create({
-      model: GROQ_CLEANUP_MODEL,
-      temperature: 0,
-      max_tokens: 512,
-      messages: [
-        { role: "system", content: transcriptCleanupPrompt.system },
-        { role: "user", content: transcriptCleanupPrompt.user(text) },
-      ],
-    });
+    const res = await client.chat.completions.create(
+      {
+        model: GROQ_CLEANUP_MODEL,
+        temperature: 0,
+        max_tokens: 512,
+        messages: [
+          { role: "system", content: transcriptCleanupPrompt.system },
+          { role: "user", content: transcriptCleanupPrompt.user(text) },
+        ],
+      },
+      { timeout: GROQ_CLEANUP_TIMEOUT_MS, maxRetries: 0 },
+    );
     const cleaned = res.choices[0]?.message?.content?.trim();
     return cleaned && cleaned.length > 0 ? cleaned : text;
   } catch (err) {
