@@ -10,7 +10,7 @@ import { Button } from "@opsboard/ui/components/button";
  */
 export function ResearchLink() {
   return (
-    <Button asChild variant="ghost" size="sm" aria-label="Task Agent">
+    <Button asChild variant="ghost" size="sm">
       <Link href="/research">
         <Sparkles aria-hidden="true" /> Research
       </Link>

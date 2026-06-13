@@ -175,6 +175,15 @@ export async function POST(req: Request): Promise<Response> {
     userMessage: researchParsePrompt.user(transcript, snapshot),
     tool: EMIT_RESEARCH_TOOL,
   });
+  // callForcedTool returns null on a transient Anthropic SDK/API/timeout error
+  // (it swallows to null). Distinguish that "try again" case from a genuine
+  // schema mismatch so the surface can message it accurately.
+  if (raw === null) {
+    return NextResponse.json(
+      { error: "The agent is busy right now — try again in a moment." },
+      { status: 200 },
+    );
+  }
   const parsed = RawResearchParse.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(

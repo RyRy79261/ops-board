@@ -21,14 +21,22 @@ export interface RankedTask extends MatchableTask {
   score: number;
 }
 
-/** Lowercase + collapse whitespace + trim, for forgiving matching. */
+/**
+ * Lowercase + fold punctuation to spaces + collapse whitespace + trim. Folding
+ * punctuation means `land-use permit` and `land use permit` normalize to the
+ * same string, so they hit the exact/contains branch instead of scoring low and
+ * reordering the default pick.
+ */
 function normalize(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function tokenize(value: string): string[] {
   return normalize(value)
-    .split(/[^a-z0-9]+/)
+    .split(" ")
     .filter((t) => t.length > 0);
 }
 

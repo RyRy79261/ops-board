@@ -5,17 +5,26 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import type { CueResearchResult } from "@/lib/research-types";
 
-import { createResearchJob } from "@opsboard/db/research";
+import { createResearchJob, getResearchJobsForTask } from "@opsboard/db/research";
 
 // /api/research — the CUE RESEARCH enqueue (the first write-consent gate). Takes
 // a confirmed { missionId, taskId, query }, creates the research_jobs row
 // (createResearchJob verifies task ownership + mission scope), and returns the
 // job id. Node runtime (neon-http driver).
 //
+// IDEMPOTENCY: at most one RUNNING job per task — a double-submit / retry returns
+// the in-flight job rather than fanning out a duplicate runner + duplicate AI
+// spend. (A DB partial-unique index on (task_id) WHERE state='running' is the
+// race-proof hardening; it lands with the M4 runner where concurrency matters.)
+//
+// NOTE (deferred hardening): this trusts the client performed the review/pick.
+// CUE RESEARCH is NOT destructive — it starts a research job on the caller's OWN
+// task (ownership verified) on their OWN key, and the actual write is gated AGAIN
+// by an explicit KEEP NOTES confirmation (M5). A server-verifiable parse-session
+// token binding the reviewed proposal is tracked as future defense-in-depth.
+//
 // M4: after the row is created this is where `inngest.send({ name:
 // "research/job.requested", data: { jobId, userId } })` fires the durable runner.
-// For M3 the row is created `running` and awaits the runner — the surface
-// confirms the enqueue; the live Running view + runner land in M4.
 
 export const runtime = "nodejs";
 
@@ -53,6 +62,16 @@ export async function POST(req: Request): Promise<Response> {
       { error: "Expected { missionId, taskId, query }." },
       { status: 400 },
     );
+  }
+
+  // Idempotency: if a job is already running for this task, return it instead of
+  // creating a duplicate (double-click / retry). getResearchJobsForTask is
+  // owner-scoped, so this never leaks another user's jobs.
+  const existing = await getResearchJobsForTask(parsed.data.taskId, user.id);
+  const running = existing.find((j) => j.state === "running");
+  if (running) {
+    const body: CueResearchResult = { jobId: running.id };
+    return NextResponse.json(body, { status: 200 });
   }
 
   const res = await createResearchJob(

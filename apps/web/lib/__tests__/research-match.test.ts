@@ -48,6 +48,18 @@ describe("rankTaskMatches", () => {
     expect(ranked[0]!.id).toBe("t2");
   });
 
+  it("folds punctuation so hyphen/space differences still match strongly", () => {
+    // 'land use permit' (spaces) must hit the contains branch against
+    // 'Tankwa Land-Use Permit' (hyphen), not fall back to a low token overlap.
+    const spaced = rankTaskMatches("land use permit", tasks);
+    const hyphenated = rankTaskMatches("land-use permit", tasks);
+    expect(spaced[0]!.id).toBe("t1");
+    expect(hyphenated[0]!.id).toBe("t1");
+    // Both spellings score the same (punctuation is normalised away).
+    expect(spaced[0]!.score).toBeCloseTo(hyphenated[0]!.score, 10);
+    expect(spaced[0]!.score).toBeGreaterThan(0.5);
+  });
+
   it("returns [] for an empty / whitespace hint", () => {
     expect(rankTaskMatches("   ", tasks)).toEqual([]);
     expect(rankTaskMatches("", tasks)).toEqual([]);

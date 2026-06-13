@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { z } from "zod";
 
 import { AppHeader } from "@opsboard/ui/components/app-header";
 import { Button } from "@opsboard/ui/components/button";
@@ -17,6 +18,23 @@ import { RecordingPanel } from "@opsboard/ui/components/recording-panel";
 import { Waveform } from "@/components/voice/waveform";
 import { useVoiceRecorder } from "@/components/voice/use-voice-recorder";
 import type { ResearchParseResult } from "@/lib/research-types";
+
+// The API can return either a typed payload OR `{ error }`; validate the success
+// shape at the client boundary (don't `as`-assert an untrusted response).
+const ParseResultSchema = z.object({
+  transcript: z.string(),
+  query: z.string(),
+  confidence: z.number(),
+  candidates: z.array(
+    z.object({
+      taskId: z.string(),
+      name: z.string(),
+      category: z.string(),
+      matchPct: z.number(),
+    }),
+  ),
+});
+const CueResultSchema = z.object({ jobId: z.string() });
 
 // /research Capture & Parse surface (client). Records a spoken research request,
 // parses it (POST /api/research/parse) into a query + ranked target-task
@@ -83,22 +101,38 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
       form.append("tz", tz);
       form.append("missionId", missionId);
 
-      const res = await fetch("/api/research/parse", {
-        method: "POST",
-        body: form,
-      });
-      const data = (await res.json().catch(() => ({}))) as
-        | ResearchParseResult
-        | { error?: string };
-      if (!res.ok || "error" in data) {
-        setError(
-          ("error" in data && data.error) || `Parse failed (${res.status}).`,
-        );
+      let data: unknown;
+      let ok: boolean;
+      try {
+        const res = await fetch("/api/research/parse", {
+          method: "POST",
+          body: form,
+        });
+        ok = res.ok;
+        data = await res.json().catch(() => ({}));
+      } catch {
+        setError("Network error — check your connection and try again.");
         return;
       }
-      const result = data as ResearchParseResult;
+
+      const parsed = ParseResultSchema.safeParse(data);
+      if (!ok || !parsed.success) {
+        const errMsg =
+          data && typeof data === "object" && "error" in data
+            ? String((data as { error?: unknown }).error ?? "")
+            : "";
+        setError(errMsg || "Couldn't parse that — try again.");
+        return;
+      }
+
+      const result: ResearchParseResult = parsed.data;
       setParse(result);
-      setSelectedTaskId(result.candidates[0]?.taskId ?? null);
+      // Auto-pick ONLY when exactly one task matches. When several match, leave
+      // the selection empty so the user must explicitly disambiguate before
+      // CUE RESEARCH — never assume an ambiguous target.
+      setSelectedTaskId(
+        result.candidates.length === 1 ? result.candidates[0]!.taskId : null,
+      );
       setCueState("idle");
     },
     [tz, missionId],
@@ -145,27 +179,41 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
     if (state === "error") reset();
   }, [state, reset]);
 
+  // The chosen target — ONLY the explicitly-selected candidate (no silent
+  // fallback to the top match). Ambiguous parses stay unselected until the user
+  // picks, which gates CUE RESEARCH below.
   const selected =
-    parse?.candidates.find((c) => c.taskId === selectedTaskId) ??
-    parse?.candidates[0] ??
-    null;
+    parse?.candidates.find((c) => c.taskId === selectedTaskId) ?? null;
 
   const cueResearch = React.useCallback(async () => {
     if (!parse || !selected || cueState === "cueing") return;
     setCueState("cueing");
     setError(null);
-    const res = await fetch("/api/research", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        missionId,
-        taskId: selected.taskId,
-        query: parse.query,
-      }),
-    });
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
-    if (!res.ok) {
-      setError(data.error ?? `Couldn't start research (${res.status}).`);
+    let data: unknown;
+    let ok: boolean;
+    try {
+      const res = await fetch("/api/research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          missionId,
+          taskId: selected.taskId,
+          query: parse.query,
+        }),
+      });
+      ok = res.ok;
+      data = await res.json().catch(() => ({}));
+    } catch {
+      setError("Network error — check your connection and try again.");
+      setCueState("idle");
+      return;
+    }
+    if (!ok || !CueResultSchema.safeParse(data).success) {
+      const errMsg =
+        data && typeof data === "object" && "error" in data
+          ? String((data as { error?: unknown }).error ?? "")
+          : "";
+      setError(errMsg || "Couldn't start research — try again.");
       setCueState("idle");
       return;
     }
@@ -260,10 +308,24 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 }}
                 action="Append research notes to this task"
               />
-            ) : (
+            ) : parse.candidates.length === 0 ? (
               <div className="border border-border bg-card p-4 text-[14px] leading-relaxed text-muted-foreground">
                 No task in “{missionName}” matched that. Try naming the task more
                 directly, then re-record.
+              </div>
+            ) : (
+              // Ambiguous: several tasks matched — show the query, and require an
+              // explicit pick from the DisambiguationPicker below before cueing.
+              <div className="flex flex-col gap-2 border border-border bg-card p-4">
+                <span className="font-mono text-micro uppercase leading-none tracking-[1.5px] text-muted-foreground-subtle">
+                  Query
+                </span>
+                <p className="font-mono text-[14px] leading-relaxed text-foreground">
+                  {`“${parse.query}”`}
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Several tasks match — pick the one these notes belong to below.
+                </p>
               </div>
             )}
 
@@ -313,6 +375,16 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 onConfirm={cueResearch}
                 onCancel={reRecord}
               />
+            ) : parse.candidates.length > 0 ? (
+              // Candidates exist but none picked — CUE RESEARCH stays gated.
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[13px] text-muted-foreground">
+                  Pick a task above to continue.
+                </span>
+                <Button variant="outline" size="sm" onClick={reRecord}>
+                  Re-record
+                </Button>
+              </div>
             ) : (
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={reRecord}>
