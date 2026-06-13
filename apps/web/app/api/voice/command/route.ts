@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { getAuthenticatedUser } from "@/lib/auth";
-import { transcribeAudio } from "@/lib/groq";
+import { transcribeAudio, cleanTranscript } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import { callForcedTool } from "@/lib/anthropic";
 import { executeIntent } from "@/lib/voice-execute";
@@ -243,14 +243,22 @@ async function handleAudio(
     );
   }
 
+  // 1b. Clean the raw Whisper transcript with a fast Groq pass (fix mis-hearings,
+  //     drop fillers/false-starts) BEFORE the Opus classifier interprets it — so
+  //     the human-boundary model reads tidy text. Fail-open: returns the raw
+  //     transcript on any hiccup, so cleanup never blocks the command. Downstream
+  //     (snapshot, classify, response) all use this cleaned transcript.
+  transcript = await cleanTranscript(transcript, groqKey);
+
   // 2. Build the snapshot SERVER-SIDE from the DB (never from model output).
   //    Scoped to the SESSION user so the classifier only ever sees THIS user's
   //    missions / tasks (no cross-user names leak into the prompt).
   const snapshot = await buildSnapshot(tz, userId);
 
-  // 3. Resolve the SESSION user's Anthropic key, then classify via Claude
-  //    (pinned Haiku, forced tool_use, temp 0, ~30s). FAIL CLOSED on no stored
-  //    key with a 402 NO_AI_KEY — pure BYO, same as transcription.
+  // 3. Resolve the SESSION user's Anthropic key, then classify via Claude (Opus
+  //    — the human-boundary model per the model-tier rule; forced tool_use, ~30s;
+  //    callForcedTool omits temperature since Opus 4.7+ rejects it). FAIL CLOSED
+  //    on no stored key with a 402 NO_AI_KEY — pure BYO, same as transcription.
   let anthropicKey: string;
   try {
     anthropicKey = await resolveAiKey(userId, "anthropic");

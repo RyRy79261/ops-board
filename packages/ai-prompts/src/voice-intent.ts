@@ -8,12 +8,16 @@
 import { VoiceIntentName } from "@opsboard/types";
 
 /**
- * Pinned classifier model. Intent parsing is a cheap/fast Haiku-class job; the
- * id is a versioned const so a model swap is an explicit, reviewable change
- * (never an in-place edit). Whisper STT is pinned separately as
- * `whisper-large-v3-turbo` in the transcribe route.
+ * Pinned classifier model. This is the HUMAN BOUNDARY — it turns the user's
+ * spoken command into the intent that drives a board mutation — so per the
+ * model-tier rule it runs on Opus (the strongest model interprets raw human
+ * input; getting the intent right is what the mutation rides on). A fast Groq
+ * pass cleans the transcript first (lib/groq.ts#cleanTranscript), so Opus reads
+ * a tidy transcript. The id is a versioned const so a swap is explicit + reviewable;
+ * Whisper STT is pinned separately as `whisper-large-v3-turbo` in the transcribe
+ * route. (Opus 4.7+ rejects sampling params — callForcedTool omits temperature for it.)
  */
-export const INTENT_CLASSIFIER_MODEL = "claude-haiku-4-5-20251001" as const;
+export const INTENT_CLASSIFIER_MODEL = "claude-opus-4-8" as const;
 export type IntentClassifierModel = typeof INTENT_CLASSIFIER_MODEL;
 
 /**

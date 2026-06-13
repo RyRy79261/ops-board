@@ -1,5 +1,10 @@
 import Groq from "groq-sdk";
 
+import {
+  GROQ_CLEANUP_MODEL,
+  transcriptCleanupPrompt,
+} from "@opsboard/ai-prompts";
+
 // LIFTED from camp-404 apps/web/lib/groq.ts (project_brief.md §3 /
 // scaffolding-plan.md S5), then REWIRED for OpsBoard BYO keys: the Groq client
 // is built per-request from a key the caller RESOLVED for the session user
@@ -39,4 +44,37 @@ export async function transcribeAudio(
     ...(options.prompt ? { prompt: options.prompt } : {}),
   });
   return res.text;
+}
+
+/**
+ * Clean up a raw Whisper transcript with a fast Groq model before the Opus
+ * intent classifier reads it — fix mis-transcriptions, drop filler/false-starts,
+ * normalise casing/punctuation, preserving wording + content words. FAIL-OPEN:
+ * any error (or empty input) returns the original transcript, so a cleanup
+ * hiccup never blocks the voice command. `apiKey` is the per-request key the
+ * route resolved for the SESSION user (same key as transcription).
+ */
+export async function cleanTranscript(
+  raw: string,
+  apiKey: string,
+): Promise<string> {
+  const text = raw.trim();
+  if (text.length === 0) return text;
+  try {
+    const client = new Groq({ apiKey });
+    const res = await client.chat.completions.create({
+      model: GROQ_CLEANUP_MODEL,
+      temperature: 0,
+      max_tokens: 512,
+      messages: [
+        { role: "system", content: transcriptCleanupPrompt.system },
+        { role: "user", content: transcriptCleanupPrompt.user(text) },
+      ],
+    });
+    const cleaned = res.choices[0]?.message?.content?.trim();
+    return cleaned && cleaned.length > 0 ? cleaned : text;
+  } catch (err) {
+    console.error("cleanTranscript failed; using raw transcript", err);
+    return text;
+  }
 }

@@ -59,6 +59,16 @@ export interface ToolCallOptions {
  * produced nothing (the setup dictation-test) can inspect the thrown error's
  * HTTP status. `temperature` is pinned to 0 for deterministic classification.
  */
+/**
+ * Opus 4.7+ and Fable/Mythos REJECT sampling params (temperature/top_p/top_k)
+ * with a 400; everything else (Haiku, Sonnet, Opus ≤4.6) accepts them. We only
+ * send `temperature: 0` (deterministic forced-tool extraction) where it's
+ * accepted, so this same helper works whether the caller pins Haiku or Opus 4.8.
+ */
+function modelAcceptsSampling(model: string): boolean {
+  return !/opus-4-(?:7|8)|fable|mythos/i.test(model);
+}
+
 export async function callForcedToolStrict(
   opts: ToolCallOptions,
 ): Promise<unknown | null> {
@@ -67,7 +77,7 @@ export async function callForcedToolStrict(
     {
       model: opts.model,
       max_tokens: opts.maxTokens ?? 1024,
-      temperature: 0,
+      ...(modelAcceptsSampling(opts.model) ? { temperature: 0 } : {}),
       system: opts.system,
       tools: [opts.tool],
       tool_choice: { type: "tool", name: opts.tool.name },

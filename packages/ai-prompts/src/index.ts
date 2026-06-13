@@ -14,3 +14,12 @@ export type {
   IntentClassifierModel,
   PromptVersions,
 } from "./voice-intent";
+export {
+  transcriptCleanupPrompt,
+  GROQ_CLEANUP_MODEL,
+  TRANSCRIPT_CLEANUP_PROMPT_VERSIONS,
+} from "./transcript-cleanup";
+export type {
+  GroqCleanupModel,
+  TranscriptCleanupPromptVersions,
+} from "./transcript-cleanup";
