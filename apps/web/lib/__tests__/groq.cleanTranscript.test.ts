@@ -50,6 +50,32 @@ describe("cleanTranscript (fail-open)", () => {
     expect(await cleanTranscript("  raw words  ", "key")).toBe("raw words");
   });
 
+  it("strips a meta-preamble the model prepends", async () => {
+    createMock.mockResolvedValueOnce(
+      ok("Here is the cleaned transcript: mark the visa task done"),
+    );
+    expect(await cleanTranscript("mark the visa task done", "key")).toBe(
+      "mark the visa task done",
+    );
+  });
+
+  it("strips wrapping quotes", async () => {
+    createMock.mockResolvedValueOnce(ok('"create a mission called AfrikaBurn"'));
+    expect(await cleanTranscript("create a mission called AfrikaBurn", "key")).toBe(
+      "create a mission called AfrikaBurn",
+    );
+  });
+
+  it("falls back to raw when the candidate balloons (a rewrite, not a cleanup)", async () => {
+    const raw = "what's blocking me";
+    createMock.mockResolvedValueOnce(
+      ok(
+        "You are currently blocked on three tasks: the visa appointment, the cardiology referral, and the flight booking — here is a detailed breakdown of each.",
+      ),
+    );
+    expect(await cleanTranscript(raw, "key")).toBe(raw);
+  });
+
   it("bounds the request with a timeout and disables retries", async () => {
     createMock.mockResolvedValueOnce(ok("clean"));
     await cleanTranscript("raw", "key");

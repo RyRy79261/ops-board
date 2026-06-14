@@ -58,12 +58,51 @@ export async function transcribeAudio(
 }
 
 /**
+ * Reconcile a cleanup candidate against the raw transcript. An 8B model can
+ * "help" in harmful ways — prepend "Here's the cleaned transcript:", wrap the
+ * text in quotes, or rewrite/answer instead of cleaning. We strip the common
+ * meta-preamble + wrapping quotes, then LENGTH-GUARD: a genuine cleanup is
+ * roughly the same size, so a candidate that collapses or balloons is treated as
+ * a rewrite and we fall back to the RAW transcript. Better the user's real words
+ * than a confident corruption — the snapshot fuzzy-match keys off the exact
+ * names (e.g. a rewrite of "AfrikaBurn" → "Africa Burn" would break matching).
+ * Returns `raw` whenever the candidate is missing, empty, or fails a guard.
+ */
+function reconcileCleanup(
+  raw: string,
+  candidate: string | null | undefined,
+): string {
+  if (!candidate) return raw;
+  let out = candidate.trim();
+  // Strip a leading meta-preamble ("Sure! Here is the cleaned transcript:").
+  out = out.replace(
+    /^(?:sure[,!.]?\s*)?here(?:'s| is)?(?:\s+the)?(?:\s+cleaned)?(?:\s+(?:transcript|text|version))?\s*[:\-—]\s*/i,
+    "",
+  );
+  // Strip wrapping quotes/backticks the model sometimes adds.
+  out = out
+    .replace(/^["'`]+/, "")
+    .replace(/["'`]+$/, "")
+    .trim();
+  if (out.length === 0) return raw;
+  // Length guard: a cleanup should be ~same size. +16 slack so very short inputs
+  // aren't tripped by punctuation/casing fixes.
+  if (out.length < raw.length * 0.5 || out.length > raw.length * 1.5 + 16) {
+    return raw;
+  }
+  return out;
+}
+
+/**
  * Clean up a raw Whisper transcript with a fast Groq model before the Opus
  * intent classifier reads it — fix mis-transcriptions, drop filler/false-starts,
  * normalise casing/punctuation, preserving wording + content words. FAIL-OPEN:
  * any error (or empty input) returns the original transcript, so a cleanup
- * hiccup never blocks the voice command. `apiKey` is the per-request key the
- * route resolved for the SESSION user (same key as transcription).
+ * hiccup never blocks the voice command. The candidate is also reconciled
+ * (preamble/quote strip + length guard — see reconcileCleanup) so a small model
+ * can't silently corrupt the content words the classifier depends on. `apiKey`
+ * is the per-request key the route resolved for the SESSION user (same key as
+ * transcription).
  */
 export async function cleanTranscript(
   raw: string,
@@ -85,8 +124,7 @@ export async function cleanTranscript(
       },
       { timeout: GROQ_CLEANUP_TIMEOUT_MS, maxRetries: 0 },
     );
-    const cleaned = res.choices[0]?.message?.content?.trim();
-    return cleaned && cleaned.length > 0 ? cleaned : text;
+    return reconcileCleanup(text, res.choices[0]?.message?.content);
   } catch (err) {
     console.error("cleanTranscript failed; using raw transcript", err);
     return text;

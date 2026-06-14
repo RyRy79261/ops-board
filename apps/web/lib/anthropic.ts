@@ -50,13 +50,21 @@ export interface ToolCallOptions {
 }
 
 /**
- * Opus 4.7+ and Fable/Mythos REJECT sampling params (temperature/top_p/top_k)
- * with a 400; everything else (Haiku, Sonnet, Opus ≤4.6) accepts them. We only
- * send `temperature: 0` (deterministic forced-tool extraction) where it's
- * accepted, so this same helper works whether the caller pins Haiku or Opus 4.8.
+ * Whether a model accepts sampling params (temperature/top_p/top_k). Opus 4.7+
+ * and Fable/Mythos REJECT them with a 400; Haiku, Sonnet, and Opus ≤4.6 accept
+ * them. We only send `temperature: 0` (deterministic forced-tool extraction)
+ * where it's accepted, so this helper works whether the caller pins Haiku or
+ * Opus 4.8.
+ *
+ * ALLOWLIST, not denylist, so an UNKNOWN future model fails SAFE: it omits
+ * temperature (the call still works, just non-deterministic) rather than sending
+ * it and getting a hard 400. We list the families known to accept sampling —
+ * Haiku, Sonnet, and Opus 4.0–4.6 (the `(?!\d)` stops `opus-4-6` from also
+ * matching `opus-4-60`, and 4.7/4.8/4.9+ never match `[0-6]`). Exported for the
+ * unit test that locks this regex (a wrong answer is a 400 outage).
  */
-function modelAcceptsSampling(model: string): boolean {
-  return !/opus-4-(?:7|8)|fable|mythos/i.test(model);
+export function modelAcceptsSampling(model: string): boolean {
+  return /haiku|sonnet|opus-4-[0-6](?!\d)/i.test(model);
 }
 
 /**

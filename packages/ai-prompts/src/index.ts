@@ -15,6 +15,7 @@ export type {
   IntentClassifierModel,
   PromptVersions,
 } from "./voice-intent";
+export { EMIT_INTENT_TOOL } from "./emit-intent-tool";
 export {
   transcriptCleanupPrompt,
   GROQ_CLEANUP_MODEL,
