@@ -50,6 +50,24 @@ export interface ToolCallOptions {
 }
 
 /**
+ * Whether a model accepts sampling params (temperature/top_p/top_k). Opus 4.7+
+ * and Fable/Mythos REJECT them with a 400; Haiku, Sonnet, and Opus ≤4.6 accept
+ * them. We only send `temperature: 0` (deterministic forced-tool extraction)
+ * where it's accepted, so this helper works whether the caller pins Haiku or
+ * Opus 4.8.
+ *
+ * ALLOWLIST, not denylist, so an UNKNOWN future model fails SAFE: it omits
+ * temperature (the call still works, just non-deterministic) rather than sending
+ * it and getting a hard 400. We list the families known to accept sampling —
+ * Haiku, Sonnet, and Opus 4.0–4.6 (the `(?!\d)` stops `opus-4-6` from also
+ * matching `opus-4-60`, and 4.7/4.8/4.9+ never match `[0-6]`). Exported for the
+ * unit test that locks this regex (a wrong answer is a 400 outage).
+ */
+export function modelAcceptsSampling(model: string): boolean {
+  return /haiku|sonnet|opus-4-[0-6](?!\d)/i.test(model);
+}
+
+/**
  * Run a forced single-tool Claude call and return the raw `tool_use.input` (an
  * `unknown` the caller MUST validate with Zod — e.g. `safeParseIntent` from
  * @opsboard/types). THROWS on any SDK/API/timeout error and returns `null` only
@@ -57,18 +75,10 @@ export interface ToolCallOptions {
  * fail-safe `callForcedTool` wrapper instead; this strict form exists so a
  * caller that must distinguish a bad-KEY vendor 4xx from a model that simply
  * produced nothing (the setup dictation-test) can inspect the thrown error's
- * HTTP status. `temperature` is pinned to 0 for deterministic classification.
+ * HTTP status. `temperature` 0 is sent only for models that accept sampling
+ * (Haiku/Sonnet/Opus ≤4.6); it is omitted for Opus 4.7+/Fable/Mythos, which
+ * reject it — see modelAcceptsSampling.
  */
-/**
- * Opus 4.7+ and Fable/Mythos REJECT sampling params (temperature/top_p/top_k)
- * with a 400; everything else (Haiku, Sonnet, Opus ≤4.6) accepts them. We only
- * send `temperature: 0` (deterministic forced-tool extraction) where it's
- * accepted, so this same helper works whether the caller pins Haiku or Opus 4.8.
- */
-function modelAcceptsSampling(model: string): boolean {
-  return !/opus-4-(?:7|8)|fable|mythos/i.test(model);
-}
-
 export async function callForcedToolStrict(
   opts: ToolCallOptions,
 ): Promise<unknown | null> {
@@ -99,7 +109,8 @@ export async function callForcedToolStrict(
  * from @opsboard/types). Fail-safe: returns `null` on a missing key, an API
  * error, a timeout, or no matching tool_use block — the route turns `null`
  * into a clean error response (never a leaked SDK stack, never a wrong
- * mutation). `temperature` is pinned to 0 for deterministic classification.
+ * mutation). `temperature` 0 is sent only where the model accepts it (see
+ * modelAcceptsSampling); it's omitted for Opus 4.7+/Fable/Mythos.
  */
 export async function callForcedTool(
   opts: ToolCallOptions,

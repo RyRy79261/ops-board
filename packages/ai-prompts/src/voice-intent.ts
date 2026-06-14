@@ -8,12 +8,15 @@
 import { VoiceIntentName } from "@opsboard/types";
 
 /**
- * Pinned classifier model. Intent parsing is a cheap/fast Haiku-class job; the
- * id is a versioned const so a model swap is an explicit, reviewable change
- * (never an in-place edit). Whisper STT is pinned separately as
- * `whisper-large-v3-turbo` in the transcribe route.
+ * Pinned classifier model. This is the HUMAN BOUNDARY — it turns the user's
+ * spoken command into the intent that drives a board mutation — so per the
+ * model-tier rule it runs on Opus (the strongest model interprets raw human
+ * input; getting the intent right is what the mutation rides on). The id is a
+ * versioned const so a swap is explicit + reviewable; Whisper STT is pinned
+ * separately as `whisper-large-v3-turbo` in the transcribe route. (Opus 4.7+
+ * rejects sampling params — the forced-tool call omits temperature for it.)
  */
-export const INTENT_CLASSIFIER_MODEL = "claude-haiku-4-5-20251001" as const;
+export const INTENT_CLASSIFIER_MODEL = "claude-opus-4-8" as const;
 export type IntentClassifierModel = typeof INTENT_CLASSIFIER_MODEL;
 
 /**
@@ -95,7 +98,9 @@ RELATIVE TIME RESOLUTION (output ISO yyyy-mm-dd in *Hint date fields and update_
 
 CONFIDENCE:
 - Always include a "confidence" number in [0,1] reflecting how sure you are of BOTH the intent and its key fields.
-- Be honest and conservative. Ambiguity between two missions/tasks, fuzzy matches you are unsure about, or partly-garbled audio should lower confidence well below 0.6.
+- A clear, plainly-stated command scores HIGH (>= 0.8). "Create a mission called Africa Burn 2027", "mark the cardiology follow-up done", "add a travel task to AfrikaBurn" each name their intent and key fields outright — classify them directly with high confidence. Don't treat a command as uncertain just because it is an action.
+- A NEW name is not ambiguity. create_mission and create_task INTRODUCE names — a mission/task name that is absent from the ${SNAPSHOT_OPEN} snapshot is exactly what a create command looks like, never a reason to doubt the intent or drop to "unknown".
+- Lower confidence well below 0.6 ONLY for genuine uncertainty: ambiguity between two EXISTING missions/tasks, a *Hint you cannot confidently resolve to the intended entity, or partly-garbled/empty audio. Reserve "unknown" for audio you truly cannot interpret — never as a hedge for a command you understood.
 
 SAFETY RULE (non-negotiable — mirrors OpsBoard's confirm-before-destruction policy):
 - delete_task and delete_mission are DESTRUCTIVE. They are NEVER auto-executed; the executor always asks the user to confirm first. Classify them when clearly intended, but never escalate a vague phrase into a delete.
@@ -130,7 +135,7 @@ export const OPSBOARD_WHISPER_PROMPT =
  * meaningfully changes. The version is what audit logs reference.
  */
 export const PROMPT_VERSIONS = {
-  voiceIntent: "2026-06-04.1",
+  voiceIntent: "2026-06-13.1",
   opsboardWhisper: "2026-06-04.1",
   intentClassifierModel: INTENT_CLASSIFIER_MODEL,
 } as const;
