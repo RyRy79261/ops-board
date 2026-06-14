@@ -26,3 +26,15 @@ export type {
   ResearchParseModel,
   ResearchPromptVersions,
 } from "./research-parse";
+export {
+  researchSynthesisPrompt,
+  researchStructurePrompt,
+  RESEARCH_MODEL,
+  STRUCTURE_MODEL,
+  RESEARCH_RUNNER_PROMPT_VERSIONS,
+} from "./research-runner";
+export type {
+  ResearchModel,
+  StructureModel,
+  ResearchRunnerPromptVersions,
+} from "./research-runner";

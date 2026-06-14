@@ -1,3 +1,12 @@
+import type {
+  ResearchResult,
+  ResearchStep,
+  ResearchJobState,
+} from "@opsboard/types";
+// Type-only (erased at compile) so this client-imported module never pulls the
+// db/neon runtime into the browser bundle.
+import type { ResearchJob } from "@opsboard/db/schema";
+
 // @opsboard/web — the wire contracts for the /research surface ⇄ its API routes.
 // Web-specific (not a shared @opsboard/types domain shape): the parse-response
 // and enqueue-request shapes the client and /api/research(/parse) agree on.
@@ -42,4 +51,43 @@ export interface ResearchErrorBody {
   /** `NO_AI_KEY` (402) drives the "add keys in Settings" prompt. */
   code?: string;
   provider?: string;
+}
+
+/** The GET /api/research/[jobId] poll response — drives the live Running surface. */
+export interface ResearchJobView {
+  id: string;
+  /** running → complete | error. */
+  state: ResearchJobState;
+  /** The research question being run. */
+  query: string;
+  /** The streaming step log (advanced by the runner). */
+  steps: ResearchStep[];
+  /** The finished AINotesBlock payload, or null until complete. */
+  result: ResearchResult | null;
+  /** Client-safe failure reason when state = error. */
+  errorMessage: string | null;
+  /** The bound task (for "findings will attach to …"). */
+  taskId: string;
+  /** ISO timestamps for the elapsed/relative display. */
+  createdAt: string;
+  completedAt: string | null;
+}
+
+/**
+ * Project a research_jobs row into the wire ResearchJobView. ONE mapper shared by
+ * the RSC page (initial render) and the GET poll route, so the seed and the polled
+ * frames stay byte-identical (a drifted field would make the live poll flicker).
+ */
+export function toResearchJobView(job: ResearchJob): ResearchJobView {
+  return {
+    id: job.id,
+    state: job.state,
+    query: job.query,
+    steps: job.steps,
+    result: job.result ?? null,
+    errorMessage: job.errorMessage,
+    taskId: job.taskId,
+    createdAt: job.createdAt.toISOString(),
+    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
+  };
 }

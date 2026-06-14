@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
@@ -40,8 +41,9 @@ const CueResultSchema = z.object({ jobId: z.string() });
 // parses it (POST /api/research/parse) into a query + ranked target-task
 // candidates, lets the user review/disambiguate, and on CUE RESEARCH enqueues
 // the job (POST /api/research). The board pipeline is untouched — this is its
-// own mission-scoped capture flow. (M4 turns the enqueue into a live Running
-// view + the Inngest runner; here it confirms the job was started.)
+// own mission-scoped capture flow. On CUE RESEARCH it enqueues the job and
+// navigates to /research/[jobId] — the live Running surface that polls the
+// Inngest-advanced job row.
 
 type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
 const KNOWN_CATEGORIES: readonly string[] = [
@@ -70,12 +72,11 @@ export interface ResearchSurfaceProps {
 }
 
 export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps) {
+  const router = useRouter();
   const [parse, setParse] = React.useState<ResearchParseResult | null>(null);
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [cueState, setCueState] = React.useState<"idle" | "cueing" | "done">(
-    "idle",
-  );
+  const [cueState, setCueState] = React.useState<"idle" | "cueing">("idle");
   const [elapsedMs, setElapsedMs] = React.useState(0);
 
   const tz = React.useMemo(() => {
@@ -208,7 +209,8 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
       setCueState("idle");
       return;
     }
-    if (!ok || !CueResultSchema.safeParse(data).success) {
+    const cue = CueResultSchema.safeParse(data);
+    if (!ok || !cue.success) {
       const errMsg =
         data && typeof data === "object" && "error" in data
           ? String((data as { error?: unknown }).error ?? "")
@@ -217,8 +219,10 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
       setCueState("idle");
       return;
     }
-    setCueState("done");
-  }, [parse, selected, cueState, missionId]);
+    // Job enqueued — hand off to the live Running surface (keep `cueing` so the
+    // button stays disabled until the route transition unmounts this surface).
+    router.push(`/research/${cue.data.jobId}`);
+  }, [parse, selected, cueState, missionId, router]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -351,23 +355,7 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
               </p>
             ) : null}
 
-            {cueState === "done" ? (
-              <div className="flex flex-col gap-3 border-l-[3px] border-success bg-card p-4">
-                <p className="text-[14px] leading-relaxed text-foreground">
-                  Research started — findings will be proposed as notes on{" "}
-                  <span className="font-medium">“{selected?.name}”</span> when
-                  it’s done.
-                </p>
-                <div className="flex gap-3">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/">Back to board</Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={reRecord}>
-                    New research
-                  </Button>
-                </div>
-              </div>
-            ) : selected ? (
+            {selected ? (
               <ConfirmBar
                 variant="bar"
                 hint="Phrasing can be terse — the mission scope plus the agent resolve the rest."

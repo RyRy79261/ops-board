@@ -4,8 +4,13 @@ import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import type { CueResearchResult } from "@/lib/research-types";
+import { inngest } from "@/lib/inngest/client";
 
-import { createResearchJob, getResearchJobsForTask } from "@opsboard/db/research";
+import {
+  createResearchJob,
+  getResearchJobsForTask,
+  updateResearchJob,
+} from "@opsboard/db/research";
 
 // /api/research — the CUE RESEARCH enqueue (the first write-consent gate). Takes
 // a confirmed { missionId, taskId, query }, creates the research_jobs row
@@ -14,8 +19,9 @@ import { createResearchJob, getResearchJobsForTask } from "@opsboard/db/research
 //
 // IDEMPOTENCY: at most one RUNNING job per task — a double-submit / retry returns
 // the in-flight job rather than fanning out a duplicate runner + duplicate AI
-// spend. (A DB partial-unique index on (task_id) WHERE state='running' is the
-// race-proof hardening; it lands with the M4 runner where concurrency matters.)
+// spend. This is a read-then-write check (getResearchJobsForTask → find running)
+// with a small TOCTOU window; a DB partial-unique index on (task_id) WHERE
+// state='running' is the race-proof hardening, deferred to a later milestone.
 //
 // NOTE (deferred hardening): this trusts the client performed the review/pick.
 // CUE RESEARCH is NOT destructive — it starts a research job on the caller's OWN
@@ -23,8 +29,8 @@ import { createResearchJob, getResearchJobsForTask } from "@opsboard/db/research
 // by an explicit KEEP NOTES confirmation (M5). A server-verifiable parse-session
 // token binding the reviewed proposal is tracked as future defense-in-depth.
 //
-// M4: after the row is created this is where `inngest.send({ name:
-// "research/job.requested", data: { jobId, userId } })` fires the durable runner.
+// On success it fires `inngest.send("research/job.requested", { jobId, userId })`
+// to start the durable runner (see the enqueue block below).
 
 export const runtime = "nodejs";
 
@@ -88,7 +94,25 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: res.error }, { status: 404 });
   }
 
-  // M4: inngest.send({ name: "research/job.requested", data: { jobId: res.job.id, userId: user.id } });
+  // Fire the durable runner. If the enqueue fails the job row would dangle in
+  // `running` forever, so fail it (best-effort) and surface a 502 — the user can
+  // re-cue rather than watch a job that will never start.
+  try {
+    await inngest.send({
+      name: "research/job.requested",
+      data: { jobId: res.job.id, userId: user.id },
+    });
+  } catch (err) {
+    console.error("inngest.send research/job.requested failed", err);
+    await updateResearchJob(res.job.id, user.id, {
+      state: "error",
+      errorMessage: "Couldn't start the research runner. Try again.",
+    }).catch(() => {});
+    return NextResponse.json(
+      { error: "Couldn't start the research runner. Try again." },
+      { status: 502 },
+    );
+  }
 
   const body: CueResearchResult = { jobId: res.job.id };
   return NextResponse.json(body, { status: 201 });

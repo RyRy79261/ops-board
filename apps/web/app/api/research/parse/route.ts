@@ -4,9 +4,10 @@ import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { transcribeAudio } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
-import { callForcedTool } from "@/lib/anthropic";
+import { callForcedToolStrict } from "@/lib/anthropic";
 import { resolveAiKey } from "@/lib/ai-key-resolver";
 import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
+import { vendorErrorResponse } from "@/app/api/_shared/vendor-errors";
 import { rankTaskMatches, toMatchPct, type MatchableTask } from "@/lib/research-match";
 import type { ResearchParseResult } from "@/lib/research-types";
 
@@ -35,9 +36,9 @@ export const runtime = "nodejs";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB, parallels /api/voice/command.
 const MAX_CANDIDATES = 5;
 
-// Forced tool — the model emits exactly { query, taskHint, confidence }. The raw
-// input is Zod-validated below; this JSON schema stays permissive so the model
-// isn't fought by a partial mirror (same idiom as EMIT_INTENT_TOOL).
+// Forced tool — the model emits exactly { query, taskHint, confidence }. All
+// three fields are declared (the model is steered by the declared schema), and
+// the raw input is Zod-validated against RawResearchParse below.
 const EMIT_RESEARCH_TOOL = {
   name: "emit_research",
   description:
@@ -127,11 +128,13 @@ export async function POST(req: Request): Promise<Response> {
       await transcribeAudio(file, groqKey, { prompt: OPSBOARD_WHISPER_PROMPT })
     ).trim();
   } catch (err) {
+    // Distinguish a rejected Groq KEY (400) / rate-limit (429) / timeout (504)
+    // from a real fault (502) — same diagnosable mapping as /api/voice/command.
     console.error("research-parse transcription error", err);
-    return NextResponse.json(
-      { error: "Couldn't transcribe that audio." },
-      { status: 200 },
-    );
+    return vendorErrorResponse(err, {
+      provider: "groq",
+      fallbackMessage: "Couldn't transcribe that audio.",
+    });
   }
   if (transcript.length === 0) {
     return NextResponse.json(
@@ -159,7 +162,10 @@ export async function POST(req: Request): Promise<Response> {
     })),
   };
 
-  // Parse (Claude, pinned Haiku, forced tool_use — per-user key, fail closed).
+  // Parse (Claude, pinned Opus — the human boundary per the model-tier rule;
+  // forced tool_use, per-user key, fail closed). The STRICT call lets a vendor
+  // error (bad key→400, rate-limit→429, timeout→504, else→502) be reported
+  // distinctly instead of being swallowed to a generic "busy" message.
   let anthropicKey: string;
   try {
     anthropicKey = await resolveAiKey(user.id, "anthropic");
@@ -168,19 +174,27 @@ export async function POST(req: Request): Promise<Response> {
     if (failClosed) return failClosed;
     throw err;
   }
-  const raw = await callForcedTool({
-    apiKey: anthropicKey,
-    model: RESEARCH_PARSE_MODEL,
-    system: researchParsePrompt.system,
-    userMessage: researchParsePrompt.user(transcript, snapshot),
-    tool: EMIT_RESEARCH_TOOL,
-  });
-  // callForcedTool returns null on a transient Anthropic SDK/API/timeout error
-  // (it swallows to null). Distinguish that "try again" case from a genuine
-  // schema mismatch so the surface can message it accurately.
+  let raw: unknown | null;
+  try {
+    raw = await callForcedToolStrict({
+      apiKey: anthropicKey,
+      model: RESEARCH_PARSE_MODEL,
+      system: researchParsePrompt.system,
+      userMessage: researchParsePrompt.user(transcript, snapshot),
+      tool: EMIT_RESEARCH_TOOL,
+    });
+  } catch (err) {
+    console.error("research-parse classify error", err);
+    return vendorErrorResponse(err, {
+      provider: "anthropic",
+      fallbackMessage: "The agent couldn't be reached — try again.",
+    });
+  }
+  // A clean "no tool_use block" (null) is a model MISS, not an error — let the
+  // user rephrase.
   if (raw === null) {
     return NextResponse.json(
-      { error: "The agent is busy right now — try again in a moment." },
+      { error: "Couldn't turn that into a research request — try rephrasing." },
       { status: 200 },
     );
   }
