@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { getAuthenticatedUser } from "@/lib/auth";
-import { transcribeAudio, cleanTranscript } from "@/lib/groq";
+import { transcribeAudio } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import { callForcedToolStrict } from "@/lib/anthropic";
 import { executeIntent } from "@/lib/voice-execute";
@@ -211,13 +211,6 @@ async function handleAudio(
       { status: 200 },
     );
   }
-
-  // 1b. Clean the raw Whisper transcript with a fast Groq pass (fix mis-hearings,
-  //     drop fillers/false-starts) BEFORE the Opus classifier interprets it — so
-  //     the human-boundary model reads tidy text. Fail-open: returns the raw
-  //     transcript on any hiccup, so cleanup never blocks the command. Downstream
-  //     (snapshot, classify, response) all use this cleaned transcript.
-  transcript = await cleanTranscript(transcript, groqKey);
 
   // 2. Build the snapshot SERVER-SIDE from the DB (never from model output).
   //    Scoped to the SESSION user so the classifier only ever sees THIS user's

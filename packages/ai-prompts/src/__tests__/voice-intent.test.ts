@@ -116,7 +116,7 @@ describe("OPSBOARD_WHISPER_PROMPT", () => {
 describe("model + version pinning", () => {
   it("pins the classifier to Opus (the human-boundary model)", () => {
     // Per the model-tier rule, the classifier interprets raw human input, so it
-    // runs on Opus; a fast Groq pass cleans the transcript first.
+    // runs on Opus (the strongest model at the human boundary).
     expect(INTENT_CLASSIFIER_MODEL).toBe("claude-opus-4-8");
     expect(PROMPT_VERSIONS.intentClassifierModel).toBe(INTENT_CLASSIFIER_MODEL);
   });

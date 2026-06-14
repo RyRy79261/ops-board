@@ -11,11 +11,10 @@ import { VoiceIntentName } from "@opsboard/types";
  * Pinned classifier model. This is the HUMAN BOUNDARY — it turns the user's
  * spoken command into the intent that drives a board mutation — so per the
  * model-tier rule it runs on Opus (the strongest model interprets raw human
- * input; getting the intent right is what the mutation rides on). A fast Groq
- * pass cleans the transcript first (lib/groq.ts#cleanTranscript), so Opus reads
- * a tidy transcript. The id is a versioned const so a swap is explicit + reviewable;
- * Whisper STT is pinned separately as `whisper-large-v3-turbo` in the transcribe
- * route. (Opus 4.7+ rejects sampling params — callForcedTool omits temperature for it.)
+ * input; getting the intent right is what the mutation rides on). The id is a
+ * versioned const so a swap is explicit + reviewable; Whisper STT is pinned
+ * separately as `whisper-large-v3-turbo` in the transcribe route. (Opus 4.7+
+ * rejects sampling params — the forced-tool call omits temperature for it.)
  */
 export const INTENT_CLASSIFIER_MODEL = "claude-opus-4-8" as const;
 export type IntentClassifierModel = typeof INTENT_CLASSIFIER_MODEL;
