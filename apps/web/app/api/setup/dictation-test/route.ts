@@ -4,14 +4,16 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { transcribeAudio } from "@/lib/groq";
 import { callForcedToolStrict } from "@/lib/anthropic";
-import { resolveAiKey, type AiProvider } from "@/lib/ai-key-resolver";
+import { resolveAiKey } from "@/lib/ai-key-resolver";
 import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
+import { vendorErrorResponse } from "@/app/api/_shared/vendor-errors";
 
 import { safeParseIntent, type VoiceIntent } from "@opsboard/types";
 import {
   voiceIntentPrompt,
   OPSBOARD_WHISPER_PROMPT,
   INTENT_CLASSIFIER_MODEL,
+  EMIT_INTENT_TOOL,
   type VoiceStateSnapshot,
 } from "@opsboard/ai-prompts";
 import { z } from "zod";
@@ -47,70 +49,19 @@ const DEFAULT_TZ = "UTC";
 // the runtime Intl validity check in sanitizeTz.
 const TzSchema = z.string().trim().min(1).max(64);
 
-// The emit_intent forced tool — identical contract to the voice route's
-// EMIT_INTENT_TOOL. The raw input is Zod-validated via safeParseIntent (the
-// @opsboard/types union is the real validator, not this loose JSON schema).
-const EMIT_INTENT_TOOL = {
-  name: "emit_intent",
-  description:
-    "Emit exactly one structured OpsBoard voice intent matching the VoiceIntent union.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      intent: {
-        type: "string",
-        enum: [
-          "create_mission",
-          "create_task",
-          "update_task_status",
-          "update_task",
-          "add_dependency",
-          "remove_dependency",
-          "delete_task",
-          "delete_mission",
-          "query",
-          "unknown",
-        ],
-        description: "The intent discriminator.",
-      },
-      confidence: {
-        type: "number",
-        description: "0..1 confidence in BOTH the intent and its key fields.",
-      },
-    },
-    required: ["intent", "confidence"],
-  },
-};
+// The emit_intent forced tool is SHARED from @opsboard/ai-prompts — the SAME
+// constant the production voice route uses, so the "try your keys" step exercises
+// the exact classifier contract that production does (these used to be two
+// inlined copies that drifted).
 
 interface DictationTestResponse {
   transcript: string;
   example: string;
 }
 
-/**
- * A vendor 4xx (bad/rejected key) raised by the Groq/Anthropic SDKs. The SDKs
- * surface an HTTP status on the error; a 401/403/429/4xx means "the key is the
- * problem", which we translate to a clear, key-specific 400 — distinct from a
- * 5xx / network blip (which we let bubble to the generic 500).
- */
-function isVendorKeyRejection(err: unknown): boolean {
-  // ONLY auth statuses mean "the key itself is wrong". A 429 (rate limit) or a
-  // generic 400 (malformed request — our bug, not the user's key) must NOT be
-  // mislabelled as a bad key, or we'd bounce the user to re-enter a good key.
-  // Those fall through to the generic 502.
-  const status = (err as { status?: unknown })?.status;
-  return status === 401 || status === 403;
-}
-
-function keyRejected(provider: AiProvider): NextResponse {
-  return NextResponse.json(
-    {
-      error: `That ${provider} key was rejected — re-check it.`,
-      provider,
-    },
-    { status: 400 },
-  );
-}
+// Vendor (Groq/Anthropic) SDK errors → distinct HTTP statuses (bad key→400,
+// rate-limit→429, timeout→504, else→502) via the SHARED helper the production
+// voice route also uses (these once had their own copy here).
 
 export const POST = withAuth(async (request, { userId }) => {
   // --- Parse the multipart audio (same shape as the voice route) -----------
@@ -155,12 +106,11 @@ export const POST = withAuth(async (request, { userId }) => {
       await transcribeAudio(file, groqKey, { prompt: OPSBOARD_WHISPER_PROMPT })
     ).trim();
   } catch (err) {
-    if (isVendorKeyRejection(err)) return keyRejected("groq");
     console.error("[setup/dictation-test] transcription error", err);
-    return NextResponse.json(
-      { error: "Couldn't transcribe that audio. Try again." },
-      { status: 502 },
-    );
+    return vendorErrorResponse(err, {
+      provider: "groq",
+      fallbackMessage: "Couldn't transcribe that audio. Try again.",
+    });
   }
 
   if (transcript.length === 0) {
@@ -196,12 +146,11 @@ export const POST = withAuth(async (request, { userId }) => {
       tool: EMIT_INTENT_TOOL,
     });
   } catch (err) {
-    if (isVendorKeyRejection(err)) return keyRejected("anthropic");
     console.error("[setup/dictation-test] classify error", err);
-    return NextResponse.json(
-      { error: "Couldn't reach the parser. Try again." },
-      { status: 502 },
-    );
+    return vendorErrorResponse(err, {
+      provider: "anthropic",
+      fallbackMessage: "Couldn't reach the parser. Try again.",
+    });
   }
 
   // The model produced an unusable shape (not a key problem) — still a useful

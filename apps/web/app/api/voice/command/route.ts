@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { transcribeAudio } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
-import { callForcedTool } from "@/lib/anthropic";
+import { callForcedToolStrict } from "@/lib/anthropic";
 import { executeIntent } from "@/lib/voice-execute";
 import { resolveAiKey } from "@/lib/ai-key-resolver";
 import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
+import { vendorErrorResponse } from "@/app/api/_shared/vendor-errors";
 
 import {
   safeParseIntent,
@@ -18,6 +19,7 @@ import {
   voiceIntentPrompt,
   OPSBOARD_WHISPER_PROMPT,
   INTENT_CLASSIFIER_MODEL,
+  EMIT_INTENT_TOOL,
   type VoiceStateSnapshot,
 } from "@opsboard/ai-prompts";
 import { createHttpDb } from "@opsboard/db";
@@ -44,42 +46,11 @@ export const runtime = "nodejs";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB hard cap (parallels transcribe).
 const DEFAULT_TZ = "UTC";
 
-// The emit_intent forced tool — its input is the VoiceIntent shape. The model is
-// FORCED to call it; the raw input is Zod-validated via safeParseIntent (the
-// schema in @opsboard/types is the source of truth, NOT this loose JSON schema).
-const EMIT_INTENT_TOOL = {
-  name: "emit_intent",
-  description:
-    "Emit exactly one structured OpsBoard voice intent matching the VoiceIntent union.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      intent: {
-        type: "string",
-        enum: [
-          "create_mission",
-          "create_task",
-          "update_task_status",
-          "update_task",
-          "add_dependency",
-          "remove_dependency",
-          "delete_task",
-          "delete_mission",
-          "query",
-          "unknown",
-        ],
-        description: "The intent discriminator.",
-      },
-      confidence: {
-        type: "number",
-        description: "0..1 confidence in BOTH the intent and its key fields.",
-      },
-    },
-    // Per-intent fields are open — the union (Zod) is the real validator. We keep
-    // the JSON schema permissive so the model isn't fought by a partial mirror.
-    required: ["intent", "confidence"],
-  },
-};
+// The emit_intent forced tool is SHARED from @opsboard/ai-prompts (it declares
+// every VoiceIntent field flat so the model reliably emits the per-intent
+// required fields; the @opsboard/types Zod union is the real validator). It used
+// to be inlined here AND in the dictation-test route — the two drifted, which is
+// why this is now one constant.
 
 /** The response contract the FAB consumes (see voice-execute ExecuteOutcome). */
 interface CommandResponseBody {
@@ -221,15 +192,13 @@ async function handleAudio(
       await transcribeAudio(file, groqKey, { prompt: OPSBOARD_WHISPER_PROMPT })
     ).trim();
   } catch (err) {
+    // Distinguish a rejected Groq KEY (400) / rate-limit (429) / timeout (504)
+    // from a real fault (502) — a bad key must NOT read as "bad audio".
     console.error("voice-command transcription error", err);
-    return NextResponse.json(
-      {
-        transcript: "",
-        intent: null,
-        error: "Couldn't transcribe that audio.",
-      } satisfies CommandResponseBody,
-      { status: 200 },
-    );
+    return vendorErrorResponse(err, {
+      provider: "groq",
+      fallbackMessage: "Couldn't transcribe that audio.",
+    });
   }
 
   if (transcript.length === 0) {
@@ -248,9 +217,14 @@ async function handleAudio(
   //    missions / tasks (no cross-user names leak into the prompt).
   const snapshot = await buildSnapshot(tz, userId);
 
-  // 3. Resolve the SESSION user's Anthropic key, then classify via Claude
-  //    (pinned Haiku, forced tool_use, temp 0, ~30s). FAIL CLOSED on no stored
-  //    key with a 402 NO_AI_KEY — pure BYO, same as transcription.
+  // 3. Resolve the SESSION user's Anthropic key, then classify via Claude (Opus
+  //    — the human-boundary model per the model-tier rule; forced tool_use, ~30s;
+  //    temperature is omitted for Opus 4.7+, which rejects it). FAIL CLOSED on no
+  //    stored key with a 402 NO_AI_KEY — pure BYO, same as transcription. We use
+  //    the STRICT call so a vendor error (bad key→400, rate-limit→429,
+  //    timeout→504, else→502) is reported DISTINCTLY instead of being swallowed
+  //    to a generic "couldn't understand" — a misconfigured key was previously
+  //    indistinguishable from a model miss.
   let anthropicKey: string;
   try {
     anthropicKey = await resolveAiKey(userId, "anthropic");
@@ -259,13 +233,24 @@ async function handleAudio(
     if (failClosed) return failClosed;
     throw err;
   }
-  const raw = await callForcedTool({
-    apiKey: anthropicKey,
-    model: INTENT_CLASSIFIER_MODEL,
-    system: voiceIntentPrompt.system,
-    userMessage: voiceIntentPrompt.user(transcript, snapshot),
-    tool: EMIT_INTENT_TOOL,
-  });
+  let raw: unknown | null;
+  try {
+    raw = await callForcedToolStrict({
+      apiKey: anthropicKey,
+      model: INTENT_CLASSIFIER_MODEL,
+      system: voiceIntentPrompt.system,
+      userMessage: voiceIntentPrompt.user(transcript, snapshot),
+      tool: EMIT_INTENT_TOOL,
+    });
+  } catch (err) {
+    console.error("voice-command classify error", err);
+    return vendorErrorResponse(err, {
+      provider: "anthropic",
+      fallbackMessage: "I couldn't reach the parser. Try again.",
+    });
+  }
+  // A clean "no tool_use block" (raw === null) is a model MISS, not an error —
+  // keep the soft 200 so the user just rephrases.
   if (raw === null) {
     return NextResponse.json(
       {
