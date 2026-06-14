@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedUser } from "@/lib/auth";
-import type { ResearchJobView } from "@/lib/research-types";
+import { toResearchJobView } from "@/lib/research-types";
 import { getResearchJob } from "@opsboard/db/research";
 
 // GET /api/research/[jobId] — owner-scoped job poll for the live Running surface.
@@ -19,21 +19,18 @@ export async function GET(
   }
 
   const { jobId } = await params;
-  const job = await getResearchJob(jobId, user.id);
+
+  // getResearchJob throws on a non-UUID id; a malformed/unknown job is a 404,
+  // not a 500 (mirrors the /research/[jobId] page guard).
+  let job: Awaited<ReturnType<typeof getResearchJob>>;
+  try {
+    job = await getResearchJob(jobId, user.id);
+  } catch {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   if (!job) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const body: ResearchJobView = {
-    id: job.id,
-    state: job.state,
-    query: job.query,
-    steps: job.steps,
-    result: job.result ?? null,
-    errorMessage: job.errorMessage,
-    taskId: job.taskId,
-    createdAt: job.createdAt.toISOString(),
-    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
-  };
-  return NextResponse.json(body, { status: 200 });
+  return NextResponse.json(toResearchJobView(job), { status: 200 });
 }

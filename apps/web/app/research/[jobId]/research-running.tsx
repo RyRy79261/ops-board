@@ -14,7 +14,7 @@ import { ResearchJobPanel } from "@opsboard/ui/components/research-job-panel";
 import { ComeBackLaterBanner } from "@opsboard/ui/components/come-back-later-banner";
 import { MinimizedJobPill } from "@opsboard/ui/components/minimized-job-pill";
 import { ErrorStateCard } from "@opsboard/ui/components/error-state-card";
-import { ResearchResult, researchNoteCount } from "@opsboard/types";
+import { ResearchResult, ResearchStep, researchNoteCount } from "@opsboard/types";
 import type { ResearchJobView } from "@/lib/research-types";
 
 // /research/[jobId] RUNNING surface (client). Seeded with the server-loaded job,
@@ -30,19 +30,14 @@ import type { ResearchJobView } from "@/lib/research-types";
 const POLL_MS = 2000;
 
 // Validate the poll envelope at the client boundary (don't `as`-assert an
-// untrusted response). `result` reuses the @opsboard/types schema so the
-// citation→source integrity is checked too.
-const StepSchema = z.object({
-  label: z.string(),
-  state: z.enum(["pending", "active", "done"]),
-  meta: z.string().optional(),
-  source: z.string().optional(),
-});
+// untrusted response). `steps` + `result` reuse the @opsboard/types schemas, so
+// they stay in lockstep with the source of truth (and citation→source integrity
+// is checked too).
 const JobViewSchema = z.object({
   id: z.string(),
   state: z.enum(["running", "complete", "error"]),
   query: z.string(),
-  steps: z.array(StepSchema),
+  steps: z.array(ResearchStep),
   result: ResearchResult.nullable(),
   errorMessage: z.string().nullable(),
   taskId: z.string(),

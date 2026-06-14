@@ -5,7 +5,7 @@ import { getTask } from "@opsboard/db/tasks";
 import { getMission } from "@opsboard/db/missions";
 
 import { requireOnboardedUser } from "@/lib/session";
-import type { ResearchJobView } from "@/lib/research-types";
+import { toResearchJobView } from "@/lib/research-types";
 import { ResearchRunning } from "./research-running";
 
 // /research/[jobId] — the AI Research RUNNING surface. force-dynamic: it reads
@@ -42,21 +42,9 @@ export default async function ResearchJobPage({
     getMission(job.missionId, userId),
   ]);
 
-  const initialJob: ResearchJobView = {
-    id: job.id,
-    state: job.state,
-    query: job.query,
-    steps: job.steps,
-    result: job.result ?? null,
-    errorMessage: job.errorMessage,
-    taskId: job.taskId,
-    createdAt: job.createdAt.toISOString(),
-    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
-  };
-
   return (
     <ResearchRunning
-      initialJob={initialJob}
+      initialJob={toResearchJobView(job)}
       taskName={task?.name ?? "this task"}
       missionName={mission?.name ?? ""}
     />

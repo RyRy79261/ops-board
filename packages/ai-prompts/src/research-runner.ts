@@ -2,9 +2,9 @@
 //
 // The runner is a TWO-STEP pipeline (structured output is incompatible with the
 // web_search citation feature, so they can't share one call):
-//   1. SYNTHESIS — a research-grade model uses the web_search/web_fetch server
-//      tools to research the confirmed query and write an actionable answer +
-//      a SOURCES list, in prose.
+//   1. SYNTHESIS — a research-grade model uses the web_search server tool to
+//      research the confirmed query and write an actionable answer + a SOURCES
+//      list, in prose.
 //   2. STRUCTURE — a cheap model converts that prose into the ResearchResult
 //      JSON (summary + numbered steps + citations + sources) via a forced tool.
 //

@@ -3,6 +3,9 @@ import type {
   ResearchStep,
   ResearchJobState,
 } from "@opsboard/types";
+// Type-only (erased at compile) so this client-imported module never pulls the
+// db/neon runtime into the browser bundle.
+import type { ResearchJob } from "@opsboard/db/schema";
 
 // @opsboard/web — the wire contracts for the /research surface ⇄ its API routes.
 // Web-specific (not a shared @opsboard/types domain shape): the parse-response
@@ -68,4 +71,23 @@ export interface ResearchJobView {
   /** ISO timestamps for the elapsed/relative display. */
   createdAt: string;
   completedAt: string | null;
+}
+
+/**
+ * Project a research_jobs row into the wire ResearchJobView. ONE mapper shared by
+ * the RSC page (initial render) and the GET poll route, so the seed and the polled
+ * frames stay byte-identical (a drifted field would make the live poll flicker).
+ */
+export function toResearchJobView(job: ResearchJob): ResearchJobView {
+  return {
+    id: job.id,
+    state: job.state,
+    query: job.query,
+    steps: job.steps,
+    result: job.result ?? null,
+    errorMessage: job.errorMessage,
+    taskId: job.taskId,
+    createdAt: job.createdAt.toISOString(),
+    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
+  };
 }

@@ -19,8 +19,9 @@ import {
 //
 // IDEMPOTENCY: at most one RUNNING job per task — a double-submit / retry returns
 // the in-flight job rather than fanning out a duplicate runner + duplicate AI
-// spend. (A DB partial-unique index on (task_id) WHERE state='running' is the
-// race-proof hardening; it lands with the M4 runner where concurrency matters.)
+// spend. This is a read-then-write check (getResearchJobsForTask → find running)
+// with a small TOCTOU window; a DB partial-unique index on (task_id) WHERE
+// state='running' is the race-proof hardening, deferred to a later milestone.
 //
 // NOTE (deferred hardening): this trusts the client performed the review/pick.
 // CUE RESEARCH is NOT destructive — it starts a research job on the caller's OWN
@@ -28,8 +29,8 @@ import {
 // by an explicit KEEP NOTES confirmation (M5). A server-verifiable parse-session
 // token binding the reviewed proposal is tracked as future defense-in-depth.
 //
-// M4: after the row is created this is where `inngest.send({ name:
-// "research/job.requested", data: { jobId, userId } })` fires the durable runner.
+// On success it fires `inngest.send("research/job.requested", { jobId, userId })`
+// to start the durable runner (see the enqueue block below).
 
 export const runtime = "nodejs";
 
