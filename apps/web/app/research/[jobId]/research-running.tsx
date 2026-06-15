@@ -14,18 +14,20 @@ import { ResearchJobPanel } from "@opsboard/ui/components/research-job-panel";
 import { ComeBackLaterBanner } from "@opsboard/ui/components/come-back-later-banner";
 import { MinimizedJobPill } from "@opsboard/ui/components/minimized-job-pill";
 import { ErrorStateCard } from "@opsboard/ui/components/error-state-card";
+import { AINotesBlock } from "@opsboard/ui/components/ai-notes-block";
 import { ResearchResult, ResearchStep, researchNoteCount } from "@opsboard/types";
 import type { ResearchJobView } from "@/lib/research-types";
 
-// /research/[jobId] RUNNING surface (client). Seeded with the server-loaded job,
-// it polls GET /api/research/[jobId] every couple of seconds while the job runs
-// (the durable Inngest runner advances the row out-of-band), streaming the live
-// step log into the ResearchJobPanel. Polling stops the moment the job reaches a
-// terminal state (complete / error). MINIMIZE collapses to a docked pill; COME
+// /research/[jobId] RUNNING + RESULT surface (client). Seeded with the
+// server-loaded job, it polls GET /api/research/[jobId] every couple of seconds
+// while the job runs (the durable Inngest runner advances the row out-of-band),
+// streaming the live step log into the ResearchJobPanel. Polling stops the moment
+// the job reaches a terminal state. MINIMIZE collapses to a docked pill; COME
 // BACK LATER returns to the board (the job keeps running — reopen to see it).
 //
-// The full Result & Notes review (AINotesBlock + KEEP NOTES write) is the next
-// milestone (M5); here a completed job shows a compact summary + note count.
+// On COMPLETE it shows the Result & Notes review (AINotesBlock) — the user
+// explicitly KEEPs (→ POST /api/research/[jobId]/keep-notes, the single write) or
+// DISMISSes. Already-kept jobs (re-opened) show the kept confirmation instead.
 
 const POLL_MS = 2000;
 
@@ -52,16 +54,29 @@ function formatElapsed(ms: number): string {
   return `${mm}:${ss}`;
 }
 
+/** AINotesBlock attribution timestamp, e.g. "2026-06-03 14:22" (local time). */
+function formatTimestamp(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
+}
+
 export interface ResearchRunningProps {
   initialJob: ResearchJobView;
   taskName: string;
   missionName: string;
+  /** True when this job's notes were already kept (re-opened) — show the kept state. */
+  alreadyKept: boolean;
 }
 
 export function ResearchRunning({
   initialJob,
   taskName,
   missionName,
+  alreadyKept,
 }: ResearchRunningProps) {
   const router = useRouter();
   const [job, setJob] = React.useState<ResearchJobView>(initialJob);
@@ -152,7 +167,9 @@ export function ResearchRunning({
           <CompleteState
             result={job.result}
             taskName={taskName}
-            elapsedLabel={elapsedLabel}
+            timestamp={formatTimestamp(job.completedAt)}
+            jobId={job.id}
+            alreadyKept={alreadyKept}
           />
         ) : minimized ? (
           // Collapsed: the work continues; a docked pill keeps it glanceable.
@@ -196,36 +213,109 @@ export function ResearchRunning({
 }
 
 /**
- * The compact M4 completion state. Full notes review + KEEP NOTES persistence is
- * M5; here we confirm the job finished and preview the summary + note count.
+ * The Result & Notes review. A completed job's findings are shown for explicit
+ * review — AI output is NEVER auto-committed. KEEP NOTES is the single write
+ * (POST /api/research/[jobId]/keep-notes, which persists the job's OWN stored
+ * result); DISMISS discards (no write). Once kept (or re-opened already-kept),
+ * the proposal is replaced by the success confirmation, per the spec.
  */
 function CompleteState({
   result,
   taskName,
-  elapsedLabel,
+  timestamp,
+  jobId,
+  alreadyKept,
 }: {
   result: ResearchResult;
   taskName: string;
-  elapsedLabel: string;
+  timestamp: string;
+  jobId: string;
+  alreadyKept: boolean;
 }) {
+  const router = useRouter();
+  const [kept, setKept] = React.useState(alreadyKept);
+  const [keeping, setKeeping] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const count = researchNoteCount(result);
-  return (
-    <div className="flex flex-col gap-3 border-l-[3px] border-success bg-card p-5">
-      <Eyebrow tone="foreground" weight={700} tracking={2}>
-        ✓ Research complete · {elapsedLabel}
-      </Eyebrow>
-      <p className="text-[14px] leading-relaxed text-foreground">
-        {result.summary}
-      </p>
-      <p className="text-[13px] text-muted-foreground">
-        {count} {count === 1 ? "note" : "notes"} ready for “{taskName}”. Review
-        &amp; keep is coming next.
-      </p>
-      <div className="flex gap-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">Back to board</Link>
-        </Button>
+
+  const onKeep = React.useCallback(async () => {
+    if (keeping) return;
+    setKeeping(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/research/${jobId}/keep-notes`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: unknown;
+        } | null;
+        setError(
+          (data && typeof data.error === "string" ? data.error : "") ||
+            "Couldn't keep those notes — try again.",
+        );
+        setKeeping(false);
+        return;
+      }
+      setKept(true); // success: replace the proposal with the confirmation
+    } catch {
+      setError("Network error — check your connection and try again.");
+      setKeeping(false);
+    }
+  }, [jobId, keeping]);
+
+  const onViewSources = React.useCallback(() => {
+    for (const s of result.sources) {
+      if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
+    }
+  }, [result.sources]);
+
+  if (kept) {
+    // KEEP NOTES replaces the proposal with the success confirmation (spec §3).
+    return (
+      <div className="flex flex-col gap-3 border-t-2 border-success bg-card p-5">
+        <span className="font-mono text-[12px] font-bold uppercase tracking-[1px] text-success">
+          ✓ Added {count} {count === 1 ? "note" : "notes"}
+        </span>
+        <p className="text-[13px] text-muted-foreground">
+          {`Notes appended to “${taskName}”.`}
+        </p>
+        <p className="text-[14px] leading-relaxed text-foreground">
+          {result.summary}
+        </p>
+        <div className="flex gap-3">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/">Back to board</Link>
+          </Button>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <AINotesBlock
+        variant="desktop"
+        isNew
+        noteCount={count}
+        timestamp={timestamp}
+        summary={result.summary}
+        steps={result.steps}
+        sources={result.sources}
+        onKeep={onKeep}
+        onDismiss={() => router.push("/")}
+        onViewSources={onViewSources}
+      />
+      {keeping ? (
+        <p role="status" className="text-[13px] text-muted-foreground">
+          Saving notes…
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-[13px] text-destructive">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
