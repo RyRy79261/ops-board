@@ -8,6 +8,7 @@ import {
   getResearchJob,
   getResearchJobsForTask,
   getResearchNotes,
+  getResearchNoteSummariesByTaskIds,
   updateResearchJob,
 } from "../research";
 import { createTestDb, TEST_USER_ID, type TestDb } from "./db-harness";
@@ -336,5 +337,61 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       .where(eq(schema.taskResearchNotes.userId, USER_A));
     expect(jobs).toHaveLength(0);
     expect(notes).toHaveLength(0);
+  });
+
+  // --- getResearchNoteSummariesByTaskIds (the board "✦ N" rollup) -------
+  describe("getResearchNoteSummariesByTaskIds", () => {
+    it("rolls up count + latest non-null job per task", async () => {
+      const { missionId, taskId } = await seedTask(USER_A);
+      const job = await createResearchJob(
+        { missionId, taskId, query: "q" },
+        USER_A,
+        h.db,
+      );
+      if (!job.ok) throw new Error(job.error);
+
+      // Two kept notes: the first cites the job; the second (newer) has NO job.
+      await appendResearchNote(
+        { taskId, jobId: job.job.id, content: RESULT },
+        USER_A,
+        h.db,
+      );
+      await appendResearchNote({ taskId, content: RESULT }, USER_A, h.db);
+
+      const [summary] = await getResearchNoteSummariesByTaskIds(
+        [taskId],
+        USER_A,
+        h.db,
+      );
+      expect(summary?.count).toBe(2);
+      // The newest note's job is null, but the link skips nulls → the id survives.
+      expect(summary?.latestJobId).toBe(job.job.id);
+    });
+
+    it("excludes another user's notes + omits tasks with none", async () => {
+      const { missionId, taskId } = await seedTask(USER_A);
+      const empty = await createTask(
+        { missionId, name: "A task with no research" },
+        USER_A,
+        h.db,
+      );
+      if (!empty.ok) throw new Error(empty.error);
+      await appendResearchNote({ taskId, content: RESULT }, USER_A, h.db);
+
+      // USER_B sees nothing for USER_A's task (the userId WHERE filter).
+      expect(
+        await getResearchNoteSummariesByTaskIds([taskId], USER_B, h.db),
+      ).toEqual([]);
+
+      // USER_A: only the task with notes appears; the empty one is omitted.
+      const rollup = await getResearchNoteSummariesByTaskIds(
+        [taskId, empty.task.id],
+        USER_A,
+        h.db,
+      );
+      expect(rollup).toHaveLength(1);
+      expect(rollup[0]?.taskId).toBe(taskId);
+      expect(rollup[0]?.count).toBe(1);
+    });
   });
 });

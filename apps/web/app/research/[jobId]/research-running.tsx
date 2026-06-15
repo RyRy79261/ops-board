@@ -291,8 +291,8 @@ function CompleteState({
       return (
         <div className="flex flex-col gap-3">
           <span className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[1px] text-success">
-            <Check className="size-3.5" aria-hidden="true" /> Kept · {count}{" "}
-            {count === 1 ? "note" : "notes"} on “{taskName}”
+            <Check className="size-3.5" aria-hidden="true" /> Kept research on “
+            {taskName}”
           </span>
           <AINotesBlock
             variant="desktop"

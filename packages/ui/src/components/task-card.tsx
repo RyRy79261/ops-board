@@ -78,9 +78,11 @@ export interface TaskVM {
 }
 
 /**
- * The kept-AI-research indicator: a small mono chip (✦ + count). A LINK when a
- * `researchHref` is given (navigates to the research result — read-only nav, not
- * a board mutation), else a static badge. Always carries an SR-only label.
+ * The kept-AI-research indicator: a small mono chip (✦ + count of kept research
+ * RESULTS — distinct from the "NOTES" step-count the spec uses inside an
+ * AINotesBlock). A LINK when a `researchHref` is given (navigates to the research
+ * result — read-only nav, not a board mutation), else a static badge. Always
+ * carries an SR-only label.
  */
 function ResearchNotesIndicator({
   count,
@@ -89,20 +91,20 @@ function ResearchNotesIndicator({
   count: number;
   href?: string | null;
 }) {
-  const noun = count === 1 ? "note" : "notes";
+  const noun = count === 1 ? "research result" : "research results";
   const base =
     "inline-flex items-center gap-1 border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-mono-caption font-medium uppercase tracking-[0.5px] text-primary";
   const body = (
     <>
       <Sparkles aria-hidden="true" className="size-3" />
       {count}
-      <span className="sr-only"> research {noun}</span>
+      <span className="sr-only"> {noun}</span>
     </>
   );
   return href ? (
     <a
       href={href}
-      aria-label={`View ${count} research ${noun}`}
+      aria-label={`View ${count} ${noun}`}
       className={cn(
         base,
         "outline-none transition-colors hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring",

@@ -326,7 +326,8 @@ export async function appendResearchNote(
 export interface ResearchNoteSummary {
   taskId: string;
   count: number;
-  /** Job id of the most-recent kept note (to link to its result), or null. */
+  /** Job id of the most-recent kept note that still references a job (notes whose
+   *  job was pruned are skipped, so the link survives), or null if none do. */
   latestJobId: string | null;
 }
 
@@ -353,7 +354,7 @@ export async function getResearchNoteSummariesByTaskIds(
       count: sql<number>`count(*)::int`,
       latestJobId: sql<
         string | null
-      >`(array_agg(${schema.taskResearchNotes.jobId} order by ${schema.taskResearchNotes.createdAt} desc))[1]`,
+      >`(array_agg(${schema.taskResearchNotes.jobId} order by ${schema.taskResearchNotes.createdAt} desc) filter (where ${schema.taskResearchNotes.jobId} is not null))[1]`,
     })
     .from(schema.taskResearchNotes)
     .where(
