@@ -31,6 +31,10 @@ export interface TaskVM {
   blockedByNames: string[];
   /** Free-text notes (currently unused on the board, carried for completeness). */
   notes?: string | null;
+  /** Count of kept AI-research notes attached to this task (board indicator). */
+  researchNoteCount?: number;
+  /** Link to the latest research result for this task (the indicator's href), or null. */
+  researchHref?: string | null;
 }
 
 /** A category, board-shaped: icon + label + hex tint + ordering. */

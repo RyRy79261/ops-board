@@ -6,6 +6,7 @@ import {
   updateResearchJob,
   appendResearchNote,
   getResearchNotes,
+  getResearchNoteSummariesByTaskIds,
 } from "../research";
 import type { ResearchResult } from "@opsboard/types";
 
@@ -140,5 +141,15 @@ describe("research input guards (no DB)", () => {
     await expect(
       updateResearchJob(UUID, USER, { state: "error", errorMessage: "  " }),
     ).rejects.toThrow(/errorMessage/);
+  });
+
+  it("getResearchNoteSummariesByTaskIds rejects an empty principal, short-circuits empty ids", async () => {
+    await expect(
+      getResearchNoteSummariesByTaskIds([UUID], ""),
+    ).rejects.toThrow(/non-empty string/);
+    // No task ids → no SQL, returns [] (the never-connected client is untouched).
+    await expect(getResearchNoteSummariesByTaskIds([], USER)).resolves.toEqual(
+      [],
+    );
   });
 });

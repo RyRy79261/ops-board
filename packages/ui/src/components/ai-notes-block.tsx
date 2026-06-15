@@ -72,10 +72,10 @@ export interface AINotesBlockProps
   steps: AINotesStep[];
   /** Embedded SOURCES list (1-based, citation targets). */
   sources: AINotesSource[];
-  /** KEEP NOTES — the explicit write-gate appending notes to the task. */
-  onKeep: () => void;
-  /** DISMISS — discards the proposed notes (no write). */
-  onDismiss: () => void;
+  /** KEEP NOTES — the explicit write-gate. Omit (with onDismiss) for READ-ONLY display of already-kept notes. */
+  onKeep?: () => void;
+  /** DISMISS — discards the proposed notes (no write). Omit (with onKeep) for read-only display. */
+  onDismiss?: () => void;
   /** VIEW SOURCES / OPEN ALL SOURCES — opens external links only. */
   onViewSources?: () => void;
   /** Leading attribution glyph. Default lucide `sparkles`. */
@@ -259,8 +259,9 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
           </div>
         </div>
 
-        {/* 5. Affordances */}
-        {isMobile ? (
+        {/* 5. Affordances — omitted in READ-ONLY mode (no onKeep/onDismiss). */}
+        {onKeep && onDismiss ? (
+          isMobile ? (
           <div className="flex flex-col gap-2 border-t border-border pt-[13px]">
             <button
               type="button"
@@ -316,7 +317,8 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
               View sources
             </button>
           </div>
-        )}
+          )
+        ) : null}
       </div>
     );
   },
