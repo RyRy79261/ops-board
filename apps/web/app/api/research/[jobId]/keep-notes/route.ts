@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
@@ -22,6 +23,10 @@ import {
 // race-proof hardening, deferred.)
 
 export const runtime = "nodejs";
+
+// Validate the route param at the boundary with Zod (coding guideline), rather
+// than leaning on getResearchJob throwing on a non-UUID.
+const JobIdParam = z.object({ jobId: z.string().uuid() });
 
 interface KeepNotesResult {
   ok: true;
@@ -47,15 +52,14 @@ export async function POST(
   );
   if (!ipLimit.ok) return rateLimited(ipLimit.retryAfterSeconds);
 
-  const { jobId } = await params;
-
-  // Load the job (owner-scoped). getResearchJob throws on a non-UUID id → 404.
-  let job: Awaited<ReturnType<typeof getResearchJob>>;
-  try {
-    job = await getResearchJob(jobId, user.id);
-  } catch {
+  const parsedParams = JobIdParam.safeParse(await params);
+  if (!parsedParams.success) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  const { jobId } = parsedParams.data;
+
+  // Load the job (owner-scoped). jobId is a validated UUID, so this won't throw.
+  const job = await getResearchJob(jobId, user.id);
   if (!job) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
