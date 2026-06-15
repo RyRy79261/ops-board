@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
@@ -320,6 +320,55 @@ export async function appendResearchNote(
     })
     .returning();
   return { ok: true, note: note! };
+}
+
+/** A task's kept-note rollup for the board: how many, and the job to link to. */
+export interface ResearchNoteSummary {
+  taskId: string;
+  count: number;
+  /** Job id of the most-recent kept note that still references a job (notes whose
+   *  job was pruned are skipped, so the link survives), or null if none do. */
+  latestJobId: string | null;
+}
+
+/**
+ * Batched kept-note rollup for a set of owned tasks — count + the most-recent
+ * note's job id (for a "view research" link). Owner-scoped; tasks with no kept
+ * notes are omitted. Mirrors getTasksByMissionIds' bulk shape so the board folds
+ * it into TaskVM in ONE query (no per-task fan-out).
+ */
+export async function getResearchNoteSummariesByTaskIds(
+  taskIds: string[],
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<ResearchNoteSummary[]> {
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError(
+      "getResearchNoteSummariesByTaskIds: `userId` must be a non-empty string.",
+    );
+  }
+  if (taskIds.length === 0) return [];
+  const rows = await db
+    .select({
+      taskId: schema.taskResearchNotes.taskId,
+      count: sql<number>`count(*)::int`,
+      latestJobId: sql<
+        string | null
+      >`(array_agg(${schema.taskResearchNotes.jobId} order by ${schema.taskResearchNotes.createdAt} desc) filter (where ${schema.taskResearchNotes.jobId} is not null))[1]`,
+    })
+    .from(schema.taskResearchNotes)
+    .where(
+      and(
+        eq(schema.taskResearchNotes.userId, userId),
+        inArray(schema.taskResearchNotes.taskId, taskIds),
+      ),
+    )
+    .groupBy(schema.taskResearchNotes.taskId);
+  return rows.map((r) => ({
+    taskId: r.taskId,
+    count: Number(r.count),
+    latestJobId: r.latestJobId ?? null,
+  }));
 }
 
 /** List a task's kept research notes newest-first, scoped to the owner. */

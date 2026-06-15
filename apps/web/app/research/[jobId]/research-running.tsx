@@ -283,7 +283,34 @@ function CompleteState({
   }, [result.sources]);
 
   if (kept) {
-    // KEEP NOTES replaces the proposal with the success confirmation (spec §3).
+    // Re-opened an already-kept job (e.g. via the board "✦ N" link) → render the
+    // kept notes READ-ONLY (AINotesBlock with no keep/dismiss). A FRESH keep this
+    // session falls through to the success confirmation (spec §3 — the toast
+    // replaces the proposal; the user just reviewed the full notes).
+    if (alreadyKept) {
+      return (
+        <div className="flex flex-col gap-3">
+          <span className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[1px] text-success">
+            <Check className="size-3.5" aria-hidden="true" /> Kept research on “
+            {taskName}”
+          </span>
+          <AINotesBlock
+            variant="desktop"
+            isNew={false}
+            noteCount={count}
+            timestamp={timestamp}
+            summary={result.summary}
+            steps={result.steps}
+            sources={result.sources}
+          />
+          <div className="flex gap-3">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/">Back to board</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div
         role="status"

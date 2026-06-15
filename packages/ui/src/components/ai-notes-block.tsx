@@ -58,8 +58,7 @@ export interface AINotesSource {
   faviconTone?: string;
 }
 
-export interface AINotesBlockProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface AINotesBlockProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Note count embedded in the attribution string (`AI RESEARCH · {n} NOTES`). */
   noteCount: number;
   /** Pre-formatted timestamp (e.g. `2026-06-03 14:22`). The leaf never computes it. */
@@ -72,10 +71,10 @@ export interface AINotesBlockProps
   steps: AINotesStep[];
   /** Embedded SOURCES list (1-based, citation targets). */
   sources: AINotesSource[];
-  /** KEEP NOTES — the explicit write-gate appending notes to the task. */
-  onKeep: () => void;
-  /** DISMISS — discards the proposed notes (no write). */
-  onDismiss: () => void;
+  /** KEEP NOTES — the explicit write-gate. Omit (with onDismiss) for READ-ONLY display of already-kept notes. */
+  onKeep?: () => void;
+  /** DISMISS — discards the proposed notes (no write). Omit (with onKeep) for read-only display. */
+  onDismiss?: () => void;
   /** VIEW SOURCES / OPEN ALL SOURCES — opens external links only. */
   onViewSources?: () => void;
   /** Leading attribution glyph. Default lucide `sparkles`. */
@@ -170,10 +169,7 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
           {steps.map((step) => (
             <li
               key={step.index}
-              className={cn(
-                "flex items-start",
-                isMobile ? "gap-2.5" : "gap-3",
-              )}
+              className={cn("flex items-start", isMobile ? "gap-2.5" : "gap-3")}
             >
               <span
                 aria-hidden="true"
@@ -259,64 +255,66 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
           </div>
         </div>
 
-        {/* 5. Affordances */}
-        {isMobile ? (
-          <div className="flex flex-col gap-2 border-t border-border pt-[13px]">
-            <button
-              type="button"
-              onClick={onViewSources}
-              className="inline-flex h-[46px] w-full items-center justify-center gap-2 border border-border bg-secondary font-mono text-[12px] font-semibold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <List aria-hidden="true" className="size-[15px]" />
-              Open all sources
-            </button>
-            <div className="flex gap-2.5">
+        {/* 5. Affordances — omitted in READ-ONLY mode (no onKeep/onDismiss). */}
+        {onKeep && onDismiss ? (
+          isMobile ? (
+            <div className="flex flex-col gap-2 border-t border-border pt-[13px]">
               <button
                 type="button"
-                onClick={onDismiss}
-                className="inline-flex h-12 flex-1 items-center justify-center border border-border bg-transparent font-mono text-[12px] font-semibold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={onViewSources}
+                className="inline-flex h-[46px] w-full items-center justify-center gap-2 border border-border bg-secondary font-mono text-[12px] font-semibold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
               >
-                Dismiss
+                <List aria-hidden="true" className="size-[15px]" />
+                Open all sources
               </button>
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={onDismiss}
+                  className="inline-flex h-12 flex-1 items-center justify-center border border-border bg-transparent font-mono text-[12px] font-semibold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Dismiss
+                </button>
+                <button
+                  type="button"
+                  onClick={onKeep}
+                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 bg-primary font-mono text-[12px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Check aria-hidden="true" className="size-4" />
+                  Keep notes
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={onKeep}
+                  className="inline-flex items-center gap-[7px] bg-primary px-[18px] py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Check aria-hidden="true" className="size-3.5" />
+                  Keep notes
+                </button>
+                <button
+                  type="button"
+                  onClick={onDismiss}
+                  className="inline-flex items-center gap-[7px] bg-transparent px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Dismiss
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={onKeep}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 bg-primary font-mono text-[12px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={onViewSources}
+                className="inline-flex shrink-0 items-center gap-[7px] border border-border bg-secondary px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Check aria-hidden="true" className="size-4" />
-                Keep notes
+                <ExternalLink aria-hidden="true" className="size-3.5" />
+                View sources
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={onKeep}
-                className="inline-flex items-center gap-[7px] bg-primary px-[18px] py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Check aria-hidden="true" className="size-3.5" />
-                Keep notes
-              </button>
-              <button
-                type="button"
-                onClick={onDismiss}
-                className="inline-flex items-center gap-[7px] bg-transparent px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Dismiss
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={onViewSources}
-              className="inline-flex shrink-0 items-center gap-[7px] border border-border bg-secondary px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <ExternalLink aria-hidden="true" className="size-3.5" />
-              View sources
-            </button>
-          </div>
-        )}
+          )
+        ) : null}
       </div>
     );
   },

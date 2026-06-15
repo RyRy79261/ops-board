@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Sparkles } from "lucide-react";
 import { windowStateDetail, type WindowStateDetail } from "@opsboard/core";
 
 import { cn } from "../lib/utils";
@@ -70,6 +71,50 @@ export interface TaskVM {
   /** Upstream task names for the '⚠ blocked by: …' caption. */
   blockedByNames: string[];
   notes?: string | null;
+  /** Count of kept AI-research notes attached to this task (board indicator). */
+  researchNoteCount?: number;
+  /** Link to the latest research result for this task; renders the indicator as a link. */
+  researchHref?: string | null;
+}
+
+/**
+ * The kept-AI-research indicator: a small mono chip (✦ + count of kept research
+ * RESULTS — distinct from the "NOTES" step-count the spec uses inside an
+ * AINotesBlock). A LINK when a `researchHref` is given (navigates to the research
+ * result — read-only nav, not a board mutation), else a static badge. Always
+ * carries an SR-only label.
+ */
+function ResearchNotesIndicator({
+  count,
+  href,
+}: {
+  count: number;
+  href?: string | null;
+}) {
+  const noun = count === 1 ? "research result" : "research results";
+  const base =
+    "inline-flex items-center gap-1 border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-mono-caption font-medium uppercase tracking-[0.5px] text-primary";
+  const body = (
+    <>
+      <Sparkles aria-hidden="true" className="size-3" />
+      {count}
+      <span className="sr-only"> {noun}</span>
+    </>
+  );
+  return href ? (
+    <a
+      href={href}
+      aria-label={`View ${count} ${noun}`}
+      className={cn(
+        base,
+        "outline-none transition-colors hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring",
+      )}
+    >
+      {body}
+    </a>
+  ) : (
+    <span className={base}>{body}</span>
+  );
 }
 
 export interface TaskCardProps
@@ -234,6 +279,12 @@ const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
               daysUntil={daysUntil}
               date={pillDate}
             />
+            {task.researchNoteCount && task.researchNoteCount > 0 ? (
+              <ResearchNotesIndicator
+                count={task.researchNoteCount}
+                href={task.researchHref}
+              />
+            ) : null}
           </div>
 
           {/* Blocked-by caption — only on blocked rows. */}

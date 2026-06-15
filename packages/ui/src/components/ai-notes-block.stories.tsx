@@ -173,3 +173,22 @@ export const Mobile: Story = {
     ),
   ],
 };
+
+// Read-only — already-kept notes: omitting onKeep/onDismiss drops the whole
+// affordance row. This is what the board "✦ N" research link lands on.
+export const ReadOnly: Story = {
+  // Omitting onKeep + onDismiss is what triggers read-only (the whole affordance
+  // row, View-sources included, is dropped) — no need to clear onViewSources.
+  args: {
+    isNew: false,
+    onKeep: undefined,
+    onDismiss: undefined,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 720 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};

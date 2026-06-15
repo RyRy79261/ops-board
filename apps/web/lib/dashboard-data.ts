@@ -6,6 +6,7 @@ import {
   getTasksByMissionIds,
   getTaskDependenciesByMissionIds,
 } from "@opsboard/db/tasks";
+import { getResearchNoteSummariesByTaskIds } from "@opsboard/db/research";
 import { deriveBlocked, criticalPath } from "@opsboard/core";
 import type { DependencyEdge as CoreDependencyEdge } from "@opsboard/core";
 import type { TaskStatus } from "@opsboard/types";
@@ -119,6 +120,17 @@ export async function getDashboardData(
   const taskRows = tasksByMission.get(activeMissionSummary.id) ?? [];
   const depRows = depsByMission.get(activeMissionSummary.id) ?? [];
 
+  // Kept-research rollup for the active mission's tasks (one batched query) — the
+  // board's per-task "✦ N" indicator + a link to the latest result.
+  const noteSummaries = await getResearchNoteSummariesByTaskIds(
+    taskRows.map((t) => t.id),
+    userId,
+    db,
+  );
+  const noteSummaryByTaskId = new Map(
+    noteSummaries.map((s) => [s.taskId, s]),
+  );
+
   // Per-mission sidebar summaries — counts + nearest-cliff inputs for each NavCard.
   const missionSummaries = missions.map((m) => ({
     id: m.id,
@@ -182,6 +194,7 @@ export async function getDashboardData(
         .map((id) => nameByTaskId.get(id))
         .filter((name): name is string => name != null);
     }
+    const noteSummary = noteSummaryByTaskId.get(t.id);
     return {
       id: t.id,
       name: t.name,
@@ -194,6 +207,10 @@ export async function getDashboardData(
       blocked,
       blockedByNames,
       notes: t.notes,
+      researchNoteCount: noteSummary?.count,
+      researchHref: noteSummary?.latestJobId
+        ? `/research/${noteSummary.latestJobId}`
+        : null,
     };
   });
 
