@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { z } from "zod";
 
 import { AppHeader } from "@opsboard/ui/components/app-header";
@@ -250,10 +250,17 @@ function CompleteState({
         const data = (await res.json().catch(() => null)) as {
           error?: unknown;
         } | null;
-        setError(
-          (data && typeof data.error === "string" ? data.error : "") ||
-            "Couldn't keep those notes — try again.",
-        );
+        const serverMsg =
+          data && typeof data.error === "string" ? data.error : "";
+        // Friendly copy for the system statuses; trust the route's own message
+        // for the user-facing ones (e.g. 409 "isn't ready to keep yet").
+        const friendly =
+          res.status === 401
+            ? "Your session expired — sign in and try again."
+            : res.status === 429
+              ? "Too many attempts — wait a moment and try again."
+              : serverMsg || "Couldn't keep those notes — try again.";
+        setError(friendly);
         setKeeping(false);
         return;
       }
@@ -273,9 +280,13 @@ function CompleteState({
   if (kept) {
     // KEEP NOTES replaces the proposal with the success confirmation (spec §3).
     return (
-      <div className="flex flex-col gap-3 border-t-2 border-success bg-card p-5">
-        <span className="font-mono text-[12px] font-bold uppercase tracking-[1px] text-success">
-          ✓ Added {count} {count === 1 ? "note" : "notes"}
+      <div
+        role="status"
+        className="flex flex-col gap-3 border-t-2 border-success bg-card p-5"
+      >
+        <span className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[1px] text-success">
+          <Check className="size-3.5" aria-hidden="true" /> Added {count}{" "}
+          {count === 1 ? "note" : "notes"}
         </span>
         <p className="text-[13px] text-muted-foreground">
           {`Notes appended to “${taskName}”.`}
