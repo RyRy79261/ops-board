@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CircleAlert, Mic, MicOff, SearchX } from "lucide-react";
 import { z } from "zod";
 
 import { AppHeader } from "@opsboard/ui/components/app-header";
@@ -13,6 +13,7 @@ import { ScopeChip } from "@opsboard/ui/components/scope-chip";
 import { ParsedIntentPanel } from "@opsboard/ui/components/parsed-intent-panel";
 import { DisambiguationPicker } from "@opsboard/ui/components/disambiguation-picker";
 import { ConfirmBar } from "@opsboard/ui/components/confirm-bar";
+import { ErrorStateCard } from "@opsboard/ui/components/error-state-card";
 import { VoiceFAB } from "@opsboard/ui/components/voice-fab";
 import { RecordingPanel } from "@opsboard/ui/components/recording-panel";
 
@@ -276,9 +277,43 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
               onPointerCancel={onPointerStop}
             />
             {recError ? (
-              <p role="alert" className="text-[13px] text-destructive">
-                {recError}
-              </p>
+              <ErrorStateCard
+                className="w-full"
+                tone="destructive"
+                icon={MicOff}
+                // Only a permission denial is truly "blocked"; "no microphone" /
+                // "recording failed" get the device-agnostic header.
+                header={
+                  /permission/i.test(recError)
+                    ? "MICROPHONE BLOCKED"
+                    : "VOICE CAPTURE FAILED"
+                }
+                body={recError}
+                actions={[
+                  { label: "Try again", variant: "primary", icon: Mic, onClick: onPress },
+                ]}
+              />
+            ) : error ? (
+              // A transcribe/parse failure (network, vendor key, rate-limit) —
+              // previously this was set but never shown in the capture stage.
+              <ErrorStateCard
+                className="w-full"
+                tone="destructive"
+                icon={CircleAlert}
+                header="COULDN’T PARSE THAT"
+                body={error}
+                actions={[
+                  {
+                    label: "Try again",
+                    variant: "primary",
+                    icon: Mic,
+                    onClick: () => {
+                      setError(null);
+                      onPress();
+                    },
+                  },
+                ]}
+              />
             ) : null}
           </div>
         ) : (
@@ -313,10 +348,14 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 action="Append research notes to this task"
               />
             ) : parse.candidates.length === 0 ? (
-              <div className="border border-border bg-card p-4 text-[14px] leading-relaxed text-muted-foreground">
-                No task in “{missionName}” matched that. Try naming the task more
-                directly, then re-record.
-              </div>
+              <ErrorStateCard
+                icon={SearchX}
+                header="NO RESULTS FOUND"
+                body={`No task in “${missionName}” matched that. Try naming the task more directly, then re-record.`}
+                actions={[
+                  { label: "Re-record", variant: "primary", icon: Mic, onClick: reRecord },
+                ]}
+              />
             ) : (
               // Ambiguous: several tasks matched — show the query, and require an
               // explicit pick from the DisambiguationPicker below before cueing.
@@ -350,9 +389,19 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
             ) : null}
 
             {error ? (
-              <p role="alert" className="text-[13px] text-destructive">
-                {error}
-              </p>
+              <ErrorStateCard
+                tone="destructive"
+                icon={CircleAlert}
+                header="COULDN’T START RESEARCH"
+                body={error}
+                actions={[
+                  {
+                    label: "Dismiss",
+                    variant: "outline",
+                    onClick: () => setError(null),
+                  },
+                ]}
+              />
             ) : null}
 
             {selected ? (

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert } from "lucide-react";
 import { z } from "zod";
 
 import { AppHeader } from "@opsboard/ui/components/app-header";
@@ -152,17 +152,22 @@ export function ResearchRunning({
         <ScopeChip variant="locked" mission={missionName} />
 
         {job.state === "error" ? (
-          <div className="flex flex-col gap-4">
-            <ErrorStateCard
-              header="RESEARCH FAILED"
-              body={
-                job.errorMessage ??
-                "Something went wrong while researching. Try cueing it again."
-              }
-              actionLabel="BACK TO BOARD"
-              onAction={() => router.push("/")}
-            />
-          </div>
+          <ErrorStateCard
+            tone="destructive"
+            icon={CircleAlert}
+            header="RESEARCH FAILED"
+            body={
+              job.errorMessage ??
+              "Something went wrong while researching. Try cueing it again."
+            }
+            actions={[
+              {
+                label: "Back to board",
+                variant: "primary",
+                onClick: () => router.push("/"),
+              },
+            ]}
+          />
         ) : job.state === "complete" && job.result ? (
           <CompleteState
             result={job.result}
