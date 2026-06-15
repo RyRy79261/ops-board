@@ -44,8 +44,10 @@ export const WithRetry: Story = {
 };
 
 // The full desktop "Errors & Edge States" catalog — all 8 cells (top-accent
-// layout), exact spec copy/icons/severity. AMBIGUOUS + LOW CONFIDENCE are
-// catalog-only here (the live flow routes ambiguity to the DisambiguationPicker).
+// layout), spec copy/icons/severity. (The LOW CONFIDENCE "Confirm" CTA uses the
+// primary action fill; the component has no warning-fill action variant — the
+// only catalog divergence.) AMBIGUOUS + LOW CONFIDENCE are catalog-only here —
+// the live flow routes ambiguity to the DisambiguationPicker.
 export const DesktopCatalog: Story = {
   args: { body: "" },
   parameters: { layout: "padded" },

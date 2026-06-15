@@ -281,7 +281,13 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 className="w-full"
                 tone="destructive"
                 icon={MicOff}
-                header="MICROPHONE BLOCKED"
+                // Only a permission denial is truly "blocked"; "no microphone" /
+                // "recording failed" get the device-agnostic header.
+                header={
+                  /permission/i.test(recError)
+                    ? "MICROPHONE BLOCKED"
+                    : "VOICE CAPTURE FAILED"
+                }
                 body={recError}
                 actions={[
                   { label: "Try again", variant: "primary", icon: Mic, onClick: onPress },

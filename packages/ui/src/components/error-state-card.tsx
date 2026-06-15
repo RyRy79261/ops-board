@@ -25,8 +25,11 @@ import { cn } from "../lib/utils";
  * `meta` renders the mono status line (e.g. "OFFLINE · LAST SYNC 2M AGO"); any
  * `children` (e.g. failed SourceRows, a keyboard fallback) render before actions.
  *
- * A11y: `role="status"` announces the condition; icons are decorative
- * (`aria-hidden`); each action is a real button with its label as accessible name.
+ * A11y: announces the condition — assertively (`role="alert"`) for the
+ * `destructive` tone (a hard failure the user just hit, matching the Alert
+ * convention), politely (`role="status"`) otherwise; overridable via `role`.
+ * Icons are decorative (`aria-hidden`); each action is a real button with its
+ * label as accessible name.
  */
 
 export type ErrorStateTone = "neutral" | "warning" | "destructive" | "primary";
@@ -134,7 +137,9 @@ const ErrorStateCard = React.forwardRef<HTMLDivElement, ErrorStateCardProps>(
     return (
       <div
         ref={ref}
-        role="status"
+        // Destructive = a hard failure → announce assertively; otherwise polite.
+        // Set before {...props} so a caller can still override the role.
+        role={tone === "destructive" ? "alert" : "status"}
         className={cn(
           "flex flex-col gap-2.5 border border-border bg-card p-3.5",
           layout === "top-accent"
