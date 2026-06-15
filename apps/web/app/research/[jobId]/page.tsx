@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getResearchJob } from "@opsboard/db/research";
+import { getResearchJob, getResearchNotes } from "@opsboard/db/research";
 import { getTask } from "@opsboard/db/tasks";
 import { getMission } from "@opsboard/db/missions";
 
@@ -37,16 +37,22 @@ export default async function ResearchJobPage({
   }
   if (!job) notFound();
 
-  const [task, mission] = await Promise.all([
+  const [task, mission, notes] = await Promise.all([
     getTask(job.taskId, userId),
     getMission(job.missionId, userId),
+    // Only a completed job can have kept notes; skip the read otherwise.
+    job.state === "complete"
+      ? getResearchNotes(job.taskId, userId)
+      : Promise.resolve([]),
   ]);
+  const alreadyKept = notes.some((n) => n.jobId === job.id);
 
   return (
     <ResearchRunning
       initialJob={toResearchJobView(job)}
       taskName={task?.name ?? "this task"}
       missionName={mission?.name ?? ""}
+      alreadyKept={alreadyKept}
     />
   );
 }
