@@ -129,7 +129,12 @@ export const DesktopCatalog: Story = {
         body="Too many requests — try again in a few minutes. Your place in line is saved."
         meta="RETRY AVAILABLE IN 3:00"
         actions={[
-          { label: "Retry in 3:00", variant: "outline", icon: Timer, disabled: true },
+          {
+            label: "Retry in 3:00",
+            variant: "outline",
+            icon: Timer,
+            disabled: true,
+          },
           { label: "Dismiss", variant: "outline" },
         ]}
       />
@@ -144,6 +149,10 @@ export const DesktopCatalog: Story = {
           { label: "Come back later", variant: "outline", icon: Timer },
         ]}
       />
+      {/* FORWARD-LOOKING: the runner only ever reaches `complete` | `error`, so
+          there is no live data path that produces PARTIAL RESULTS yet (it would
+          need per-source failure tracking + a `partial` job state). The card +
+          SourceRow `status="failed"` support it for when that lands. */}
       <ErrorStateCard
         layout="top-accent"
         tone="warning"
@@ -171,8 +180,8 @@ export const DesktopCatalog: Story = {
         ]}
       >
         <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground-subtle">
-          <Keyboard aria-hidden="true" className="size-3" /> or type your request
-          instead
+          <Keyboard aria-hidden="true" className="size-3" /> or type your
+          request instead
         </span>
       </ErrorStateCard>
     </div>
