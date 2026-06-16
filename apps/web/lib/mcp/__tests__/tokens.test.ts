@@ -46,9 +46,12 @@ describe("verifyPkce", () => {
       false,
     );
   });
-  it("plain: matches verbatim", () => {
-    expect(verifyPkce("abc123", "plain", "abc123")).toBe(true);
-    expect(verifyPkce("abc123", "plain", "abc124")).toBe(false);
+  it("rejects non-S256 methods (S256-only policy, fail-closed)", () => {
+    // `plain` is a valid RFC 7636 method but OpsBoard does not honor it — even a
+    // verbatim match must be rejected so a downgraded/forged code can't exchange.
+    expect(verifyPkce("abc123", "plain", "abc123")).toBe(false);
+    expect(verifyPkce("abc123", "PLAIN", "abc123")).toBe(false);
+    expect(verifyPkce("abc123", "", "abc123")).toBe(false);
   });
 });
 

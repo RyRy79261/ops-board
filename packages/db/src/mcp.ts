@@ -4,15 +4,12 @@ import * as schema from "./schema";
 
 // @opsboard/db/mcp — the server-only MCP auth-state helpers the S6 OAuth
 // shell depends on (`appendMcpAuditLog`, token lookup/touch). OpsBoard is
-// single-user: camp-404 scoped every row to a `users.id`; here we write a
-// single constant principal into the nullable `principal_id` column instead.
-
-/**
- * The single-user principal. OpsBoard has no users table — every MCP call
- * acts as this constant principal, written into the nullable `principal_id`
- * columns so the audit / token rows stay attributable.
- */
-export const MCP_PRINCIPAL_ID = "owner";
+// MULTI-USER: every auth code / access token / audit row carries the `user_id`
+// of the human who authorized the MCP client (the verified Neon Auth session
+// captured in the authorize route), and the audit log's `principal_id` mirrors
+// that id. An UNAUTHENTICATED tool-call rejection is attributed to NULL (no
+// principal) — never to a constant placeholder, which would falsely pin
+// anonymous traffic to a real-looking actor.
 
 /** Append one row to mcp_audit_log. Best-effort — never throws into the caller. */
 export async function appendMcpAuditLog(input: {
@@ -27,7 +24,9 @@ export async function appendMcpAuditLog(input: {
   try {
     const db = createHttpDb();
     await db.insert(schema.mcpAuditLog).values({
-      principalId: input.principalId ?? MCP_PRINCIPAL_ID,
+      // Attribute to the real authorizing user, or NULL when there is none
+      // (e.g. an unauthenticated rejection) — never a constant placeholder.
+      principalId: input.principalId ?? null,
       clientId: input.clientId,
       tool: input.tool,
       argsJson: input.argsJson,

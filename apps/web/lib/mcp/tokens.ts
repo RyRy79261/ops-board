@@ -36,23 +36,23 @@ export function constantTimeEqual(a: string, b: string): boolean {
 }
 
 /**
- * Verify a PKCE code_verifier against the stored code_challenge per
- * RFC 7636. Supports the two challenge methods the OAuth 2.1 spec
- * mandates: `S256` (required) and `plain` (allowed but discouraged).
+ * Verify a PKCE code_verifier against the stored code_challenge per RFC 7636.
  *
- * For S256 the challenge is `base64url(sha256(verifier))` and we
- * recompute it on the verifier we receive — byte-wise compared in
- * constant time.
+ * OpsBoard is S256-ONLY: the authorize route accepts only `S256` and the OAuth
+ * metadata advertises only `S256`. RFC 7636's `plain` method (challenge ==
+ * verifier — trivially defeated if the authorization request is observed) is
+ * deliberately NOT honored: any method other than `S256` FAILS CLOSED, so even a
+ * manually-inserted `plain` code row could never be exchanged.
+ *
+ * For S256 the challenge is `base64url(sha256(verifier))`, recomputed on the
+ * received verifier and compared byte-wise in constant time.
  */
 export function verifyPkce(
   challenge: string,
-  method: "S256" | "plain",
+  method: string,
   verifier: string,
 ): boolean {
-  if (method === "plain") {
-    return constantTimeEqual(challenge, verifier);
-  }
-  // S256: base64url(SHA256(ASCII(verifier)))
+  if (method !== "S256") return false;
   const computed = createHash("sha256").update(verifier).digest("base64url");
   return constantTimeEqual(challenge, computed);
 }

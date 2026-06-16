@@ -140,7 +140,8 @@ export interface IssueAuthCodeInput {
   userId: string;
   redirectUri: string;
   codeChallenge: string;
-  codeChallengeMethod: "S256" | "plain";
+  /** S256 only — OpsBoard does not accept `plain` PKCE (see verifyPkce). */
+  codeChallengeMethod: "S256";
   scope: string;
 }
 
@@ -151,6 +152,12 @@ export async function issueAuthCode(
   const code = generateOpaqueToken(32);
   const now = new Date();
   await db.insert(schema.mcpAuthCodes).values({
+    // The code is stored in plaintext by DESIGN. Long-lived secrets (access /
+    // refresh tokens, client secrets) are SHA-256 hashed at rest; the auth code
+    // is not, because it's single-use, expires in 5 min (AUTH_CODE_TTL_SEC), and
+    // the token exchange ALSO requires the PKCE code_verifier — which is never
+    // stored — so a leaked DB snapshot yields nothing exchangeable. This matches
+    // the mature intake-tracker reference (hash tokens, not short-lived codes).
     code,
     clientId: input.clientId,
     // Bind the code to the approving user; mirror it into principalId so the
@@ -315,7 +322,9 @@ export async function rotateRefreshToken(input: {
         principalId: old.userId,
         scope: old.scope,
         expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_SEC * 1000),
-        refreshExpiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_SEC * 1000),
+        refreshExpiresAt: new Date(
+          now.getTime() + REFRESH_TOKEN_TTL_SEC * 1000,
+        ),
       });
 
       return {

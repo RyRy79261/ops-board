@@ -41,14 +41,20 @@ export interface RateLimitResult {
  * Reserve one token for `key`. Returns `{ok: true}` if the request is
  * allowed, otherwise `{ok: false, retryAfterSeconds}`.
  */
-export function rateLimit(key: string, opts: RateLimitOptions): RateLimitResult {
+export function rateLimit(
+  key: string,
+  opts: RateLimitOptions,
+): RateLimitResult {
   const windowMs = opts.windowMs ?? 60_000;
   maybeSweep(windowMs);
   const refillPerMs = opts.limit / windowMs;
   const now = Date.now();
   const existing = buckets.get(key);
   const tokens = existing
-    ? Math.min(opts.limit, existing.tokens + (now - existing.updatedAt) * refillPerMs)
+    ? Math.min(
+        opts.limit,
+        existing.tokens + (now - existing.updatedAt) * refillPerMs,
+      )
     : opts.limit;
 
   if (tokens < 1) {
@@ -81,9 +87,29 @@ export interface RateLimiter {
 /** The default in-process limiter — the in-memory token bucket above. */
 export const rateLimiter: RateLimiter = { limit: rateLimit };
 
-/** Best-effort IP extraction from a Next.js request. */
+/**
+ * Best-effort client IP for rate-limit bucketing.
+ *
+ * SECURITY: `x-forwarded-for` is only partly trustworthy. A client can PREPEND
+ * arbitrary values to it; the trusted edge (Vercel) APPENDS the real connection
+ * IP. So the LEFTMOST entry is attacker-spoofable — keying on it lets an attacker
+ * rotate the header to land in a fresh bucket every request and defeat the IP
+ * limit entirely — while the RIGHTMOST entry is the trustworthy one. Prefer
+ * `x-real-ip`, which Vercel sets from the verified connection and the client
+ * cannot forge; otherwise fall back to the RIGHTMOST `x-forwarded-for` entry,
+ * never the leftmost. Assumes a single trusted proxy (Vercel) — revisit if the
+ * deployment fronts the app with additional proxies.
+ */
 export function getClientIp(headers: Headers): string {
+  const real = headers.get("x-real-ip")?.trim();
+  if (real) return real;
   const fwd = headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]!.trim();
-  return headers.get("x-real-ip") ?? "unknown";
+  if (fwd) {
+    const parts = fwd
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1]!;
+  }
+  return "unknown";
 }
