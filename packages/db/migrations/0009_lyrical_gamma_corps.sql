@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "research_jobs_one_running_per_task" ON "research_jobs" USING btree ("task_id") WHERE "research_jobs"."state" = 'running';--> statement-breakpoint
+CREATE UNIQUE INDEX "task_research_notes_one_per_job" ON "task_research_notes" USING btree ("job_id") WHERE "task_research_notes"."job_id" is not null;

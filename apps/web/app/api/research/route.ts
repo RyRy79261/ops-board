@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
+import { resolveAiKey } from "@/lib/ai-key-resolver";
+import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
 import type { CueResearchResult } from "@/lib/research-types";
 import { inngest } from "@/lib/inngest/client";
 
@@ -68,6 +70,20 @@ export async function POST(req: Request): Promise<Response> {
       { error: "Expected { missionId, taskId, query }." },
       { status: 400 },
     );
+  }
+
+  // Fail CLOSED before any write: the runner needs the user's own Anthropic key,
+  // so verify it exists up front. Without this the route would create a job row +
+  // fire an Inngest event for a keyless user, and the failure would only surface
+  // INSIDE the runner as a job-level error — not the 402 the BYO-keys contract
+  // requires (mirrors /api/research/parse). The key is NOT passed to Inngest; the
+  // runner re-resolves it locally per step so it's never persisted in step state.
+  try {
+    await resolveAiKey(user.id, "anthropic");
+  } catch (err) {
+    const failClosed = aiKeyErrorResponse(err);
+    if (failClosed) return failClosed;
+    throw err;
   }
 
   // Idempotency: if a job is already running for this task, return it instead of

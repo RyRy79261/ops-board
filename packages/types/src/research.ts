@@ -85,17 +85,32 @@ export const ResearchResult = z
     sources: z.array(ResearchSource).max(50),
   })
   .strict()
-  // Referential integrity: every step citation must point to a real source (a
-  // 1-based index within `sources`). Shape-only validation would let a model
-  // draft a citation to a non-existent source and persist a broken reference.
+  // Referential integrity: every step citation must point to a real source by its
+  // 1-based `index` VALUE — not its array position. Sources carry an explicit
+  // `index` that is NOT guaranteed contiguous or in array order, so bounding a
+  // citation by `sources.length` is wrong in both directions: with sources
+  // [{index:1},{index:3}] a citation of 2 (no such source) would slip through,
+  // while a citation of 3 (a real source) would be rejected. Validate membership
+  // in the declared index set instead, and require those indices to be unique so a
+  // citation maps to exactly one source.
   .superRefine((result, ctx) => {
-    const sourceCount = result.sources.length;
+    const sourceIndices = new Set<number>();
+    result.sources.forEach((source, sourceIdx) => {
+      if (sourceIndices.has(source.index)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `duplicate source index ${source.index}`,
+          path: ["sources", sourceIdx, "index"],
+        });
+      }
+      sourceIndices.add(source.index);
+    });
     result.steps.forEach((step, stepIdx) => {
       step.citations.forEach((citation, citationIdx) => {
-        if (citation < 1 || citation > sourceCount) {
+        if (!sourceIndices.has(citation)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `citation ${citation} has no matching source (1..${sourceCount})`,
+            message: `citation ${citation} has no matching source`,
             path: ["steps", stepIdx, "citations", citationIdx],
           });
         }

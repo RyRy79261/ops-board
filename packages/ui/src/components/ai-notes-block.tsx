@@ -159,8 +159,12 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
         {/* 2. Summary */}
         <p className="text-[14px] leading-relaxed text-foreground">{summary}</p>
 
-        {/* 3. Numbered steps */}
+        {/* 3. Numbered steps. `role="list"` is REQUIRED: Safari/VoiceOver strips
+            the implicit list role when `list-style: none` is applied, so without
+            it the steps lose their "list, N items" announcement. The numeric badge
+            is aria-hidden, so each step also carries an sr-only ordinal below. */}
         <ol
+          role="list"
           className={cn(
             "flex list-none flex-col",
             isMobile ? "gap-[11px]" : "gap-[14px]",
@@ -194,6 +198,7 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
                     isMobile ? "leading-[1.45]" : "leading-relaxed",
                   )}
                 >
+                  <span className="sr-only">{`Step ${step.index}: `}</span>
                   {step.text}
                   {/* Mobile appends citations as inline bracket text. */}
                   {isMobile
@@ -259,14 +264,18 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
         {onKeep && onDismiss ? (
           isMobile ? (
             <div className="flex flex-col gap-2 border-t border-border pt-[13px]">
-              <button
-                type="button"
-                onClick={onViewSources}
-                className="inline-flex h-[46px] w-full items-center justify-center gap-2 border border-border bg-secondary font-mono text-[12px] font-semibold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <List aria-hidden="true" className="size-[15px]" />
-                Open all sources
-              </button>
+              {/* Guard the sources button on its own handler: a button that does
+                  nothing on activation is an a11y smell. */}
+              {onViewSources ? (
+                <button
+                  type="button"
+                  onClick={onViewSources}
+                  className="inline-flex h-[46px] w-full items-center justify-center gap-2 border border-border bg-secondary font-mono text-[12px] font-semibold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <List aria-hidden="true" className="size-[15px]" />
+                  Open all sources
+                </button>
+              ) : null}
               <div className="flex gap-2.5">
                 <button
                   type="button"
@@ -304,14 +313,16 @@ const AINotesBlock = React.forwardRef<HTMLDivElement, AINotesBlockProps>(
                   Dismiss
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={onViewSources}
-                className="inline-flex shrink-0 items-center gap-[7px] border border-border bg-secondary px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <ExternalLink aria-hidden="true" className="size-3.5" />
-                View sources
-              </button>
+              {onViewSources ? (
+                <button
+                  type="button"
+                  onClick={onViewSources}
+                  className="inline-flex shrink-0 items-center gap-[7px] border border-border bg-secondary px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[1px] text-foreground outline-none transition-colors hover:border-border-hover focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                  View sources
+                </button>
+              ) : null}
             </div>
           )
         ) : null}

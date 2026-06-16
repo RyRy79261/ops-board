@@ -361,6 +361,13 @@ export const researchJobs = pgTable(
     userIdx: index("research_jobs_user_idx").on(j.userId),
     taskIdx: index("research_jobs_task_idx").on(j.taskId),
     stateIdx: index("research_jobs_state_idx").on(j.state),
+    // At most ONE running job per task — the race-proof backstop for the
+    // read-then-write idempotency check in the CUE RESEARCH route. PARTIAL so it
+    // only constrains `running` rows (a task accrues many complete/error jobs over
+    // time); when a job moves out of `running` the slot frees for a re-cue.
+    oneRunningPerTask: uniqueIndex("research_jobs_one_running_per_task")
+      .on(j.taskId)
+      .where(sql`${j.state} = 'running'`),
     // Lifecycle invariants enforced at the DB boundary (defense-in-depth behind
     // the service guards): a `complete` job must carry a `result`, an `error`
     // job must carry an `error_message`, and any terminal state must have a
@@ -404,6 +411,12 @@ export const taskResearchNotes = pgTable(
   (n) => ({
     taskIdx: index("task_research_notes_task_idx").on(n.taskId),
     userIdx: index("task_research_notes_user_idx").on(n.userId),
+    // One kept note per job — the race-proof backstop for the KEEP NOTES
+    // idempotency check. PARTIAL (job_id IS NOT NULL) so notes whose job was
+    // pruned (ON DELETE SET NULL → NULL job_id) aren't forced unique on NULL.
+    oneNotePerJob: uniqueIndex("task_research_notes_one_per_job")
+      .on(n.jobId)
+      .where(sql`${n.jobId} is not null`),
   }),
 );
 

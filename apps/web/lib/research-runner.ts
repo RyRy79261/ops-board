@@ -41,10 +41,14 @@ const SYNTHESIS_TIMEOUT_MS = 50_000;
 const STRUCTURE_TIMEOUT_MS = 30_000;
 /**
  * The structured JSON re-encodes the whole synthesis prose (field names, quoting,
- * URL escaping) so it is LARGER than the prose — budget generously above the
- * prose handed in, or Haiku truncates mid-tool-call and the result fails to parse.
+ * URL escaping) so it is LARGER than the prose. Synthesis can accumulate prose
+ * across up to MAX_RESUMES+1 turns (each up to 8k output tokens), so the structure
+ * step's cap must clear that ceiling with headroom — at the old 8k it equalled a
+ * SINGLE synthesis turn and truncated multi-turn prose mid-tool-call (→ invalid
+ * JSON → ResearchResult parse failure → the job errored). This step runs in its
+ * own ~60s invocation on Haiku, so tokens (not wall time) are the only constraint.
  */
-const STRUCTURE_MAX_TOKENS = 8_000;
+const STRUCTURE_MAX_TOKENS = 16_000;
 
 export type SynthesizeOutcome =
   | { ok: true; prose: string }
@@ -112,7 +116,10 @@ export async function synthesizeResearch(
     return { ok: false, error: "Research failed while searching the web." };
   }
   if (prose.trim().length === 0) {
-    return { ok: false, error: "The research came back empty — try rephrasing." };
+    return {
+      ok: false,
+      error: "The research came back empty — try rephrasing.",
+    };
   }
   return { ok: true, prose };
 }

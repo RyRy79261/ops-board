@@ -6,7 +6,7 @@ import {
   updateResearchJob,
   appendResearchNote,
   getResearchNotes,
-  getResearchNoteSummariesByTaskIds,
+  getResearchNoteSummariesByMissionId,
 } from "../research";
 import type { ResearchResult } from "@opsboard/types";
 
@@ -143,13 +143,12 @@ describe("research input guards (no DB)", () => {
     ).rejects.toThrow(/errorMessage/);
   });
 
-  it("getResearchNoteSummariesByTaskIds rejects an empty principal, short-circuits empty ids", async () => {
+  it("getResearchNoteSummariesByMissionId rejects a non-UUID mission and an empty principal", async () => {
     await expect(
-      getResearchNoteSummariesByTaskIds([UUID], ""),
-    ).rejects.toThrow(/non-empty string/);
-    // No task ids → no SQL, returns [] (the never-connected client is untouched).
-    await expect(getResearchNoteSummariesByTaskIds([], USER)).resolves.toEqual(
-      [],
+      getResearchNoteSummariesByMissionId("not-a-uuid", USER),
+    ).rejects.toThrow(/must be a valid UUID/);
+    await expect(getResearchNoteSummariesByMissionId(UUID, "")).rejects.toThrow(
+      /non-empty string/,
     );
   });
 });

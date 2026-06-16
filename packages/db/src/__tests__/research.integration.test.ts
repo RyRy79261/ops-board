@@ -8,7 +8,7 @@ import {
   getResearchJob,
   getResearchJobsForTask,
   getResearchNotes,
-  getResearchNoteSummariesByTaskIds,
+  getResearchNoteSummariesByMissionId,
   updateResearchJob,
 } from "../research";
 import { createTestDb, TEST_USER_ID, type TestDb } from "./db-harness";
@@ -32,10 +32,19 @@ const STEPS: ResearchStep[] = [
 ];
 
 const RESULT: ResearchResult = {
-  summary: "Submit the Tankwa land-use permit via CapeNature's regional office.",
+  summary:
+    "Submit the Tankwa land-use permit via CapeNature's regional office.",
   steps: [
-    { index: 1, text: "Gather the site coordinates and dates.", citations: [1] },
-    { index: 2, text: "Email the application to the office.", citations: [1, 2] },
+    {
+      index: 1,
+      text: "Gather the site coordinates and dates.",
+      citations: [1],
+    },
+    {
+      index: 2,
+      text: "Email the application to the office.",
+      citations: [1, 2],
+    },
   ],
   sources: [
     {
@@ -115,7 +124,9 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
         h.db,
       );
       expect(res.ok).toBe(false);
-      expect(await getResearchJobsForTask(taskId, USER_A, h.db)).toHaveLength(0);
+      expect(await getResearchJobsForTask(taskId, USER_A, h.db)).toHaveLength(
+        0,
+      );
     });
 
     it("refuses a task that is not in the scoped mission", async () => {
@@ -222,7 +233,9 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       );
       if (!created.ok) throw new Error(created.error);
       expect(await getResearchJob(created.job.id, USER_B, h.db)).toBeNull();
-      expect(await getResearchJobsForTask(taskId, USER_B, h.db)).toHaveLength(0);
+      expect(await getResearchJobsForTask(taskId, USER_B, h.db)).toHaveLength(
+        0,
+      );
     });
   });
 
@@ -288,7 +301,9 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
         h.db,
       );
       expect(res.ok).toBe(false);
-      expect(await getResearchNotes(taskB.task.id, USER_A, h.db)).toHaveLength(0);
+      expect(await getResearchNotes(taskB.task.id, USER_A, h.db)).toHaveLength(
+        0,
+      );
     });
 
     it("survives a deleted job via ON DELETE SET NULL", async () => {
@@ -339,8 +354,8 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
     expect(notes).toHaveLength(0);
   });
 
-  // --- getResearchNoteSummariesByTaskIds (the board "✦ N" rollup) -------
-  describe("getResearchNoteSummariesByTaskIds", () => {
+  // --- getResearchNoteSummariesByMissionId (the board "✦ N" rollup) -----
+  describe("getResearchNoteSummariesByMissionId", () => {
     it("rolls up count + latest non-null job per task", async () => {
       const { missionId, taskId } = await seedTask(USER_A);
       const job = await createResearchJob(
@@ -358,8 +373,8 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       );
       await appendResearchNote({ taskId, content: RESULT }, USER_A, h.db);
 
-      const [summary] = await getResearchNoteSummariesByTaskIds(
-        [taskId],
+      const [summary] = await getResearchNoteSummariesByMissionId(
+        missionId,
         USER_A,
         h.db,
       );
@@ -368,7 +383,7 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       expect(summary?.latestJobId).toBe(job.job.id);
     });
 
-    it("excludes another user's notes + omits tasks with none", async () => {
+    it("scopes to mission + owner, excludes other users, omits empty tasks", async () => {
       const { missionId, taskId } = await seedTask(USER_A);
       const empty = await createTask(
         { missionId, name: "A task with no research" },
@@ -378,20 +393,93 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       if (!empty.ok) throw new Error(empty.error);
       await appendResearchNote({ taskId, content: RESULT }, USER_A, h.db);
 
-      // USER_B sees nothing for USER_A's task (the userId WHERE filter).
+      // USER_B querying USER_A's mission sees nothing (the mission's tasks aren't
+      // theirs → the task subquery is empty, and the userId filter excludes them).
       expect(
-        await getResearchNoteSummariesByTaskIds([taskId], USER_B, h.db),
+        await getResearchNoteSummariesByMissionId(missionId, USER_B, h.db),
       ).toEqual([]);
 
       // USER_A: only the task with notes appears; the empty one is omitted.
-      const rollup = await getResearchNoteSummariesByTaskIds(
-        [taskId, empty.task.id],
+      const rollup = await getResearchNoteSummariesByMissionId(
+        missionId,
         USER_A,
         h.db,
       );
       expect(rollup).toHaveLength(1);
       expect(rollup[0]?.taskId).toBe(taskId);
       expect(rollup[0]?.count).toBe(1);
+    });
+  });
+
+  // --- race-proof idempotency (the partial unique indexes from migration 0009) -
+  describe("concurrency backstops", () => {
+    it("createResearchJob returns the existing running job instead of a duplicate", async () => {
+      const { missionId, taskId } = await seedTask(USER_A);
+      const first = await createResearchJob(
+        { missionId, taskId, query: "first" },
+        USER_A,
+        h.db,
+      );
+      if (!first.ok) throw new Error(first.error);
+
+      // A second cue while the first is still running must NOT fan out a duplicate
+      // — the partial unique index (task_id WHERE state='running') forces the
+      // onConflict path to return the in-flight job.
+      const second = await createResearchJob(
+        { missionId, taskId, query: "second" },
+        USER_A,
+        h.db,
+      );
+      expect(second.ok).toBe(true);
+      if (!second.ok) return;
+      expect(second.job.id).toBe(first.job.id);
+      expect(await getResearchJobsForTask(taskId, USER_A, h.db)).toHaveLength(
+        1,
+      );
+
+      // Once the first completes, the running slot frees and a re-cue is allowed.
+      await updateResearchJob(
+        first.job.id,
+        USER_A,
+        { state: "complete", result: RESULT },
+        h.db,
+      );
+      const third = await createResearchJob(
+        { missionId, taskId, query: "third" },
+        USER_A,
+        h.db,
+      );
+      expect(third.ok).toBe(true);
+      if (third.ok) expect(third.job.id).not.toBe(first.job.id);
+    });
+
+    it("appendResearchNote keeps a job exactly once (returns the existing note)", async () => {
+      const { missionId, taskId } = await seedTask(USER_A);
+      const job = await createResearchJob(
+        { missionId, taskId, query: "q" },
+        USER_A,
+        h.db,
+      );
+      if (!job.ok) throw new Error(job.error);
+
+      const first = await appendResearchNote(
+        { taskId, jobId: job.job.id, content: RESULT },
+        USER_A,
+        h.db,
+      );
+      if (!first.ok) throw new Error(first.error);
+
+      // A second keep of the SAME job must return the existing note, not duplicate
+      // it — the partial unique index (job_id) forces the onConflict path.
+      const second = await appendResearchNote(
+        { taskId, jobId: job.job.id, content: RESULT },
+        USER_A,
+        h.db,
+      );
+      expect(second.ok).toBe(true);
+      if (!second.ok) return;
+      expect(second.note.id).toBe(first.note.id);
+      expect(await getResearchNotes(taskId, USER_A, h.db)).toHaveLength(1);
     });
   });
 });

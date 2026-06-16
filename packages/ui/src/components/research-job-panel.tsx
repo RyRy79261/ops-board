@@ -39,8 +39,7 @@ export interface ResearchJobStep {
   source?: string;
 }
 
-export interface ResearchJobPanelProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface ResearchJobPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   /** The task under research (DM Sans, `$foreground`). */
   taskName: string;
   /** Pre-formatted elapsed timer string, e.g. `00:42` (never computed here). */
@@ -60,7 +59,13 @@ export interface ResearchJobPanelProps
 }
 
 /** Mobile log row — flatter than the desktop ResearchStepRow (no left accent). */
-function MobileStepRow({ state, label }: { state: ResearchJobStep["state"]; label: string }) {
+function MobileStepRow({
+  state,
+  label,
+}: {
+  state: ResearchJobStep["state"];
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="flex w-4 shrink-0 items-center justify-center">
@@ -97,7 +102,10 @@ function MobileStepRow({ state, label }: { state: ResearchJobStep["state"]; labe
   );
 }
 
-const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>(
+const ResearchJobPanel = React.forwardRef<
+  HTMLDivElement,
+  ResearchJobPanelProps
+>(
   (
     {
       taskName,
@@ -115,9 +123,12 @@ const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>
   ) => {
     if (variant === "mobile") {
       return (
+        // NO `role="status"` on the container: it would (a) nest a live region
+        // around the inner `role="log"` step list → doubled announcements, and
+        // (b) wrap the per-second elapsed timer in a live region → the time read
+        // out every tick. The `role="log"` below is the single intended live region.
         <div
           ref={ref}
-          role="status"
           className={cn(
             "flex flex-col gap-3.5 border border-border bg-card p-4",
             className,
@@ -140,13 +151,23 @@ const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>
             </span>
           </div>
 
-          <p className="text-[15px] font-semibold text-foreground">{taskName}</p>
+          <p className="text-[15px] font-semibold text-foreground">
+            {taskName}
+          </p>
 
-          <ProgressBar indeterminate height={4} label={`Researching ${taskName}`} />
+          <ProgressBar
+            indeterminate
+            height={4}
+            label={`Researching ${taskName}`}
+          />
 
           {/* Log — inline mobile rows (flatter than desktop). role=log +
               aria-live so screen readers hear each step as it streams in. */}
-          <div role="log" aria-live="polite" className="flex flex-col gap-[9px]">
+          <div
+            role="log"
+            aria-live="polite"
+            className="flex flex-col gap-[9px]"
+          >
             {steps.map((step, i) => (
               <MobileStepRow key={i} state={step.state} label={step.label} />
             ))}
@@ -156,12 +177,15 @@ const ResearchJobPanel = React.forwardRef<HTMLDivElement, ResearchJobPanelProps>
     }
 
     return (
-      <div ref={ref} className={cn("flex flex-col gap-5", className)} {...props}>
-        {/* (a) Research Job card — 2px $primary top accent. */}
-        <div
-          role="status"
-          className="flex flex-col border border-border bg-card"
-        >
+      <div
+        ref={ref}
+        className={cn("flex flex-col gap-5", className)}
+        {...props}
+      >
+        {/* (a) Research Job card — 2px $primary top accent. No `role="status"`:
+            it wraps the per-second elapsed timer, which would be re-announced every
+            tick. The LIVE STEP LOG's `role="log"` (below) is the single live region. */}
+        <div className="flex flex-col border border-border bg-card">
           <div aria-hidden="true" className="h-0.5 w-full bg-primary" />
           <div className="flex flex-col gap-[18px] p-[22px]">
             {/* JobHead — status + scope on the left, ELAPSED block on the right. */}

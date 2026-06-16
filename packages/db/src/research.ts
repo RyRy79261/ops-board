@@ -3,7 +3,11 @@ import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
 import type { ResearchJob, TaskResearchNote } from "./schema";
-import { ResearchJobState, ResearchResult, ResearchStep } from "@opsboard/types";
+import {
+  ResearchJobState,
+  ResearchResult,
+  ResearchStep,
+} from "@opsboard/types";
 
 // @opsboard/db/research — persistence for the AI Research (Task Agent) feature.
 //
@@ -95,10 +99,14 @@ export async function createResearchJob(
     throw new TypeError("createResearchJob: `taskId` must be a valid UUID.");
   }
   if (!isNonEmptyString(input.query)) {
-    throw new TypeError("createResearchJob: `query` must be a non-empty string.");
+    throw new TypeError(
+      "createResearchJob: `query` must be a non-empty string.",
+    );
   }
   if (!isNonEmptyString(userId)) {
-    throw new TypeError("createResearchJob: `userId` must be a non-empty string.");
+    throw new TypeError(
+      "createResearchJob: `userId` must be a non-empty string.",
+    );
   }
 
   // The task must exist, be owned by this user, AND live in the scoped mission.
@@ -125,8 +133,34 @@ export async function createResearchJob(
       taskId: input.taskId,
       query: input.query.trim(),
     })
+    // Race-proof idempotency: the partial unique index (task_id WHERE
+    // state='running') rejects a second running job for the same task. On
+    // conflict, insert nothing and fall through to returning the existing one,
+    // so concurrent CUE RESEARCH submits never fan out duplicate runners.
+    .onConflictDoNothing({
+      target: schema.researchJobs.taskId,
+      where: sql`${schema.researchJobs.state} = 'running'`,
+    })
     .returning();
-  return { ok: true, job: job! };
+  if (!job) {
+    // A concurrent cue won the race — return its still-running job so the caller
+    // still gets a jobId (matching the route's read-then-write idempotency).
+    const [running] = await db
+      .select()
+      .from(schema.researchJobs)
+      .where(
+        and(
+          eq(schema.researchJobs.taskId, input.taskId),
+          eq(schema.researchJobs.userId, userId),
+          eq(schema.researchJobs.state, "running"),
+        ),
+      )
+      .orderBy(desc(schema.researchJobs.createdAt))
+      .limit(1);
+    if (running) return { ok: true, job: running };
+    return { ok: false, error: "Couldn't start research — try again." };
+  }
+  return { ok: true, job };
 }
 
 /** Read one job, scoped to its owner. Returns null when absent or not owned. */
@@ -161,7 +195,9 @@ export async function getResearchJobsForTask(
   db: OpsboardDb = createHttpDb(),
 ): Promise<ResearchJob[]> {
   if (!isUuid(taskId)) {
-    throw new TypeError("getResearchJobsForTask: `taskId` must be a valid UUID.");
+    throw new TypeError(
+      "getResearchJobsForTask: `taskId` must be a valid UUID.",
+    );
   }
   if (!isNonEmptyString(userId)) {
     throw new TypeError(
@@ -197,9 +233,14 @@ export async function updateResearchJob(
     throw new TypeError("updateResearchJob: `id` must be a valid UUID.");
   }
   if (!isNonEmptyString(userId)) {
-    throw new TypeError("updateResearchJob: `userId` must be a non-empty string.");
+    throw new TypeError(
+      "updateResearchJob: `userId` must be a non-empty string.",
+    );
   }
-  if (patch.state !== undefined && !ResearchJobState.safeParse(patch.state).success) {
+  if (
+    patch.state !== undefined &&
+    !ResearchJobState.safeParse(patch.state).success
+  ) {
     throw new TypeError(
       "updateResearchJob: `state` must be running | complete | error.",
     );
@@ -208,7 +249,10 @@ export async function updateResearchJob(
     const ok = ResearchStep.array().safeParse(patch.steps).success;
     if (!ok) throw new TypeError("updateResearchJob: `steps` is malformed.");
   }
-  if (patch.result !== undefined && !ResearchResult.safeParse(patch.result).success) {
+  if (
+    patch.result !== undefined &&
+    !ResearchResult.safeParse(patch.result).success
+  ) {
     throw new TypeError("updateResearchJob: `result` is malformed.");
   }
   // Terminal transitions must carry their payload: completing a job requires a
@@ -269,10 +313,14 @@ export async function appendResearchNote(
     throw new TypeError("appendResearchNote: `taskId` must be a valid UUID.");
   }
   if (input.jobId != null && !isUuid(input.jobId)) {
-    throw new TypeError("appendResearchNote: `jobId` must be a valid UUID or null.");
+    throw new TypeError(
+      "appendResearchNote: `jobId` must be a valid UUID or null.",
+    );
   }
   if (!isNonEmptyString(userId)) {
-    throw new TypeError("appendResearchNote: `userId` must be a non-empty string.");
+    throw new TypeError(
+      "appendResearchNote: `userId` must be a non-empty string.",
+    );
   }
   if (!ResearchResult.safeParse(input.content).success) {
     throw new TypeError("appendResearchNote: `content` is malformed.");
@@ -318,8 +366,34 @@ export async function appendResearchNote(
       jobId: input.jobId ?? null,
       content: input.content,
     })
+    // Race-proof idempotency: the partial unique index (job_id WHERE job_id IS NOT
+    // NULL) rejects a second note for the same job. On conflict, insert nothing and
+    // return the existing note, so concurrent KEEP NOTES never duplicate a row.
+    .onConflictDoNothing({
+      target: schema.taskResearchNotes.jobId,
+      where: sql`${schema.taskResearchNotes.jobId} is not null`,
+    })
     .returning();
-  return { ok: true, note: note! };
+  if (!note) {
+    // A concurrent keep won the race (only possible when a job is cited — the
+    // partial index doesn't constrain NULL job_id). Return the existing note so
+    // keeping stays idempotent.
+    if (input.jobId != null) {
+      const [existing] = await db
+        .select()
+        .from(schema.taskResearchNotes)
+        .where(
+          and(
+            eq(schema.taskResearchNotes.jobId, input.jobId),
+            eq(schema.taskResearchNotes.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (existing) return { ok: true, note: existing };
+    }
+    return { ok: false, error: "Couldn't save notes — try again." };
+  }
+  return { ok: true, note };
 }
 
 /** A task's kept-note rollup for the board: how many, and the job to link to. */
@@ -332,22 +406,28 @@ export interface ResearchNoteSummary {
 }
 
 /**
- * Batched kept-note rollup for a set of owned tasks — count + the most-recent
- * note's job id (for a "view research" link). Owner-scoped; tasks with no kept
- * notes are omitted. Mirrors getTasksByMissionIds' bulk shape so the board folds
- * it into TaskVM in ONE query (no per-task fan-out).
+ * Batched kept-note rollup for ONE mission's owned tasks — count + the most-recent
+ * note's job id (for the board's "✦ N" view-research link). Owner- AND
+ * mission-scoped via a subquery on `tasks`, so the board can run it inside its main
+ * parallel batch: it needs only the active mission id (known up front), NOT the
+ * resolved task ids — eliminating the extra serial round-trip a by-task-ids query
+ * forced. Tasks with no kept notes are omitted; an empty mission yields no rows.
  */
-export async function getResearchNoteSummariesByTaskIds(
-  taskIds: string[],
+export async function getResearchNoteSummariesByMissionId(
+  missionId: string,
   userId: string,
   db: OpsboardDb = createHttpDb(),
 ): Promise<ResearchNoteSummary[]> {
-  if (!isNonEmptyString(userId)) {
+  if (!isUuid(missionId)) {
     throw new TypeError(
-      "getResearchNoteSummariesByTaskIds: `userId` must be a non-empty string.",
+      "getResearchNoteSummariesByMissionId: `missionId` must be a valid UUID.",
     );
   }
-  if (taskIds.length === 0) return [];
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError(
+      "getResearchNoteSummariesByMissionId: `userId` must be a non-empty string.",
+    );
+  }
   const rows = await db
     .select({
       taskId: schema.taskResearchNotes.taskId,
@@ -360,7 +440,19 @@ export async function getResearchNoteSummariesByTaskIds(
     .where(
       and(
         eq(schema.taskResearchNotes.userId, userId),
-        inArray(schema.taskResearchNotes.taskId, taskIds),
+        // Mission scope (also re-asserts ownership of the underlying task).
+        inArray(
+          schema.taskResearchNotes.taskId,
+          db
+            .select({ id: schema.tasks.id })
+            .from(schema.tasks)
+            .where(
+              and(
+                eq(schema.tasks.missionId, missionId),
+                eq(schema.tasks.userId, userId),
+              ),
+            ),
+        ),
       ),
     )
     .groupBy(schema.taskResearchNotes.taskId);
@@ -381,7 +473,9 @@ export async function getResearchNotes(
     throw new TypeError("getResearchNotes: `taskId` must be a valid UUID.");
   }
   if (!isNonEmptyString(userId)) {
-    throw new TypeError("getResearchNotes: `userId` must be a non-empty string.");
+    throw new TypeError(
+      "getResearchNotes: `userId` must be a non-empty string.",
+    );
   }
   return db
     .select()

@@ -6,7 +6,7 @@ import {
   getTasksByMissionIds,
   getTaskDependenciesByMissionIds,
 } from "@opsboard/db/tasks";
-import { getResearchNoteSummariesByTaskIds } from "@opsboard/db/research";
+import { getResearchNoteSummariesByMissionId } from "@opsboard/db/research";
 import { deriveBlocked, criticalPath } from "@opsboard/core";
 import type { DependencyEdge as CoreDependencyEdge } from "@opsboard/core";
 import type { TaskStatus } from "@opsboard/types";
@@ -90,12 +90,16 @@ export async function getDashboardData(
   // mission detail, the global category catalogue, and (in BULK, not a
   // per-mission fan-out) every owned task + dependency edge across all missions.
   const missionIds = missions.map((m) => m.id);
-  const [mission, categoryRows, allTasks, allDeps] = await Promise.all([
-    getMission(activeMissionSummary.id, userId, db),
-    getCategories(db),
-    getTasksByMissionIds(missionIds, userId, db),
-    getTaskDependenciesByMissionIds(missionIds, userId, db),
-  ]);
+  const [mission, categoryRows, allTasks, allDeps, noteSummaries] =
+    await Promise.all([
+      getMission(activeMissionSummary.id, userId, db),
+      getCategories(db),
+      getTasksByMissionIds(missionIds, userId, db),
+      getTaskDependenciesByMissionIds(missionIds, userId, db),
+      // Kept-research rollup for the active mission's tasks — mission-scoped so it
+      // runs IN this batch (no extra serial round-trip after task ids resolve).
+      getResearchNoteSummariesByMissionId(activeMissionSummary.id, userId, db),
+    ]);
 
   // Group the bulk rows by mission server-side. Deps carry no missionId, so map
   // each edge to its task's mission via a taskId→missionId lookup.
@@ -120,16 +124,9 @@ export async function getDashboardData(
   const taskRows = tasksByMission.get(activeMissionSummary.id) ?? [];
   const depRows = depsByMission.get(activeMissionSummary.id) ?? [];
 
-  // Kept-research rollup for the active mission's tasks (one batched query) — the
-  // board's per-task "✦ N" indicator + a link to the latest result.
-  const noteSummaries = await getResearchNoteSummariesByTaskIds(
-    taskRows.map((t) => t.id),
-    userId,
-    db,
-  );
-  const noteSummaryByTaskId = new Map(
-    noteSummaries.map((s) => [s.taskId, s]),
-  );
+  // The board's per-task "✦ N" indicator + link to the latest result. Fetched in
+  // the parallel batch above (mission-scoped), grouped here by task id.
+  const noteSummaryByTaskId = new Map(noteSummaries.map((s) => [s.taskId, s]));
 
   // Per-mission sidebar summaries — counts + nearest-cliff inputs for each NavCard.
   const missionSummaries = missions.map((m) => ({
