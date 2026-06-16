@@ -415,21 +415,15 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
   describe("concurrency backstops", () => {
     it("createResearchJob returns the existing running job instead of a duplicate", async () => {
       const { missionId, taskId } = await seedTask(USER_A);
-      const first = await createResearchJob(
-        { missionId, taskId, query: "first" },
-        USER_A,
-        h.db,
-      );
+      // Fire two cues for the same task CONCURRENTLY — the actual race. The partial
+      // unique index (task_id WHERE state='running') lets exactly one insert win;
+      // the other hits onConflict and returns the in-flight job. Either may win the
+      // race, but both must resolve to the same job id and leave one running row.
+      const [first, second] = await Promise.all([
+        createResearchJob({ missionId, taskId, query: "first" }, USER_A, h.db),
+        createResearchJob({ missionId, taskId, query: "second" }, USER_A, h.db),
+      ]);
       if (!first.ok) throw new Error(first.error);
-
-      // A second cue while the first is still running must NOT fan out a duplicate
-      // — the partial unique index (task_id WHERE state='running') forces the
-      // onConflict path to return the in-flight job.
-      const second = await createResearchJob(
-        { missionId, taskId, query: "second" },
-        USER_A,
-        h.db,
-      );
       expect(second.ok).toBe(true);
       if (!second.ok) return;
       expect(second.job.id).toBe(first.job.id);
@@ -462,20 +456,23 @@ describe.skipIf(!hasDb)("@opsboard/db research (real Postgres)", () => {
       );
       if (!job.ok) throw new Error(job.error);
 
-      const first = await appendResearchNote(
-        { taskId, jobId: job.job.id, content: RESULT },
-        USER_A,
-        h.db,
-      );
+      // Keep the SAME job from two callers CONCURRENTLY — the actual race. The
+      // partial unique index (job_id) lets one insert win; the other hits
+      // onConflict and returns the existing note. Both resolve to the same note id
+      // and leave exactly one note row.
+      const [first, second] = await Promise.all([
+        appendResearchNote(
+          { taskId, jobId: job.job.id, content: RESULT },
+          USER_A,
+          h.db,
+        ),
+        appendResearchNote(
+          { taskId, jobId: job.job.id, content: RESULT },
+          USER_A,
+          h.db,
+        ),
+      ]);
       if (!first.ok) throw new Error(first.error);
-
-      // A second keep of the SAME job must return the existing note, not duplicate
-      // it — the partial unique index (job_id) forces the onConflict path.
-      const second = await appendResearchNote(
-        { taskId, jobId: job.job.id, content: RESULT },
-        USER_A,
-        h.db,
-      );
       expect(second.ok).toBe(true);
       if (!second.ok) return;
       expect(second.note.id).toBe(first.note.id);
