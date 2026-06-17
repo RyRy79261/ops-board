@@ -28,10 +28,17 @@ export function CategoryView({
 }: ViewProps) {
   const criticalSet = new Set(criticalPathIds);
 
-  // Bucket tasks by slug once.
+  // Bucket tasks by slug; collect uncategorised tasks SEPARATELY rather than
+  // dropping them. A task can be uncategorised if its category was deleted
+  // (ON DELETE SET NULL) or created without one — these used to vanish from the
+  // board entirely; now they render in a trailing "Uncategorised" group.
   const tasksBySlug = new Map<string, TaskVM[]>();
+  const uncategorised: TaskVM[] = [];
   for (const task of tasks) {
-    if (task.categorySlug == null) continue;
+    if (task.categorySlug == null) {
+      uncategorised.push(task);
+      continue;
+    }
     const list = tasksBySlug.get(task.categorySlug);
     if (list) list.push(task);
     else tasksBySlug.set(task.categorySlug, [task]);
@@ -51,6 +58,22 @@ export function CategoryView({
       };
     })
     .filter((group) => group.tasks.length > 0);
+
+  // Append a synthetic trailing "Uncategorised" group when any tasks lack a
+  // category, so they're always visible (a neutral slate tone, sorted last).
+  if (uncategorised.length > 0) {
+    groups.push({
+      category: {
+        slug: "__uncategorised__",
+        name: "Uncategorised",
+        color: "#8a8f98",
+        lucideIcon: "Inbox",
+        sortOrder: Number.MAX_SAFE_INTEGER,
+      },
+      tasks: uncategorised,
+      done: uncategorised.filter((t) => t.status === "done").length,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-[26px] px-8 py-5">

@@ -248,6 +248,17 @@ export const CATEGORY_SEEDS: ReadonlyArray<{
     sortOrder: 4,
     isDefault: true,
   },
+  // The catch-all default bucket. New tasks created without an explicit category
+  // land here (createTask defaults to "general") so they never vanish from the
+  // board. Neutral slate tone; sorted last so the domain categories lead.
+  {
+    slug: "general",
+    name: "General",
+    color: "#8a8f98",
+    lucideIcon: "Inbox",
+    sortOrder: 5,
+    isDefault: true,
+  },
 ];
 
 // --- BYO API keys (server-only) ------------------------------------------

@@ -9,6 +9,7 @@ import {
   deleteMission,
   deleteTask,
   removeDependency,
+  updateMission,
   updateTask,
 } from "../mutations";
 import { createTestDb, TEST_USER_ID, type TestDb } from "./db-harness";
@@ -80,6 +81,61 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
     });
   });
 
+  // --- updateMission ----------------------------------------------------
+  describe("updateMission", () => {
+    it("patches name + target date (only provided fields)", async () => {
+      const created = await createMission(
+        { name: "AfrikaBurn", targetDate: "2026-04-27" },
+        USER_A,
+        h.db,
+      );
+      // Rename only — the date is left untouched.
+      const renamed = await updateMission(
+        created.mission.id,
+        { name: "AfrikaBurn 2027" },
+        USER_A,
+        h.db,
+      );
+      expect(renamed.ok).toBe(true);
+      if (renamed.ok) {
+        expect(renamed.mission.name).toBe("AfrikaBurn 2027");
+        expect(renamed.mission.targetDate).toBe("2026-04-27");
+      }
+      // Clear the date with an explicit null.
+      const cleared = await updateMission(
+        created.mission.id,
+        { targetDate: null },
+        USER_A,
+        h.db,
+      );
+      expect(cleared.ok && cleared.mission.targetDate).toBeNull();
+    });
+
+    it("refuses another user's mission (no write)", async () => {
+      const created = await createMission({ name: "Mine" }, USER_A, h.db);
+      const res = await updateMission(
+        created.mission.id,
+        { name: "Hijacked" },
+        USER_B,
+        h.db,
+      );
+      expect(res.ok).toBe(false);
+      // Untouched for the real owner.
+      const still = await getMission(created.mission.id, USER_A, h.db);
+      expect(still?.name).toBe("Mine");
+    });
+
+    it("returns {ok:false} for an unknown mission", async () => {
+      const res = await updateMission(
+        "99999999-9999-9999-9999-999999999999",
+        { name: "Ghost" },
+        USER_A,
+        h.db,
+      );
+      expect(res.ok).toBe(false);
+    });
+  });
+
   // --- createTask -------------------------------------------------------
   describe("createTask", () => {
     let missionId: string;
@@ -89,13 +145,22 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       missionId = m.mission.id;
     });
 
-    it("creates a bare task with defaults", async () => {
-      const result = await createTask({ missionId, name: "Pack" }, USER_A, h.db);
+    it("creates a bare task defaulting to the general category", async () => {
+      const result = await createTask(
+        { missionId, name: "Pack" },
+        USER_A,
+        h.db,
+      );
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.task.name).toBe("Pack");
         expect(result.task.status).toBe("not-started");
-        expect(result.task.categoryId).toBeNull();
+        // No category given → defaults to the "general" catch-all (never null),
+        // so the task is always visible on the category board.
+        const general = (await h.client.select().from(schema.categories)).find(
+          (c) => c.slug === "general",
+        );
+        expect(result.task.categoryId).toBe(general!.id);
         // The invariant: the task's userId equals its mission's userId.
         expect(result.task.userId).toBe(USER_A);
       }
@@ -109,9 +174,7 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       );
       expect(result.ok).toBe(true);
       if (result.ok) {
-        const [cat] = await h.client
-          .select()
-          .from(schema.categories);
+        const [cat] = await h.client.select().from(schema.categories);
         expect(result.task.categoryId).toBeTruthy();
         // The resolved id belongs to the medical category.
         const medical = (await h.client.select().from(schema.categories)).find(
@@ -231,7 +294,12 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
 
     it("clears a cliff date with null", async () => {
       await updateTask(taskId, { tooLateBy: "2026-04-01" }, USER_A, h.db);
-      const cleared = await updateTask(taskId, { tooLateBy: null }, USER_A, h.db);
+      const cleared = await updateTask(
+        taskId,
+        { tooLateBy: null },
+        USER_A,
+        h.db,
+      );
       if (cleared.ok) expect(cleared.task.tooLateBy).toBeNull();
     });
 
@@ -378,7 +446,9 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.error).toMatch(/itself/i);
       // Nothing was inserted.
-      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(0);
+      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(
+        0,
+      );
     });
 
     it("rejects a duplicate edge with a typed error (no throw)", async () => {
@@ -388,7 +458,9 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       expect(dup.ok).toBe(false);
       if (!dup.ok) expect(dup.error).toMatch(/already exists/i);
       // Still exactly one edge.
-      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(1);
+      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(
+        1,
+      );
     });
 
     it("rejects an edge to a non-existent task with a typed error (no throw)", async () => {
@@ -405,7 +477,9 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       await addDependency(aId, bId, USER_A, h.db);
       const removed = await removeDependency(aId, bId, USER_A, h.db);
       expect(removed.ok).toBe(true);
-      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(0);
+      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(
+        0,
+      );
 
       // Removing again is a no-op {ok:true}.
       const again = await removeDependency(aId, bId, USER_A, h.db);
@@ -417,7 +491,9 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       const result = await addDependency(aId, bId, USER_B, h.db);
       expect(result.ok).toBe(false);
       // No edge exists for the real owner.
-      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(0);
+      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(
+        0,
+      );
     });
 
     it("removeDependency scoped to user B leaves user A's edge intact", async () => {
@@ -425,7 +501,9 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
       const removed = await removeDependency(aId, bId, USER_B, h.db);
       // Idempotent shape, but USER_A's edge must survive.
       expect(removed.ok).toBe(true);
-      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(1);
+      expect(await getTaskDependencies(missionId, USER_A, h.db)).toHaveLength(
+        1,
+      );
     });
   });
 });

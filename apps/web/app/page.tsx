@@ -6,6 +6,7 @@ import { requireOnboardedUser } from "@/lib/session";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { VoiceController } from "@/components/voice/voice-controller";
 import { SettingsLink } from "@/components/settings-link";
+import { MissionCreateLauncher } from "@/components/board/board-actions";
 
 // The read-only board entry point. force-dynamic: the board is live (status
 // cycling + window-state ticking), never statically cached. Reads the active
@@ -50,12 +51,15 @@ export default async function HomePage({
             </>
           }
         />
-        <main className="flex flex-1 items-center justify-center p-6">
+        <main className="flex flex-1 flex-col items-center justify-center gap-5 p-6">
           <EmptyState
             variant="no-missions"
             hintStyle="tokens"
             className="w-full max-w-md"
           />
+          {/* Non-voice path: create the first mission from a form (the FAB below
+              still handles "create a mission" by voice). */}
+          <MissionCreateLauncher variant="primary" />
         </main>
         <VoiceController />
       </div>
