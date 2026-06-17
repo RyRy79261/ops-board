@@ -61,7 +61,7 @@ export interface TestDb {
   pool: Pool;
   /** Run the committed migrations against the connected database. */
   migrate(): Promise<void>;
-  /** Insert the five default categories (CATEGORY_SEEDS). */
+  /** Insert the default categories (CATEGORY_SEEDS). */
   seedCategories(): Promise<void>;
   /**
    * Insert a user row (the FK target every mission/task scopes against) and

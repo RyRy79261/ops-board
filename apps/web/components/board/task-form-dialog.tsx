@@ -12,37 +12,28 @@ import {
 } from "@opsboard/ui/components/dialog";
 import { Button } from "@opsboard/ui/components/button";
 import { TextInput } from "@opsboard/ui/components/text-input";
-import type { TaskStatus } from "@opsboard/types";
-import type { CategoryVM, TaskVM } from "@/lib/dashboard-types";
-import { createTaskAction, updateTaskAction } from "@/app/actions";
+import type { CategoryVM } from "@/lib/dashboard-types";
+import { createTaskAction } from "@/app/actions";
 
-// Non-voice task create / edit form. One component, two modes: `task` present →
-// edit (updateTaskAction), absent → create on `missionId` (createTaskAction).
-// Category defaults to "general" (matching createTask) so a new task always
-// lands in a visible bucket. Select + textarea are styled inline to the
-// TextInput field recipe (the kit has no Select primitive yet).
+// Non-voice task CREATE form. Category defaults to "general" (matching
+// createTask) so a new task always lands in a visible bucket. The category
+// <select> is styled inline to the TextInput field recipe (the kit has no Select
+// primitive yet). Task EDIT (name/notes/status/dates) lands in PR2 with the
+// per-card edit affordance + the LOCKED-#4 TaskCard decision.
 
 // Field recipe shared with TextInput (sharp box on $muted, orange focus ring).
 const FIELD =
-  "w-full border border-input bg-muted px-3 py-2 font-mono text-[14px] text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "w-full border border-input bg-muted px-3 py-2 font-mono text-[14px] text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-45";
 const LABEL =
   "font-mono text-eyebrow uppercase leading-none tracking-[1.5px] text-muted-foreground";
-
-const STATUS_LABELS: Record<TaskStatus, string> = {
-  "not-started": "Not started",
-  "in-progress": "In progress",
-  done: "Done",
-};
 
 export interface TaskFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The mission a NEW task is created on (ignored in edit mode). */
+  /** The mission a new task is created on. */
   missionId: string;
   /** The category options (already includes "general"). */
   categories: CategoryVM[];
-  /** Present → edit that task; absent → create a new one. */
-  task?: TaskVM;
 }
 
 export function TaskFormDialog({
@@ -50,33 +41,24 @@ export function TaskFormDialog({
   onOpenChange,
   missionId,
   categories,
-  task,
 }: TaskFormDialogProps) {
   const router = useRouter();
-  const isEdit = task != null;
-  const [name, setName] = React.useState(task?.name ?? "");
-  const [categorySlug, setCategorySlug] = React.useState(
-    task?.categorySlug ?? "general",
-  );
-  const [tooLateBy, setTooLateBy] = React.useState(task?.too_late_by ?? "");
-  const [notBefore, setNotBefore] = React.useState(task?.not_before ?? "");
-  const [notes, setNotes] = React.useState(task?.notes ?? "");
-  const [status, setStatus] = React.useState<TaskStatus>(
-    task?.status ?? "not-started",
-  );
+  const [name, setName] = React.useState("");
+  const [categorySlug, setCategorySlug] = React.useState("general");
+  const [tooLateBy, setTooLateBy] = React.useState("");
+  const [notBefore, setNotBefore] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
 
+  // Reset to a blank form each time the dialog opens.
   React.useEffect(() => {
     if (!open) return;
-    setName(task?.name ?? "");
-    setCategorySlug(task?.categorySlug ?? "general");
-    setTooLateBy(task?.too_late_by ?? "");
-    setNotBefore(task?.not_before ?? "");
-    setNotes(task?.notes ?? "");
-    setStatus(task?.status ?? "not-started");
+    setName("");
+    setCategorySlug("general");
+    setTooLateBy("");
+    setNotBefore("");
     setError(null);
-  }, [open, task?.id]);
+  }, [open]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,23 +68,13 @@ export function TaskFormDialog({
     }
     setError(null);
     startTransition(async () => {
-      const res = isEdit
-        ? await updateTaskAction({
-            taskId: task.id,
-            name,
-            categorySlug,
-            status,
-            tooLateBy,
-            notBefore,
-            notes,
-          })
-        : await createTaskAction({
-            missionId,
-            name,
-            categorySlug,
-            tooLateBy,
-            notBefore,
-          });
+      const res = await createTaskAction({
+        missionId,
+        name,
+        categorySlug,
+        tooLateBy,
+        notBefore,
+      });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -113,26 +85,22 @@ export function TaskFormDialog({
   };
 
   const selectId = React.useId();
-  const statusId = React.useId();
-  const notesId = React.useId();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit task" : "New task"}</DialogTitle>
+          <DialogTitle>New task</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Update this task's details."
-              : "Add a task to this mission. Pick a category, or leave it in General."}
+            Add a task to this mission. Pick a category, or leave it in General.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <TextInput
             label="Task name"
             required
-            autoFocus
             maxLength={200}
+            disabled={pending}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Submit land-use permit"
@@ -145,14 +113,19 @@ export function TaskFormDialog({
             <select
               id={selectId}
               className={FIELD}
-              value={categorySlug ?? "general"}
+              disabled={pending}
+              value={categorySlug}
               onChange={(e) => setCategorySlug(e.target.value)}
             >
-              {categories.map((c) => (
-                <option key={c.slug} value={c.slug}>
-                  {c.name}
-                </option>
-              ))}
+              {categories.length > 0 ? (
+                categories.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))
+              ) : (
+                <option value="general">General</option>
+              )}
             </select>
           </div>
 
@@ -160,52 +133,18 @@ export function TaskFormDialog({
             <TextInput
               label="Not before"
               type="date"
-              value={notBefore ?? ""}
+              disabled={pending}
+              value={notBefore}
               onChange={(e) => setNotBefore(e.target.value)}
             />
             <TextInput
               label="Too late by"
               type="date"
-              value={tooLateBy ?? ""}
+              disabled={pending}
+              value={tooLateBy}
               onChange={(e) => setTooLateBy(e.target.value)}
             />
           </div>
-
-          {isEdit ? (
-            <>
-              <div className="flex w-full flex-col gap-[7px]">
-                <label htmlFor={statusId} className={LABEL}>
-                  Status
-                </label>
-                <select
-                  id={statusId}
-                  className={FIELD}
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                >
-                  {(Object.keys(STATUS_LABELS) as TaskStatus[]).map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex w-full flex-col gap-[7px]">
-                <label htmlFor={notesId} className={LABEL}>
-                  Notes
-                </label>
-                <textarea
-                  id={notesId}
-                  className={FIELD}
-                  rows={3}
-                  maxLength={2000}
-                  value={notes ?? ""}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
-            </>
-          ) : null}
 
           {error ? (
             <p role="alert" className="text-caption text-destructive">
@@ -225,7 +164,7 @@ export function TaskFormDialog({
               type="submit"
               disabled={pending || name.trim().length === 0}
             >
-              {pending ? "Saving…" : isEdit ? "Save changes" : "Create task"}
+              {pending ? "Saving…" : "Create task"}
             </Button>
           </DialogFooter>
         </form>

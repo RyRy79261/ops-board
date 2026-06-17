@@ -97,8 +97,8 @@ export function MissionFormDialog({
           <TextInput
             label="Mission name"
             required
-            autoFocus
             maxLength={200}
+            disabled={pending}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. AfrikaBurn 2026"
@@ -106,6 +106,7 @@ export function MissionFormDialog({
           <TextInput
             label="Target date"
             type="date"
+            disabled={pending}
             value={targetDate ?? ""}
             onChange={(e) => setTargetDate(e.target.value)}
             helper="Optional — the fixed real-world event date."

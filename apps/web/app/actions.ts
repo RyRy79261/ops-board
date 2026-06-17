@@ -7,7 +7,6 @@ import {
   createMission,
   updateMission,
   createTask,
-  updateTask,
 } from "@opsboard/db/mutations";
 import { auth } from "@/lib/neon-auth";
 import { ensureUserSynced } from "@/lib/auth-middleware";
@@ -18,7 +17,11 @@ import { ensureUserSynced } from "@/lib/auth-middleware";
 // validation, the verified session principal resolved here (NEVER taken from
 // args), the scoped @opsboard/db mutation, and a revalidatePath("/") so the RSC
 // re-reads the board. All return the {ok:true,...} | {ok:false,error} shape the
-// client islands branch on.
+// client islands branch on — including on unexpected DB throws (wrapped so an
+// infra error surfaces inline, not as an unhandled Server Action exception).
+//
+// NOTE: task EDIT (updateTask) is intentionally NOT wired here yet — it lands in
+// PR2 alongside the per-card edit affordance + the LOCKED-#4 TaskCard decision.
 
 /** Resolve the verified session user (synced into our mirror), or null. userId
  *  is ALWAYS the session principal — never client input. */
@@ -32,22 +35,33 @@ async function sessionUserId(): Promise<string | null> {
 
 // --- Shared field validators ----------------------------------------------
 
+/** A real "YYYY-MM-DD" calendar date (round-trips through UTC). */
+function isRealCalendarDate(v: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === mo - 1 &&
+    dt.getUTCDate() === d
+  );
+}
+
 const NameField = z.string().trim().min(1, "A name is required.").max(200);
-/** A date input: "YYYY-MM-DD", or empty/null → cleared. */
+/** A date input: a REAL "YYYY-MM-DD", or empty/null → cleared. Calendar
+ *  validity is checked HERE so the mutation's own guard never throws past the
+ *  action boundary on something like "2026-02-30". */
 const DateField = z
-  .union([
-    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD."),
-    z.literal(""),
-    z.null(),
-  ])
+  .union([z.string(), z.null()])
   .optional()
-  .transform((v) => (v == null || v === "" ? null : v));
+  .transform((v) => (v == null || v === "" ? null : v))
+  .refine((v) => v == null || isRealCalendarDate(v), {
+    message: "Enter a real date (YYYY-MM-DD).",
+  });
 const CategorySlugField = z.string().trim().min(1).optional();
-const StatusField = z.enum(["not-started", "in-progress", "done"]).optional();
-const NotesField = z
-  .union([z.string().max(2000), z.null()])
-  .optional()
-  .transform((v) => (v == null || v === "" ? null : v));
 
 // --- Existing: cycle a task's status --------------------------------------
 
@@ -74,11 +88,14 @@ export async function updateTaskStatusAction(
   const userId = await sessionUserId();
   if (!userId) return { ok: false, error: "Not signed in." };
 
-  const result = await updateTaskStatus(id.data, status.data, userId);
-  if (!result.ok) return { ok: false, error: result.error };
-
-  revalidatePath("/");
-  return { ok: true };
+  try {
+    const result = await updateTaskStatus(id.data, status.data, userId);
+    if (!result.ok) return { ok: false, error: result.error };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Couldn't update the task. Try again." };
+  }
 }
 
 // --- Missions --------------------------------------------------------------
@@ -107,12 +124,16 @@ export async function createMissionAction(
   const userId = await sessionUserId();
   if (!userId) return { ok: false, error: "Not signed in." };
 
-  const res = await createMission(
-    { name: parsed.data.name, targetDate: parsed.data.targetDate },
-    userId,
-  );
-  revalidatePath("/");
-  return { ok: true, missionId: res.mission.id };
+  try {
+    const res = await createMission(
+      { name: parsed.data.name, targetDate: parsed.data.targetDate },
+      userId,
+    );
+    revalidatePath("/");
+    return { ok: true, missionId: res.mission.id };
+  } catch {
+    return { ok: false, error: "Couldn't create the mission. Try again." };
+  }
 }
 
 export type MutationActionResult = { ok: true } | { ok: false; error: string };
@@ -138,11 +159,14 @@ export async function updateMissionAction(
   if (!userId) return { ok: false, error: "Not signed in." };
 
   const { missionId, ...patch } = parsed.data;
-  const res = await updateMission(missionId, patch, userId);
-  if (!res.ok) return { ok: false, error: res.error };
-
-  revalidatePath("/");
-  return { ok: true };
+  try {
+    const res = await updateMission(missionId, patch, userId);
+    if (!res.ok) return { ok: false, error: res.error };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Couldn't update the mission. Try again." };
+  }
 }
 
 // --- Tasks -----------------------------------------------------------------
@@ -174,41 +198,12 @@ export async function createTaskAction(
   const userId = await sessionUserId();
   if (!userId) return { ok: false, error: "Not signed in." };
 
-  const res = await createTask(parsed.data, userId);
-  if (!res.ok) return { ok: false, error: res.error };
-
-  revalidatePath("/");
-  return { ok: true, taskId: res.task.id };
-}
-
-const UpdateTaskInput = z.object({
-  taskId: z.string().uuid(),
-  name: NameField.optional(),
-  notes: NotesField,
-  categorySlug: CategorySlugField,
-  status: StatusField,
-  tooLateBy: DateField,
-  notBefore: DateField,
-});
-
-/** Edit a task's fields (name, notes, category, status, dates). */
-export async function updateTaskAction(
-  input: z.input<typeof UpdateTaskInput>,
-): Promise<MutationActionResult> {
-  const parsed = UpdateTaskInput.safeParse(input);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: parsed.error.issues[0]?.message ?? "Invalid task.",
-    };
+  try {
+    const res = await createTask(parsed.data, userId);
+    if (!res.ok) return { ok: false, error: res.error };
+    revalidatePath("/");
+    return { ok: true, taskId: res.task.id };
+  } catch {
+    return { ok: false, error: "Couldn't create the task. Try again." };
   }
-  const userId = await sessionUserId();
-  if (!userId) return { ok: false, error: "Not signed in." };
-
-  const { taskId, ...patch } = parsed.data;
-  const res = await updateTask(taskId, patch, userId);
-  if (!res.ok) return { ok: false, error: res.error };
-
-  revalidatePath("/");
-  return { ok: true };
 }
