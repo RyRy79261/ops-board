@@ -65,16 +65,22 @@ function MissionSettingsDialog({
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [deleting, startDelete] = React.useTransition();
 
-  // Re-seed to the mission's values whenever the dialog (re)opens.
+  // Seed the form from the mission ONLY when the dialog OPENS — never on later
+  // prop changes. After a successful save, router.refresh() pushes the new
+  // mission.name down; re-seeding then would wipe the "Saved" state (and any
+  // in-progress edit), which made saves look like silent no-ops.
+  const openedRef = React.useRef(false);
   React.useEffect(() => {
-    if (!open) return;
-    setName(mission.name);
-    setTargetDate(mission.targetDate ?? "");
-    setSaveError(null);
-    setSaved(false);
-    setConfirming(false);
-    setConfirmValue("");
-    setDeleteError(null);
+    if (open && !openedRef.current) {
+      setName(mission.name);
+      setTargetDate(mission.targetDate ?? "");
+      setSaveError(null);
+      setSaved(false);
+      setConfirming(false);
+      setConfirmValue("");
+      setDeleteError(null);
+    }
+    openedRef.current = open;
   }, [open, mission.id, mission.name, mission.targetDate]);
 
   const dirty =
@@ -89,10 +95,14 @@ function MissionSettingsDialog({
     setSaveError(null);
     setSaved(false);
     startSave(async () => {
+      // Send only what actually changed, so a name-only edit never rewrites the
+      // target date (and vice-versa) — updateMission skips omitted fields.
       const res = await updateMissionAction({
         missionId: mission.id,
-        name,
-        targetDate,
+        ...(name !== mission.name ? { name } : {}),
+        ...((targetDate || "") !== (mission.targetDate ?? "")
+          ? { targetDate }
+          : {}),
       });
       if (!res.ok) {
         setSaveError(res.error);
