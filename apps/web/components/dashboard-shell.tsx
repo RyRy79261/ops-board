@@ -29,7 +29,7 @@ import { ResearchLink } from "@/components/research-link";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
   MissionCreateLauncher,
-  MissionEditLauncher,
+  MissionSettingsLink,
   TaskCreateLauncher,
 } from "@/components/board/board-actions";
 
@@ -137,18 +137,12 @@ export function DashboardShell({ data }: { data: DashboardData }) {
   const activeView =
     data.tasks.length === 0 ? (
       <div className="flex flex-1 items-center justify-center p-6">
-        <div className="flex w-full max-w-md flex-col items-center gap-5">
-          <EmptyState
-            message="NO TASKS YET"
-            hint='Add a task below, or say "add a task".'
-            hintStyle="tokens"
-            className="w-full"
-          />
-          <TaskCreateLauncher
-            missionId={data.activeMissionId}
-            categories={data.categories}
-          />
-        </div>
+        <EmptyState
+          message="NO TASKS YET"
+          hint='Use "Add task" above, or say "add a task".'
+          hintStyle="tokens"
+          className="w-full max-w-md"
+        />
       </div>
     ) : view === "category" ? (
       <CategoryView {...viewProps} />
@@ -201,15 +195,16 @@ export function DashboardShell({ data }: { data: DashboardData }) {
           total: stats.total,
         }}
       />
-      {/* Non-voice board actions — edit the mission, add a task by form. */}
-      <div className="flex flex-wrap items-center gap-2 px-8 pt-4">
-        <MissionEditLauncher mission={data.mission} />
+      <ViewTabs value={view} onValueChange={setView} />
+      {/* Board action bar — right-aligned below the view tabs. Mission edit +
+          delete live on the settings page (the gear); Add task opens the form. */}
+      <div className="flex items-center justify-end gap-2 px-8 py-3">
+        <MissionSettingsLink missionId={data.activeMissionId} />
         <TaskCreateLauncher
           missionId={data.activeMissionId}
           categories={data.categories}
         />
       </div>
-      <ViewTabs value={view} onValueChange={setView} />
       <div
         role="tabpanel"
         id={`view-panel-${view}`}

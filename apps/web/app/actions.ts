@@ -6,6 +6,7 @@ import { updateTaskStatus } from "@opsboard/db/tasks";
 import {
   createMission,
   updateMission,
+  deleteMission,
   createTask,
 } from "@opsboard/db/mutations";
 import { auth } from "@/lib/neon-auth";
@@ -166,6 +167,30 @@ export async function updateMissionAction(
     return { ok: true };
   } catch {
     return { ok: false, error: "Couldn't update the mission. Try again." };
+  }
+}
+
+const MissionId = z.string().uuid();
+
+/** Delete a mission (cascades to its tasks + dependency edges). Owner-scoped +
+ *  idempotent at the db layer. The settings surface gates this behind a
+ *  type-the-name confirmation. */
+export async function deleteMissionAction(
+  missionId: string,
+): Promise<MutationActionResult> {
+  const id = MissionId.safeParse(missionId);
+  if (!id.success) return { ok: false, error: "Invalid mission." };
+
+  const userId = await sessionUserId();
+  if (!userId) return { ok: false, error: "Not signed in." };
+
+  try {
+    const res = await deleteMission(id.data, userId);
+    if (!res.ok) return { ok: false, error: res.error };
+    revalidatePath("/");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Couldn't delete the mission. Try again." };
   }
 }
 
