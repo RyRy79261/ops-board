@@ -78,6 +78,7 @@ function MissionSettingsDialog({
       setSaved(false);
       setConfirming(false);
       setConfirmValue("");
+      setMatched(false);
       setDeleteError(null);
     }
     openedRef.current = open;
@@ -206,7 +207,7 @@ function MissionSettingsDialog({
                 value={confirmValue}
                 onValueChange={setConfirmValue}
                 onMatchChange={setMatched}
-                disabled={deleting}
+                disabled={busy}
               />
               {deleteError ? (
                 <p role="alert" className="text-caption text-destructive">
@@ -217,7 +218,7 @@ function MissionSettingsDialog({
                 <Button
                   variant="destructive"
                   size="sm"
-                  disabled={!matched || deleting}
+                  disabled={!matched || busy}
                   onClick={onDelete}
                 >
                   {deleting ? "Deleting…" : "Delete forever"}
@@ -229,6 +230,7 @@ function MissionSettingsDialog({
                   onClick={() => {
                     setConfirming(false);
                     setConfirmValue("");
+                    setMatched(false);
                   }}
                 >
                   Cancel
