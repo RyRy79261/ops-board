@@ -15,8 +15,8 @@ import { TextInput } from "@opsboard/ui/components/text-input";
 import { createMissionAction } from "@/app/actions";
 
 // Non-voice mission CREATE form (composes the existing Dialog + TextInput kit).
-// On success it navigates to the new mission. Mission EDIT + DELETE live on the
-// per-mission settings page (/missions/[id]/settings), GitHub-general-style.
+// On success it navigates to the new mission. Mission EDIT + DELETE live in the
+// in-place MissionSettingsDialog (the board's ⚙ Settings), not a separate page.
 
 export interface MissionFormDialogProps {
   open: boolean;

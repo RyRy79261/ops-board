@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { Plus, Settings } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@opsboard/ui/components/button";
 import type { CategoryVM } from "@/lib/dashboard-types";
 import { MissionFormDialog } from "./mission-form-dialog";
@@ -10,8 +9,8 @@ import { TaskFormDialog } from "./task-form-dialog";
 
 // Self-contained launcher buttons that own their dialog's open state, so they
 // can be dropped anywhere (the no-missions empty state, the sidebar, the board
-// action bar) without the parent threading state. Mission EDIT + DELETE live on
-// the per-mission settings page reached via MissionSettingsLink.
+// action bar) without the parent threading state. Mission EDIT + DELETE live in
+// the in-place MissionSettingsDialog (see mission-settings-dialog.tsx).
 
 /** "+ New mission" — opens the create-mission form. */
 export function MissionCreateLauncher({
@@ -60,16 +59,5 @@ export function TaskCreateLauncher({
         categories={categories}
       />
     </>
-  );
-}
-
-/** "⚙ Settings" — link to the per-mission settings page (edit + danger zone). */
-export function MissionSettingsLink({ missionId }: { missionId: string }) {
-  return (
-    <Button asChild variant="ghost" size="sm">
-      <Link href={`/missions/${encodeURIComponent(missionId)}/settings`}>
-        <Settings aria-hidden="true" /> Settings
-      </Link>
-    </Button>
   );
 }

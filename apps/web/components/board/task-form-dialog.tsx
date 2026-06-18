@@ -44,7 +44,10 @@ export function TaskFormDialog({
 }: TaskFormDialogProps) {
   const router = useRouter();
   const [name, setName] = React.useState("");
-  const [categorySlug, setCategorySlug] = React.useState("general");
+  // "" = "General" (the server's best-effort default); a real slug is sent only
+  // when the user picks a specific category. Never force "general" — that would
+  // bypass createTask's no-category fallback.
+  const [categorySlug, setCategorySlug] = React.useState("");
   const [tooLateBy, setTooLateBy] = React.useState("");
   const [notBefore, setNotBefore] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -54,7 +57,7 @@ export function TaskFormDialog({
   React.useEffect(() => {
     if (!open) return;
     setName("");
-    setCategorySlug("general");
+    setCategorySlug("");
     setTooLateBy("");
     setNotBefore("");
     setError(null);
@@ -71,7 +74,8 @@ export function TaskFormDialog({
       const res = await createTaskAction({
         missionId,
         name,
-        categorySlug,
+        // Omit when "General" so createTask applies its own best-effort default.
+        categorySlug: categorySlug === "" ? undefined : categorySlug,
         tooLateBy,
         notBefore,
       });
@@ -117,15 +121,16 @@ export function TaskFormDialog({
               value={categorySlug}
               onChange={(e) => setCategorySlug(e.target.value)}
             >
-              {categories.length > 0 ? (
-                categories.map((c) => (
+              {/* Empty value = "General" (the server-default catch-all); the
+                  real domain categories follow. */}
+              <option value="">General</option>
+              {categories
+                .filter((c) => c.slug !== "general")
+                .map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.name}
                   </option>
-                ))
-              ) : (
-                <option value="general">General</option>
-              )}
+                ))}
             </select>
           </div>
 

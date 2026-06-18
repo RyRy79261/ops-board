@@ -29,9 +29,9 @@ import { ResearchLink } from "@/components/research-link";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
   MissionCreateLauncher,
-  MissionSettingsLink,
   TaskCreateLauncher,
 } from "@/components/board/board-actions";
+import { MissionSettingsLauncher } from "@/components/board/mission-settings-dialog";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
 // desktop 3-pane). Holds the active-view state (ViewTabs), provides each view a
@@ -69,7 +69,12 @@ export function DashboardShell({ data }: { data: DashboardData }) {
   // mutations (voice / MCP) surface. router.refresh() re-runs the RSC; React
   // reconciles without losing the client view/optimistic state.
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), REFRESH_MS);
+    const id = setInterval(() => {
+      // Only refresh while the tab is actually visible — no background churn
+      // (and no surprise re-render when you switch back to a stale tab… it
+      // refreshes on the next tick once visible).
+      if (document.visibilityState === "visible") router.refresh();
+    }, REFRESH_MS);
     return () => clearInterval(id);
   }, [router]);
 
@@ -199,7 +204,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
       {/* Board action bar — right-aligned below the view tabs. Mission edit +
           delete live on the settings page (the gear); Add task opens the form. */}
       <div className="flex items-center justify-end gap-2 px-8 py-3">
-        <MissionSettingsLink missionId={data.activeMissionId} />
+        <MissionSettingsLauncher mission={data.mission} />
         <TaskCreateLauncher
           missionId={data.activeMissionId}
           categories={data.categories}
