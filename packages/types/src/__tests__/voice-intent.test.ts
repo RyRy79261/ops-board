@@ -15,10 +15,11 @@ import {
 // ---------------------------------------------------------------------------
 
 describe("VoiceIntent union shape", () => {
-  it("enumerates EXACTLY the 10 OpsBoard intents", () => {
+  it("enumerates EXACTLY the 11 OpsBoard intents", () => {
     expect(VoiceIntentName.options).toEqual([
       "create_mission",
       "create_task",
+      "create_category",
       "update_task_status",
       "update_task",
       "add_dependency",
@@ -28,7 +29,7 @@ describe("VoiceIntent union shape", () => {
       "query",
       "unknown",
     ]);
-    expect(VoiceIntentName.options).toHaveLength(10);
+    expect(VoiceIntentName.options).toHaveLength(11);
   });
 
   it("marks only delete_* as destructive", () => {
@@ -68,6 +69,15 @@ const validSamples: Array<{
       tooLateByHint: "2026-04-20",
       notBeforeHint: "2026-02-01",
       dependsOnHints: ["Confirm leave", "Pay camp dues"],
+    },
+  },
+  {
+    name: "create_category",
+    input: {
+      intent: "create_category",
+      confidence: 0.9,
+      name: "Camping",
+      colorHint: "dark green",
     },
   },
   {

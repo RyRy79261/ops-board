@@ -13,6 +13,7 @@ import { z } from "zod";
 export const VoiceIntentName = z.enum([
   "create_mission",
   "create_task",
+  "create_category",
   "update_task_status",
   "update_task",
   "add_dependency",
@@ -68,6 +69,14 @@ export const VoiceIntent = z.discriminatedUnion("intent", [
       tooLateByHint: optionalHint,
       notBeforeHint: optionalHint,
       dependsOnHints: z.array(hint).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      intent: z.literal("create_category"),
+      confidence,
+      name: hint,
+      colorHint: optionalHint,
     })
     .strict(),
   z

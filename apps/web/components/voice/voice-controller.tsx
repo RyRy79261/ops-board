@@ -37,6 +37,7 @@ import { Waveform } from "@/components/voice/waveform";
 type ExecuteResult =
   | { kind: "mission_created"; missionId: string; name: string }
   | { kind: "task_created"; taskId: string; name: string; mission: string }
+  | { kind: "category_created"; name: string; slug: string }
   | {
       kind: "task_status_updated";
       taskId: string;
@@ -438,6 +439,8 @@ function successHeader(result: ExecuteResult): string {
       return "✓ MISSION CREATED";
     case "task_created":
       return "✓ TASK ADDED";
+    case "category_created":
+      return "✓ CATEGORY CREATED";
     case "task_status_updated":
       return result.status === "done"
         ? "✓ MARKED DONE"
@@ -465,6 +468,8 @@ function successBody(result: ExecuteResult): string {
       return result.name;
     case "task_created":
       return `${result.name} — ${result.mission}`;
+    case "category_created":
+      return result.name;
     case "task_status_updated":
       return result.name;
     case "task_updated":

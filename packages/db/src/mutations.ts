@@ -1,8 +1,8 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { createHttpDb } from "./index";
 import type { OpsboardDb } from "./index";
 import * as schema from "./schema";
-import type { Mission, Task, TaskStatus } from "./schema";
+import type { Category, Mission, Task, TaskStatus } from "./schema";
 
 // @opsboard/db/mutations — the WRITE side of @opsboard/db. The board UI is
 // read-only (it only cycles status via ./tasks.ts#updateTaskStatus); these
@@ -151,6 +151,85 @@ async function resolveCategorySlug(
     .where(eq(schema.categories.slug, slug))
     .limit(1);
   return row ? { ok: true, categoryId: row.id } : { ok: false };
+}
+
+// --- Categories -----------------------------------------------------------
+
+export type CreateCategoryResult =
+  | { ok: true; category: Category }
+  | { ok: false; error: string };
+
+export interface CreateCategoryInput {
+  /** Display name; the slug is derived from it. */
+  name: string;
+  /** Hex tint (e.g. "#5aa0e0"); defaults to a neutral slate. */
+  color?: string;
+  /** Lucide icon name; defaults to "Tag". */
+  lucideIcon?: string;
+}
+
+/** Build a URL-safe slug from a category name. */
+function categorySlugFromName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+/**
+ * Create a task category. Categories are GLOBAL (no per-user scope — mirrors the
+ * seeded set), so this takes no userId. The slug is derived from the name and is
+ * idempotent (creating an existing slug returns the existing row); the new
+ * category sorts after the existing ones. Throws only on caller misuse (an empty
+ * name); a name with no usable characters returns a typed error.
+ */
+export async function createCategory(
+  input: CreateCategoryInput,
+  db: OpsboardDb = createHttpDb(),
+): Promise<CreateCategoryResult> {
+  if (!isNonEmptyString(input.name)) {
+    throw new TypeError("createCategory: `name` must be a non-empty string.");
+  }
+  const slug = categorySlugFromName(input.name);
+  if (slug.length === 0) {
+    return {
+      ok: false,
+      error: "That name has no letters or numbers to make a category from.",
+    };
+  }
+
+  // Place the new category after the existing ones.
+  const [agg] = await db
+    .select({
+      maxSort: sql<number | null>`max(${schema.categories.sortOrder})`,
+    })
+    .from(schema.categories);
+  const sortOrder = (Number(agg?.maxSort ?? 0) || 0) + 1;
+
+  const [row] = await db
+    .insert(schema.categories)
+    .values({
+      slug,
+      name: input.name.trim(),
+      color: input.color ?? "#8a8f98",
+      lucideIcon: input.lucideIcon ?? "Tag",
+      sortOrder,
+      isDefault: false,
+    })
+    .onConflictDoNothing({ target: schema.categories.slug })
+    .returning();
+  if (row) return { ok: true, category: row };
+
+  // Slug already exists → return the existing category (idempotent create).
+  const [existing] = await db
+    .select()
+    .from(schema.categories)
+    .where(eq(schema.categories.slug, slug))
+    .limit(1);
+  if (existing) return { ok: true, category: existing };
+  return { ok: false, error: "Couldn't create that category." };
 }
 
 // --- Missions -------------------------------------------------------------

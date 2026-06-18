@@ -42,7 +42,7 @@ export interface VoiceStateSnapshot {
     category: string;
     status: "not-started" | "in-progress" | "done";
   }>;
-  /** The five seeded category words, for categoryHint matching. */
+  /** The current category words (seeds + any user-created), for categoryHint matching. */
   categories: readonly string[];
 }
 
@@ -76,6 +76,7 @@ export const voiceIntentPrompt = {
 INTENTS (pick exactly one; set "intent" to the matching value):
 - create_mission { name, targetDateHint? } — start a new mission (a real-world event with a fixed date, e.g. "AfrikaBurn", "the Berlin cardiology trip").
 - create_task { missionHint?, name, categoryHint?, tooLateByHint?, notBeforeHint?, dependsOnHints?[] } — add a task to a mission.
+- create_category { name, colorHint? } — define a NEW task category (e.g. "make a category called Camping", "add a finance category"). Use this whenever the user asks to create/add a category; never route a category-creation request to "unknown".
 - update_task_status { taskHint, status } — set a task's status. status is EXACTLY one of "done" | "in-progress" | "not-started".
 - update_task { taskHint, field, value } — change a single field of a task (e.g. field "category", value "travel"; field "tooLateBy", value "2026-03-15").
 - add_dependency { taskHint, dependsOnHint } — make one task depend on another.
@@ -87,7 +88,7 @@ INTENTS (pick exactly one; set "intent" to the matching value):
 
 FIELD EXTRACTION:
 - *Hint fields (missionHint, taskHint, categoryHint, dependsOnHint, dependsOnHints[]) are FUZZY MATCHES against the names in the injected ${SNAPSHOT_OPEN}…${SNAPSHOT_CLOSE} snapshot. Copy the snapshot's spelling of the matched name when you are confident; if no snapshot entry plausibly matches, still emit the spoken phrase as the hint (the executor resolves and will ask for confirmation if it stays ambiguous). Never invent an id.
-- categoryHint must resolve to one of the five seeded categories: medical, bureaucratic, travel, gear, tech. Map synonyms (e.g. "doctor"/"clinic" → medical; "visa"/"paperwork" → bureaucratic; "flights"/"booking" → travel; "kit"/"equipment" → gear; "software"/"device" → tech).
+- categoryHint must resolve to one of the categories listed in the snapshot's "categories" array (defaults are medical, bureaucratic, travel, gear, tech, general, plus any the user has created). Map synonyms to the closest listed category (e.g. "doctor"/"clinic" → medical; "visa"/"paperwork" → bureaucratic; "flights"/"booking" → travel; "kit"/"equipment" → gear; "software"/"device" → tech). To DEFINE a new category, use create_category instead.
 - Only populate optional fields when they are unambiguous in the transcript. Omit a field rather than guessing.
 
 RELATIVE TIME RESOLUTION (output ISO yyyy-mm-dd in *Hint date fields and update_task value when it is a date):
@@ -135,7 +136,7 @@ export const OPSBOARD_WHISPER_PROMPT =
  * meaningfully changes. The version is what audit logs reference.
  */
 export const PROMPT_VERSIONS = {
-  voiceIntent: "2026-06-13.1",
+  voiceIntent: "2026-06-18.1",
   opsboardWhisper: "2026-06-04.1",
   intentClassifierModel: INTENT_CLASSIFIER_MODEL,
 } as const;
