@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import * as schema from "../schema";
 import { getMission } from "../missions";
 import { getTask, getTaskDependencies, getTasks } from "../tasks";
 import {
   addDependency,
+  createCategory,
   createMission,
   createTask,
   deleteMission,
@@ -132,6 +134,38 @@ describe.skipIf(!hasDb)("@opsboard/db mutations (real Postgres)", () => {
         USER_A,
         h.db,
       );
+      expect(res.ok).toBe(false);
+    });
+  });
+
+  // --- createCategory ---------------------------------------------------
+  describe("createCategory", () => {
+    it("creates a global category with a slug derived from the name", async () => {
+      const res = await createCategory({ name: "Camping Gear" }, h.db);
+      expect(res.ok).toBe(true);
+      if (res.ok) {
+        expect(res.category.slug).toBe("camping-gear");
+        expect(res.category.name).toBe("Camping Gear");
+        expect(res.category.isDefault).toBe(false);
+      }
+    });
+
+    it("is idempotent on the slug (returns the existing category)", async () => {
+      const first = await createCategory({ name: "Finance" }, h.db);
+      const second = await createCategory({ name: "finance" }, h.db); // same slug
+      expect(first.ok && second.ok).toBe(true);
+      if (first.ok && second.ok) {
+        expect(second.category.id).toBe(first.category.id);
+      }
+      const rows = await h.client
+        .select()
+        .from(schema.categories)
+        .where(eq(schema.categories.slug, "finance"));
+      expect(rows).toHaveLength(1);
+    });
+
+    it("rejects a name with no usable characters", async () => {
+      const res = await createCategory({ name: "!!!" }, h.db);
       expect(res.ok).toBe(false);
     });
   });
