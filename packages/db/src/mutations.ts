@@ -613,6 +613,43 @@ export async function addDependency(
     return { ok: false, error: "One or both tasks do not exist." };
   }
 
+  // Cycle guard. Adding "taskId depends on dependsOnId" closes a cycle iff
+  // dependsOnId ALREADY (transitively) depends on taskId. Walk the user's
+  // existing edges from dependsOnId; if we can reach taskId, reject — otherwise
+  // a 2-hop cycle (A→B then B→A) would silently corrupt deriveBlocked /
+  // criticalPath. (neon-http has no transactions, so two concurrent adds could
+  // still race a cycle in; this catches the overwhelming common case — a
+  // bulletproof guard needs a serializable tx or a recursive-CTE constraint.)
+  const userEdges = await db
+    .select({
+      from: schema.taskDependencies.taskId,
+      to: schema.taskDependencies.dependsOnId,
+    })
+    .from(schema.taskDependencies)
+    .innerJoin(
+      schema.tasks,
+      eq(schema.taskDependencies.taskId, schema.tasks.id),
+    )
+    .where(eq(schema.tasks.userId, userId));
+  const adjacency = new Map<string, string[]>();
+  for (const edge of userEdges) {
+    const list = adjacency.get(edge.from);
+    if (list) list.push(edge.to);
+    else adjacency.set(edge.from, [edge.to]);
+  }
+  const seen = new Set<string>();
+  const queue: string[] = [dependsOnId];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (current === taskId) {
+      return { ok: false, error: "That would create a dependency cycle." };
+    }
+    if (seen.has(current)) continue;
+    seen.add(current);
+    const next = adjacency.get(current);
+    if (next) queue.push(...next);
+  }
+
   try {
     await db.insert(schema.taskDependencies).values({ taskId, dependsOnId });
     return { ok: true };
