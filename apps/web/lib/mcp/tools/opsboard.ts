@@ -30,7 +30,12 @@ import {
 } from "@opsboard/core";
 import { and, eq, sql } from "drizzle-orm";
 import * as schema from "@opsboard/db/schema";
-import { runTool, ToolError, notFound, MAX_DATE_RANGE_DAYS } from "../tool-utils";
+import {
+  runTool,
+  ToolError,
+  notFound,
+  MAX_DATE_RANGE_DAYS,
+} from "../tool-utils";
 import { issueConfirmToken, consumeConfirmToken } from "../confirm-token";
 
 // PHASE 2 (scaffolding-plan.md S6, project_brief.md §4). The 14 OpsBoard MCP
@@ -79,13 +84,12 @@ const uuid = z.string().uuid("Expected a task/mission UUID.");
 
 const taskStatus = z.enum(["not-started", "in-progress", "done"]);
 
-const categorySlug = z.enum([
-  "medical",
-  "bureaucratic",
-  "travel",
-  "gear",
-  "tech",
-]);
+// Any non-empty category slug — the seeded set (medical / bureaucratic / travel
+// / gear / tech / general) PLUS any user-created category. We deliberately do NOT
+// hard-wire the list as an enum: that rejected the seeded `general` bucket and
+// every voice-created category, diverging from the data-driven write path. The
+// mutation layer's resolveCategorySlug gates genuinely-unknown slugs.
+const categorySlug = z.string().trim().min(1);
 
 /** A validated IANA tz, falling back to UTC on anything unknown/oversized. */
 const tzArg = z
@@ -172,11 +176,10 @@ async function resolveMission(
     const missions = await getMissions(userId);
     const exact = missions.filter((m) => m.name.toLowerCase() === hint);
     if (exact.length === 1) return exact[0]!;
-    const partial = missions.filter((m) =>
-      m.name.toLowerCase().includes(hint),
-    );
+    const partial = missions.filter((m) => m.name.toLowerCase().includes(hint));
     if (partial.length === 1) return partial[0]!;
-    if (partial.length === 0) notFound(`No mission matching "${args.nameHint}".`);
+    if (partial.length === 0)
+      notFound(`No mission matching "${args.nameHint}".`);
     throw new ToolError(
       `"${args.nameHint}" matches ${partial.length} missions; be more specific.`,
     );
@@ -300,7 +303,8 @@ export function registerOpsboardDataTools(server: McpServer): void {
           }
 
           const filtered = tasks.filter((t) => {
-            if (categoryId !== null && t.categoryId !== categoryId) return false;
+            if (categoryId !== null && t.categoryId !== categoryId)
+              return false;
             if (args.status && t.status !== args.status) return false;
             if (blockedFilter && !blockedFilter.has(t.id)) return false;
             return true;
@@ -342,10 +346,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
             const tasks = await getTasks(mid, ctx.userId, db);
             const edges = await getTaskDependencies(mid, ctx.userId, db);
             const coreEdges = toCoreEdges(edges);
-            const blockedMap = deriveBlocked(
-              toBlockedTasks(tasks),
-              coreEdges,
-            );
+            const blockedMap = deriveBlocked(toBlockedTasks(tasks), coreEdges);
             const nameById = new Map(tasks.map((t) => [t.id, t.name]));
             for (const t of tasks) {
               if (blockedMap.get(t.id) !== true) continue;
@@ -381,12 +382,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
         "Tasks whose action window is closing — their too_late_by cliff falls within `daysAhead` days from now (default 7). Uses the same window-state derivation the dashboard does. Read-only.",
       inputSchema: {
         missionId: uuid.optional(),
-        daysAhead: z
-          .number()
-          .int()
-          .min(0)
-          .max(MAX_DATE_RANGE_DAYS)
-          .optional(),
+        daysAhead: z.number().int().min(0).max(MAX_DATE_RANGE_DAYS).optional(),
         tz: tzArg,
       },
     },
@@ -479,7 +475,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
           const mission = await getMission(args.missionId, ctx.userId, db);
           if (!mission) notFound("No mission with that id.");
           const tasks = await getTasks(args.missionId, ctx.userId, db);
-          const edges = await getTaskDependencies(args.missionId, ctx.userId, db);
+          const edges = await getTaskDependencies(
+            args.missionId,
+            ctx.userId,
+            db,
+          );
           const pathIds = criticalPath(
             tasks.map((t) => ({ id: t.id })),
             toCoreEdges(edges),
@@ -584,7 +584,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
     {
       title: "Create a task",
       description:
-        "Add a task to a mission. `category` is a category slug (medical | bureaucratic | travel | gear | tech). `tooLateBy` is the cliff after which the task is moot (NOT a due date); `notBefore` is the earliest start date. `dependsOn` lists the task ids this one waits on.",
+        "Add a task to a mission. `category` is a category slug — one of the seeded set (medical, bureaucratic, travel, gear, tech, general) or any category the user has created; unknown slugs are rejected. `tooLateBy` is the cliff after which the task is moot (NOT a due date); `notBefore` is the earliest start date. `dependsOn` lists the task ids this one waits on.",
       inputSchema: {
         missionId: uuid,
         name: z.string().min(1),
@@ -619,7 +619,9 @@ export function registerOpsboardDataTools(server: McpServer): void {
 
           // Notes aren't a createTask input — patch them in if supplied.
           if (args.notes !== undefined) {
-            unwrap(await updateTask(task.id, { notes: args.notes }, ctx.userId));
+            unwrap(
+              await updateTask(task.id, { notes: args.notes }, ctx.userId),
+            );
           }
 
           // Wire up each dependency edge; surface the FIRST failure (so a bad
@@ -701,8 +703,14 @@ export function registerOpsboardDataTools(server: McpServer): void {
         handler: async (ctx) => {
           // addDependency requires BOTH endpoints to belong to ctx.userId;
           // otherwise it returns "One or both tasks do not exist." → ToolError.
-          unwrap(await addDependency(args.taskId, args.dependsOnId, ctx.userId));
-          return { ok: true, taskId: args.taskId, dependsOnId: args.dependsOnId };
+          unwrap(
+            await addDependency(args.taskId, args.dependsOnId, ctx.userId),
+          );
+          return {
+            ok: true,
+            taskId: args.taskId,
+            dependsOnId: args.dependsOnId,
+          };
         },
       }),
   );
@@ -725,7 +733,11 @@ export function registerOpsboardDataTools(server: McpServer): void {
           unwrap(
             await removeDependency(args.taskId, args.dependsOnId, ctx.userId),
           );
-          return { ok: true, taskId: args.taskId, dependsOnId: args.dependsOnId };
+          return {
+            ok: true,
+            taskId: args.taskId,
+            dependsOnId: args.dependsOnId,
+          };
         },
       }),
   );
@@ -816,11 +828,7 @@ export function registerOpsboardDataTools(server: McpServer): void {
           }
 
           if (
-            !consumeConfirmToken(
-              "delete_mission",
-              args.missionId,
-              args.confirm,
-            )
+            !consumeConfirmToken("delete_mission", args.missionId, args.confirm)
           ) {
             throw new ToolError(
               "Confirmation token is invalid, expired, or doesn't match this mission. Call delete_mission without confirm to get a fresh token.",
