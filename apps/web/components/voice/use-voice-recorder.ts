@@ -118,7 +118,13 @@ export function useVoiceRecorder({
   // Keep the latest callbacks in a ref so the unmount cleanup + the onstop
   // handler (which closes over the recorder created in start()) always call the
   // current props without re-subscribing the effect or re-creating start().
-  const handlersRef = React.useRef({ onBlob, endpoint, onResult, onTranscript, promptKey });
+  const handlersRef = React.useRef({
+    onBlob,
+    endpoint,
+    onResult,
+    onTranscript,
+    promptKey,
+  });
   handlersRef.current = { onBlob, endpoint, onResult, onTranscript, promptKey };
 
   React.useEffect(() => {
@@ -168,6 +174,15 @@ export function useVoiceRecorder({
           autoGainControl: true,
         },
       });
+      // If the component unmounted WHILE the permission prompt was open, the
+      // unmount cleanup already ran (refs were still null, so it stopped
+      // nothing). Bail now — before arming a live mic / AudioContext / timeout
+      // that nothing would ever tear down (a back-nav or HMR mid-prompt left the
+      // microphone hot).
+      if (!mountedRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       streamRef.current = stream;
 
       // Analyser for the live waveform UI. fftSize 1024 per the voice
@@ -186,7 +201,10 @@ export function useVoiceRecorder({
       safeSet(setAnalyser, node);
 
       const mimeType = pickMimeType();
-      const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const rec = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType } : undefined,
+      );
       recorderRef.current = rec;
       chunksRef.current = [];
 
@@ -194,6 +212,10 @@ export function useVoiceRecorder({
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       rec.onerror = () => {
+        // A `stop` event fires right after `error`; null onstop so handleStop
+        // doesn't run and overwrite the "error" state with processing→idle (the
+        // user would never see "TAP TO RETRY").
+        rec.onstop = null;
         safeSet(setError, "Recording failed");
         safeSet(setState, "error");
         teardownAudio();
