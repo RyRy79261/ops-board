@@ -46,6 +46,31 @@ const config: NextConfig = {
       },
     ];
   },
+  // Baseline security response headers on every route. These are the low-risk,
+  // high-value ones (clickjacking / MIME-sniffing / referrer leakage / forced
+  // TLS); the per-route MCP CORS headers still apply on top. A full
+  // Content-Security-Policy is deliberately deferred — it needs a policy crafted
+  // around next/og, the inline-styled pills, and the OAuth meta-refresh page, so
+  // it warrants its own focused change rather than a blanket guess here.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default config;
