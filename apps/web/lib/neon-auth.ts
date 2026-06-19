@@ -23,10 +23,29 @@ const PLACEHOLDER_BASE_URL = "https://build-placeholder.neon-auth.invalid";
 const PLACEHOLDER_COOKIE_SECRET =
   "build-placeholder-secret-build-placeholder-secret"; // 50 chars
 
+const cookieSecret = process.env.NEON_AUTH_COOKIE_SECRET;
+
+// Fail CLOSED in production: a running server must NEVER HMAC session cookies
+// with the public placeholder — that would let anyone forge a session. The
+// placeholder is tolerated ONLY during `next build` / typecheck (env absent), so
+// CI + local builds still succeed; a real production server missing the secret
+// crashes loudly on cold start instead of silently accepting forged cookies.
+// (On Vercel the secret is injected at build time too, so this only ever trips a
+// genuinely misconfigured deploy.)
+if (
+  !cookieSecret &&
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PHASE !== "phase-production-build"
+) {
+  throw new Error(
+    "NEON_AUTH_COOKIE_SECRET is required in production. Set it in the deploy environment (openssl rand -base64 32).",
+  );
+}
+
 export const auth = createNeonAuth({
   baseUrl: process.env.NEON_AUTH_BASE_URL ?? PLACEHOLDER_BASE_URL,
   cookies: {
-    secret: process.env.NEON_AUTH_COOKIE_SECRET ?? PLACEHOLDER_COOKIE_SECRET,
+    secret: cookieSecret ?? PLACEHOLDER_COOKIE_SECRET,
     // Lax (not strict — the default) so cross-site top-level navigations
     // carry the session cookie. Strict drops the cookie on cross-site GETs.
     sameSite: "lax",
