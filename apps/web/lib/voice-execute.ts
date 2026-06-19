@@ -108,7 +108,11 @@ export interface QueryAnswer {
 export type ExecuteOutcome =
   | { result: ExecuteResult }
   | { needsConfirmation: true; clarify: string }
-  | { needsDisambiguation: true; options: DisambiguationOption[]; prompt: string }
+  | {
+      needsDisambiguation: true;
+      options: DisambiguationOption[];
+      prompt: string;
+    }
   | { error: string };
 
 // --- DB-backed snapshot + resolvers -----------------------------------------
@@ -135,7 +139,10 @@ async function missionResolvables(
 async function allTaskResolvables(
   userId: string,
   db: OpsboardDb,
-): Promise<{ resolvables: Resolvable[]; tasksById: Map<string, TaskWithMission> }> {
+): Promise<{
+  resolvables: Resolvable[];
+  tasksById: Map<string, TaskWithMission>;
+}> {
   const [missions, categories] = await Promise.all([
     getMissions(userId, db),
     getCategories(db),
@@ -347,10 +354,45 @@ async function execCreateTask(
   if ("outcome" in resolvedMission) return resolvedMission.outcome;
   const mission = resolvedMission.mission;
 
+  // An explicit category hint that doesn't resolve is a clarify — NOT a silent
+  // drop into "general" (that loses the user's stated intent). No hint at all
+  // leaves categorySlug null, which createTask defaults to "general".
   let categorySlug: string | null = null;
   if (intent.categoryHint) {
     const categories = await getCategories(db);
     categorySlug = resolveCategory(intent.categoryHint, categories);
+    if (categorySlug == null) {
+      return {
+        needsConfirmation: true,
+        clarify: `"${intent.categoryHint}" isn't one of the known categories — say one that exists, or create it first.`,
+      };
+    }
+  }
+
+  // Resolve dependency hints to existing tasks BEFORE creating, so an ambiguous
+  // or unknown dependency aborts cleanly instead of leaving a dep-less task.
+  // (Previously dependsOnHints was validated + transmitted, then silently
+  // dropped — the declared dependencies never happened.)
+  const dependsOnIds: string[] = [];
+  if (intent.dependsOnHints && intent.dependsOnHints.length > 0) {
+    const { resolvables } = await allTaskResolvables(userId, db);
+    for (const hint of intent.dependsOnHints) {
+      const resolved = resolveHint(hint, resolvables);
+      if (resolved.status === "none") {
+        return {
+          needsConfirmation: true,
+          clarify: `I couldn't find a task matching "${hint}" to depend on.`,
+        };
+      }
+      if (resolved.status === "many") {
+        return {
+          needsDisambiguation: true,
+          options: toOptions(resolved.matches),
+          prompt: `Which task should this depend on (for "${hint}")?`,
+        };
+      }
+      dependsOnIds.push(resolved.match.id);
+    }
   }
 
   const res = await createTask(
@@ -367,6 +409,14 @@ async function execCreateTask(
   if (!res.ok) {
     return { error: "Could not create that task." };
   }
+
+  // Wire up the resolved dependencies on the new task. A brand-new task can't
+  // form a cycle or self-dep, so these succeed; we don't undo the creation if
+  // an edge somehow fails.
+  for (const dependsOnId of dependsOnIds) {
+    await addDependency(res.task.id, dependsOnId, userId, db);
+  }
+
   return {
     result: {
       kind: "task_created",
@@ -397,7 +447,12 @@ async function execUpdateTaskStatus(
       prompt: "Which task?",
     };
   }
-  const res = await updateTaskStatus(resolved.match.id, intent.status, userId, db);
+  const res = await updateTaskStatus(
+    resolved.match.id,
+    intent.status,
+    userId,
+    db,
+  );
   if (!res.ok) return { error: "Could not update that task." };
   const task = tasksById.get(resolved.match.id);
   return {

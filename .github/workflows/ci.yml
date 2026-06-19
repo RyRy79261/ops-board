@@ -95,6 +95,43 @@ jobs:
         env:
           DATABASE_URL: postgres://opsboard:opsboard@localhost:5432/opsboard_test
 
+  # Real Postgres for the WEB integration suite. The plain `verify` job runs
+  # `pnpm test` with no DATABASE_URL, so apps/web's voice-pipeline integration
+  # test (safeParseIntent → executeIntent → @opsboard/db, against real SQL)
+  # self-SKIPS there. This job gives it a DB so the end-to-end voice write path
+  # is actually exercised in CI. The test self-migrates (h.migrate()) in
+  # beforeAll, so no separate migrate step is needed.
+  web-integration:
+    name: web · integration (postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: opsboard
+          POSTGRES_PASSWORD: opsboard
+          POSTGRES_DB: opsboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U opsboard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Just the integration suite (the web unit tests already run in `verify`),
+      # so a failure here points squarely at the DB-backed path.
+      - run: pnpm --filter @opsboard/web exec vitest run lib/__tests__/voice-pipeline.integration.test.ts
+        env:
+          DATABASE_URL: postgres://opsboard:opsboard@localhost:5432/opsboard_test
+
   # Fail if schema.ts changed without regenerating the committed migration.
   migration-drift:
     name: db · migration drift

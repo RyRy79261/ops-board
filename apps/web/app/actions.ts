@@ -11,6 +11,12 @@ import {
 } from "@opsboard/db/mutations";
 import { auth } from "@/lib/neon-auth";
 import { ensureUserSynced } from "@/lib/auth-middleware";
+import {
+  NameField,
+  DateField,
+  PatchDateField,
+  CategorySlugField,
+} from "@/lib/form-fields";
 
 // The board's write-side Server Actions — the NON-VOICE create/edit path (the
 // keyboard/pointer counterpart to the voice + MCP surfaces). Each mirrors the
@@ -34,35 +40,9 @@ async function sessionUserId(): Promise<string | null> {
   return userId;
 }
 
-// --- Shared field validators ----------------------------------------------
-
-/** A real "YYYY-MM-DD" calendar date (round-trips through UTC). */
-function isRealCalendarDate(v: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
-  if (!m) return false;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  return (
-    dt.getUTCFullYear() === y &&
-    dt.getUTCMonth() === mo - 1 &&
-    dt.getUTCDate() === d
-  );
-}
-
-const NameField = z.string().trim().min(1, "A name is required.").max(200);
-/** A date input: a REAL "YYYY-MM-DD", or empty/null → cleared. Calendar
- *  validity is checked HERE so the mutation's own guard never throws past the
- *  action boundary on something like "2026-02-30". */
-const DateField = z
-  .union([z.string(), z.null()])
-  .optional()
-  .transform((v) => (v == null || v === "" ? null : v))
-  .refine((v) => v == null || isRealCalendarDate(v), {
-    message: "Enter a real date (YYYY-MM-DD).",
-  });
-const CategorySlugField = z.string().trim().min(1).optional();
+// Shared field validators (NameField / DateField / PatchDateField /
+// CategorySlugField) live in @/lib/form-fields so their date/patch semantics are
+// unit-testable without this server-only module.
 
 // --- Existing: cycle a task's status --------------------------------------
 
@@ -139,11 +119,19 @@ export async function createMissionAction(
 
 export type MutationActionResult = { ok: true } | { ok: false; error: string };
 
-const UpdateMissionInput = z.object({
-  missionId: z.string().uuid(),
-  name: NameField.optional(),
-  targetDate: DateField,
-});
+const UpdateMissionInput = z
+  .object({
+    missionId: z.string().uuid(),
+    name: NameField.optional(),
+    // PATCH semantics: an absent targetDate is left UNCHANGED (undefined → the
+    // mutation drops it from SET). Only an explicit "" / null clears it. Using
+    // DateField here was a data-loss bug — it coerced an absent key to null, so
+    // a name-only edit silently wiped the target date.
+    targetDate: PatchDateField,
+  })
+  .refine((d) => d.name !== undefined || d.targetDate !== undefined, {
+    message: "Nothing to update.",
+  });
 
 /** Edit a mission's name / target date. */
 export async function updateMissionAction(
