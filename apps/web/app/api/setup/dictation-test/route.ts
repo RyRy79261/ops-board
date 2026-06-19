@@ -199,7 +199,14 @@ function ephemeralSnapshot(tz: string): VoiceStateSnapshot {
     timezone: tz,
     missions: [],
     tasks: [],
-    categories: ["medical", "bureaucratic", "travel", "gear", "tech"],
+    categories: [
+      "medical",
+      "bureaucratic",
+      "travel",
+      "gear",
+      "tech",
+      "general",
+    ],
   };
 }
 
@@ -217,6 +224,8 @@ function renderIntentExample(intent: VoiceIntent): string {
       return `I'd create the task: "${intent.name}"${
         intent.missionHint ? ` in ${intent.missionHint}` : ""
       }.`;
+    case "create_category":
+      return `I'd create the category: "${intent.name}".`;
     case "update_task_status":
       return `I'd mark "${intent.taskHint}" as ${intent.status}.`;
     case "update_task":

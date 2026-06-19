@@ -40,7 +40,12 @@ export const EMIT_INTENT_TOOL = {
       name: {
         type: "string",
         description:
-          "The new mission name (create_mission) or new task name (create_task). REQUIRED for those two intents.",
+          "The new mission name (create_mission), task name (create_task), or category name (create_category). REQUIRED for those intents.",
+      },
+      colorHint: {
+        type: "string",
+        description:
+          "create_category: an optional colour word/phrase for the new category (e.g. blue, dark green).",
       },
       targetDateHint: {
         type: "string",
@@ -56,7 +61,7 @@ export const EMIT_INTENT_TOOL = {
       categoryHint: {
         type: "string",
         description:
-          "create_task: one of the five seeded categories (medical, bureaucratic, travel, gear, tech).",
+          "create_task: the task's category — match one of the categories listed in the current-state snapshot (map synonyms to the closest).",
       },
       tooLateByHint: {
         type: "string",

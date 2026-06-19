@@ -2,8 +2,10 @@ import {
   Backpack,
   Cpu,
   FileText,
+  Inbox,
   Plane,
   Stethoscope,
+  Tag,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +36,27 @@ export const CATEGORY_ICON: Record<Category, LucideIcon> = {
   gear: Backpack,
   tech: Cpu,
 };
+
+// Resolve a stored category `lucide_icon` NAME (the DB column) to a component —
+// for DATA-DRIVEN categories (the seeds + any user-created), which carry their
+// glyph as a string rather than the 5-tone enum. The set is the seed glyphs plus
+// the catch-all defaults ("Inbox" = general, "Tag" = created); anything unknown
+// falls back to Tag so a custom category always renders SOME icon (LOCKED #6's
+// icon channel is never dropped).
+const ICON_BY_NAME: Record<string, LucideIcon> = {
+  Stethoscope,
+  FileText,
+  Plane,
+  Backpack,
+  Cpu,
+  Inbox,
+  Tag,
+};
+
+/** Resolve a Lucide icon name to its component, defaulting to Tag. */
+export function iconByName(name: string | null | undefined): LucideIcon {
+  return (name && ICON_BY_NAME[name]) || Tag;
+}
 
 /** Uppercase display label per category. */
 export const CATEGORY_LABEL: Record<Category, string> = {

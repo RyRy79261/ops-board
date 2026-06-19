@@ -21,6 +21,12 @@ export interface TaskVM {
   status: TaskStatus;
   /** The task's category slug, or null if uncategorised. Drives grouping + CategoryTag. */
   categorySlug: string | null;
+  /** The category's display name (label) — null if uncategorised. */
+  categoryName?: string | null;
+  /** The category's hue (hex) for the data-driven CategoryTag — null if uncategorised. */
+  categoryColor?: string | null;
+  /** The category's Lucide icon NAME (e.g. "Stethoscope", "Tag") — null if uncategorised. */
+  categoryIcon?: string | null;
   /** The cliff — "after this date the task is moot". ISO `YYYY-MM-DD` or null. */
   too_late_by: string | null;
   /** "Can't start until this date". ISO `YYYY-MM-DD` or null. */

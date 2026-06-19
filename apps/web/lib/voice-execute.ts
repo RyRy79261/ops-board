@@ -20,6 +20,7 @@ import type { Task, TaskStatus } from "@opsboard/db/schema";
 import {
   createMission,
   createTask,
+  createCategory,
   updateTask,
   deleteTask,
   deleteMission,
@@ -69,6 +70,7 @@ export type ExecuteResult =
       name: string;
       mission: string;
     }
+  | { kind: "category_created"; name: string; slug: string }
   | {
       kind: "task_status_updated";
       taskId: string;
@@ -212,6 +214,8 @@ export async function executeIntent(
         return await execCreateMission(intent, userId, db);
       case "create_task":
         return await execCreateTask(intent, userId, db);
+      case "create_category":
+        return await execCreateCategory(intent, db);
       case "update_task_status":
         return await execUpdateTaskStatus(intent, userId, db);
       case "update_task":
@@ -256,6 +260,25 @@ async function execCreateMission(
       kind: "mission_created",
       missionId: res.mission.id,
       name: res.mission.name,
+    },
+  };
+}
+
+async function execCreateCategory(
+  intent: Extract<VoiceIntent, { intent: "create_category" }>,
+  db: OpsboardDb,
+): Promise<ExecuteOutcome> {
+  // Categories are global; createCategory derives the slug + is idempotent. The
+  // colorHint is carried on the intent for future use; the default tint is fine.
+  const res = await createCategory({ name: intent.name }, db);
+  if (!res.ok) {
+    return { needsConfirmation: true, clarify: res.error };
+  }
+  return {
+    result: {
+      kind: "category_created",
+      name: res.category.name,
+      slug: res.category.slug,
     },
   };
 }

@@ -12,6 +12,7 @@ import {
   type StatusCycleStatus,
 } from "./status-cycle-button";
 import { CategoryTag } from "./category-tag";
+import { iconByName } from "../lib/categories";
 import { WindowStatePill, type WindowState } from "./window-state-pill";
 
 /**
@@ -39,19 +40,6 @@ import { WindowStatePill, type WindowState } from "./window-state-pill";
 /** Stored task status (the StatusCycleButton's tri-state). */
 export type TaskStatus = StatusCycleStatus;
 
-/** §4 category slugs CategoryTag understands; any other slug renders no tag. */
-type CategorySlug = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-const CATEGORY_SLUGS: readonly CategorySlug[] = [
-  "medical",
-  "bureaucratic",
-  "travel",
-  "gear",
-  "tech",
-];
-function isCategorySlug(slug: string | null): slug is CategorySlug {
-  return slug != null && (CATEGORY_SLUGS as readonly string[]).includes(slug);
-}
-
 /**
  * The view-model the card renders (structural copy of the app's shared TaskVM —
  * see apps/web/lib/dashboard-types.ts). Kept local so @opsboard/ui carries no
@@ -62,6 +50,12 @@ export interface TaskVM {
   name: string;
   status: TaskStatus;
   categorySlug: string | null;
+  /** Category display name (label) — drives the data-driven CategoryTag. */
+  categoryName?: string | null;
+  /** Category hue (hex) for the CategoryTag. */
+  categoryColor?: string | null;
+  /** Category Lucide icon NAME (e.g. "Stethoscope", "Tag"). */
+  categoryIcon?: string | null;
   /** Cliff — "too late after this date" (ISO `YYYY-MM-DD`); drives closing/closed. */
   too_late_by: string | null;
   /** "can't start until this date" (ISO `YYYY-MM-DD`); drives not-yet. */
@@ -117,8 +111,10 @@ function ResearchNotesIndicator({
   );
 }
 
-export interface TaskCardProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onClick"> {
+export interface TaskCardProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "onClick"
+> {
   /** The task view-model. */
   task: TaskVM;
   /** IANA timezone for the window-state derivation (e.g. browser tz). */
@@ -176,7 +172,10 @@ function formatShortDate(iso: string | null): string | undefined {
 }
 
 const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
-  ({ task, tz, now, criticalPath = false, onCycle, className, ...props }, ref) => {
+  (
+    { task, tz, now, criticalPath = false, onCycle, className, ...props },
+    ref,
+  ) => {
     // Optimistic status — snappy local flip while onCycle round-trips. The
     // setter must run inside a transition/action; wrapping in startTransition
     // keeps it valid whether or not onCycle is itself a server action.
@@ -228,7 +227,6 @@ const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
             ? startDate
             : undefined;
 
-    const slug = isCategorySlug(task.categorySlug) ? task.categorySlug : null;
     const showBlockedHint =
       wState === "blocked" && task.blockedByNames.length > 0;
 
@@ -256,9 +254,7 @@ const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
           <span
             className={cn(
               "font-sans text-subtitle-dense font-medium",
-              struck
-                ? "text-muted-foreground line-through"
-                : "text-foreground",
+              struck ? "text-muted-foreground line-through" : "text-foreground",
             )}
           >
             {task.name}
@@ -266,9 +262,11 @@ const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
 
           {/* Meta row — CategoryTag + window pill. */}
           <div className="flex flex-wrap items-center gap-2">
-            {slug ? (
+            {task.categoryName ? (
               <CategoryTag
-                category={slug}
+                color={task.categoryColor ?? "#8a8f98"}
+                icon={iconByName(task.categoryIcon)}
+                label={task.categoryName.toUpperCase()}
                 variant="inline"
                 dimmed={wState === "blocked" || wState === "not-yet"}
               />

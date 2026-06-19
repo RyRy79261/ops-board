@@ -146,11 +146,20 @@ export async function getDashboardData(
     targetDate: activeMissionSummary.targetDate,
   };
 
-  // categorySlug lookup (the task row stores categoryId; the board groups + tags
-  // by slug). One pass over the category catalogue.
-  const slugByCategoryId = new Map<string, string>();
+  // Category lookup (the task row stores categoryId; the board groups by slug and
+  // renders the data-driven CategoryTag from the category's name/hue/icon). One
+  // pass over the catalogue.
+  const categoryById = new Map<
+    string,
+    { slug: string; name: string; color: string; lucideIcon: string }
+  >();
   for (const c of categoryRows) {
-    slugByCategoryId.set(c.id, c.slug);
+    categoryById.set(c.id, {
+      slug: c.slug,
+      name: c.name,
+      color: c.color,
+      lucideIcon: c.lucideIcon,
+    });
   }
 
   // task name lookup, for the "⚠ blocked by: {name}" captions.
@@ -192,13 +201,15 @@ export async function getDashboardData(
         .filter((name): name is string => name != null);
     }
     const noteSummary = noteSummaryByTaskId.get(t.id);
+    const cat = t.categoryId ? categoryById.get(t.categoryId) : undefined;
     return {
       id: t.id,
       name: t.name,
       status: t.status as TaskStatus,
-      categorySlug: t.categoryId
-        ? (slugByCategoryId.get(t.categoryId) ?? null)
-        : null,
+      categorySlug: cat?.slug ?? null,
+      categoryName: cat?.name ?? null,
+      categoryColor: cat?.color ?? null,
+      categoryIcon: cat?.lucideIcon ?? null,
       too_late_by: t.tooLateBy,
       not_before: t.notBefore,
       blocked,
