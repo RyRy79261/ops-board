@@ -20,6 +20,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["lib/**/__tests__/**/*.test.ts"],
+    // The integration suites (voice-pipeline, confirm-token) each migrate +
+    // truncate the SAME real Postgres in beforeAll/beforeEach. Run test FILES
+    // serially so two suites never race on the non-idempotent `migrate()`
+    // bootstrap (drizzle's __drizzle_migrations + enum/type creation) — mirrors
+    // packages/db/vitest.config.ts. The pure unit suites are unaffected.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

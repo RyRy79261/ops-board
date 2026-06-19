@@ -766,7 +766,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
           if (!task) notFound("No task with that id.");
 
           if (!args.confirm) {
-            const token = issueConfirmToken("delete_task", args.taskId);
+            const token = await issueConfirmToken(
+              db,
+              ctx.userId,
+              "delete_task",
+              args.taskId,
+            );
             return {
               needsConfirmation: true,
               message: `This will delete the task "${task!.name}" and its dependency edges. To confirm, call delete_task again with confirm="${token}".`,
@@ -774,7 +779,15 @@ export function registerOpsboardDataTools(server: McpServer): void {
             };
           }
 
-          if (!consumeConfirmToken("delete_task", args.taskId, args.confirm)) {
+          if (
+            !(await consumeConfirmToken(
+              db,
+              ctx.userId,
+              "delete_task",
+              args.taskId,
+              args.confirm,
+            ))
+          ) {
             throw new ToolError(
               "Confirmation token is invalid, expired, or doesn't match this task. Call delete_task without confirm to get a fresh token.",
             );
@@ -818,7 +831,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
             );
 
           if (!args.confirm) {
-            const token = issueConfirmToken("delete_mission", args.missionId);
+            const token = await issueConfirmToken(
+              db,
+              ctx.userId,
+              "delete_mission",
+              args.missionId,
+            );
             return {
               needsConfirmation: true,
               message: `This will delete the mission "${mission!.name}" and all ${count} of its tasks. To confirm, call delete_mission again with confirm="${token}".`,
@@ -828,7 +846,13 @@ export function registerOpsboardDataTools(server: McpServer): void {
           }
 
           if (
-            !consumeConfirmToken("delete_mission", args.missionId, args.confirm)
+            !(await consumeConfirmToken(
+              db,
+              ctx.userId,
+              "delete_mission",
+              args.missionId,
+              args.confirm,
+            ))
           ) {
             throw new ToolError(
               "Confirmation token is invalid, expired, or doesn't match this mission. Call delete_mission without confirm to get a fresh token.",
