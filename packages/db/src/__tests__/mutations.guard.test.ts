@@ -3,6 +3,7 @@ import {
   createMission,
   createTask,
   updateTask,
+  updateMission,
   deleteTask,
   deleteMission,
   addDependency,
@@ -30,6 +31,9 @@ describe("mutation input guards (no DB)", () => {
     );
     await expect(deleteTask("nope", USER)).rejects.toThrow(/valid UUID/);
     await expect(deleteMission("nope", USER)).rejects.toThrow(/valid UUID/);
+    await expect(updateMission("nope", { name: "y" }, USER)).rejects.toThrow(
+      /valid UUID/,
+    );
     await expect(addDependency("a", "b", USER)).rejects.toThrow(/valid UUID/);
     await expect(removeDependency(UUID, "b", USER)).rejects.toThrow(
       /valid UUID/,
@@ -49,17 +53,21 @@ describe("mutation input guards (no DB)", () => {
     await expect(
       updateTask(UUID, { notBefore: "2026-00-10" }, USER),
     ).rejects.toThrow();
+    await expect(
+      updateMission(UUID, { targetDate: "2026-13-45" }, USER),
+    ).rejects.toThrow();
   });
 
   it("rejects a missing userId before touching SQL", async () => {
     // With a valid id + date but an empty userId, the userId guard must fire.
+    await expect(createMission({ name: "M" }, "")).rejects.toThrow(/userId/);
     await expect(
-      createMission({ name: "M" }, ""),
+      createTask({ missionId: UUID, name: "x" }, ""),
     ).rejects.toThrow(/userId/);
-    await expect(createTask({ missionId: UUID, name: "x" }, "")).rejects.toThrow(
+    await expect(updateTask(UUID, { name: "y" }, "")).rejects.toThrow(/userId/);
+    await expect(updateMission(UUID, { name: "y" }, "")).rejects.toThrow(
       /userId/,
     );
-    await expect(updateTask(UUID, { name: "y" }, "")).rejects.toThrow(/userId/);
     await expect(deleteTask(UUID, "")).rejects.toThrow(/userId/);
     await expect(deleteMission(UUID, "")).rejects.toThrow(/userId/);
     await expect(addDependency(UUID, UUID, "")).rejects.toThrow(/userId/);

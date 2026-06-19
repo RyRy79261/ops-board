@@ -10,10 +10,7 @@ import { Sidebar } from "@opsboard/ui/components/sidebar";
 import { NavCard, type NavCardChip } from "@opsboard/ui/components/nav-card";
 import { MissionDetailHeader } from "@opsboard/ui/components/mission-detail-header";
 import { SyncStatus } from "@opsboard/ui/components/sync-status";
-import {
-  ViewTabs,
-  type ViewTabValue,
-} from "@opsboard/ui/components/view-tabs";
+import { ViewTabs, type ViewTabValue } from "@opsboard/ui/components/view-tabs";
 import { EmptyState } from "@opsboard/ui/components/empty-state";
 import { cn } from "@opsboard/ui/lib/utils";
 import type { TaskStatus } from "@opsboard/types";
@@ -30,6 +27,11 @@ import { VoiceController } from "@/components/voice/voice-controller";
 import { SettingsLink } from "@/components/settings-link";
 import { ResearchLink } from "@/components/research-link";
 import { ErrorBoundary } from "@/components/error-boundary";
+import {
+  MissionCreateLauncher,
+  TaskCreateLauncher,
+} from "@/components/board/board-actions";
+import { MissionSettingsLauncher } from "@/components/board/mission-settings-dialog";
 
 // The client shell: AppHeader + a responsive layout (mobile single-column ↔
 // desktop 3-pane). Holds the active-view state (ViewTabs), provides each view a
@@ -67,7 +69,12 @@ export function DashboardShell({ data }: { data: DashboardData }) {
   // mutations (voice / MCP) surface. router.refresh() re-runs the RSC; React
   // reconciles without losing the client view/optimistic state.
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), REFRESH_MS);
+    const id = setInterval(() => {
+      // Only refresh while the tab is actually visible — no background churn
+      // (and no surprise re-render when you switch back to a stale tab… it
+      // refreshes on the next tick once visible).
+      if (document.visibilityState === "visible") router.refresh();
+    }, REFRESH_MS);
     return () => clearInterval(id);
   }, [router]);
 
@@ -137,7 +144,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
       <div className="flex flex-1 items-center justify-center p-6">
         <EmptyState
           message="NO TASKS YET"
-          hint='Say "add a task" to get started.'
+          hint='Use "Add task" above, or say "add a task".'
           hintStyle="tokens"
           className="w-full max-w-md"
         />
@@ -194,6 +201,15 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         }}
       />
       <ViewTabs value={view} onValueChange={setView} />
+      {/* Board action bar — right-aligned below the view tabs. Mission edit +
+          delete live on the settings page (the gear); Add task opens the form. */}
+      <div className="flex items-center justify-end gap-2 px-8 py-3">
+        <MissionSettingsLauncher mission={data.mission} />
+        <TaskCreateLauncher
+          missionId={data.activeMissionId}
+          categories={data.categories}
+        />
+      </div>
       <div
         role="tabpanel"
         id={`view-panel-${view}`}
@@ -229,12 +245,16 @@ export function DashboardShell({ data }: { data: DashboardData }) {
       >
         {isDesktop ? (
           <Sidebar title="MISSIONS" count={data.missions.length}>
+            <div className="mb-3">
+              <MissionCreateLauncher className="w-full justify-center" />
+            </div>
             {missionList}
           </Sidebar>
         ) : (
           // Mobile: the mission rail collapses to a horizontal strip above the
           // main column (single-column, thumb-reachable).
-          <nav className="flex gap-2 overflow-x-auto border-b border-border bg-muted px-4 py-3">
+          <nav className="flex items-center gap-2 overflow-x-auto border-b border-border bg-muted px-4 py-3">
+            <MissionCreateLauncher />
             {missionList}
           </nav>
         )}
@@ -293,8 +313,18 @@ function deriveMissionChip(
 }
 
 const MONTHS_UPPER = [
-  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
 ] as const;
 
 /** Format an epoch (ms) as the operator-block date `DD MON YYYY` in local time. */

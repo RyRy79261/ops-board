@@ -21,6 +21,11 @@ export type MutationResult = { ok: true } | { ok: false; error: string };
 /** createMission result — always succeeds once inputs validate. */
 export type CreateMissionResult = { ok: true; mission: Mission };
 
+/** updateMission result — fails (no throw) on an unknown / unowned mission. */
+export type UpdateMissionResult =
+  | { ok: true; mission: Mission }
+  | { ok: false; error: string };
+
 /** createTask result — fails (no throw) on a bad mission / category ref. */
 export type CreateTaskResult =
   | { ok: true; task: Task }
@@ -36,6 +41,13 @@ export type UpdateTaskResult =
 export interface CreateMissionInput {
   name: string;
   /** "YYYY-MM-DD" or null/omitted — the fixed real-world event date. */
+  targetDate?: string | null;
+}
+
+/** A patch for updateMission — provided fields only; omitted are left untouched. */
+export interface UpdateMissionPatch {
+  name?: string;
+  /** "YYYY-MM-DD" or null (clears the anchor date). */
   targetDate?: string | null;
 }
 
@@ -203,6 +215,56 @@ export async function deleteMission(
   return { ok: true };
 }
 
+/**
+ * Patch a mission's editable fields (name, target date). Only provided fields
+ * are written; an explicit `null` `targetDate` clears it. Bumps `updated_at`.
+ * Owner-scoped — an absent/unowned mission returns {ok:false} (never throws).
+ * Throws only on caller-side misuse (a bad id, empty name, or malformed date).
+ */
+export async function updateMission(
+  missionId: string,
+  patch: UpdateMissionPatch,
+  userId: string,
+  db: OpsboardDb = createHttpDb(),
+): Promise<UpdateMissionResult> {
+  if (!isUuid(missionId)) {
+    throw new TypeError("updateMission: `missionId` must be a valid UUID.");
+  }
+  if (!isNonEmptyString(userId)) {
+    throw new TypeError("updateMission: `userId` must be a non-empty string.");
+  }
+  if (patch.name !== undefined && !isNonEmptyString(patch.name)) {
+    throw new TypeError("updateMission: `name` must be a non-empty string.");
+  }
+  if (
+    patch.targetDate !== undefined &&
+    !isValidDateOrNullish(patch.targetDate)
+  ) {
+    throw new TypeError(
+      'updateMission: `targetDate` must be "YYYY-MM-DD" or null.',
+    );
+  }
+
+  const set: Partial<typeof schema.missions.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (patch.name !== undefined) set.name = patch.name.trim();
+  if (patch.targetDate !== undefined) set.targetDate = patch.targetDate ?? null;
+
+  const [mission] = await db
+    .update(schema.missions)
+    .set(set)
+    .where(
+      and(
+        eq(schema.missions.id, missionId),
+        eq(schema.missions.userId, userId),
+      ),
+    )
+    .returning();
+  if (!mission) return { ok: false, error: "Mission not found." };
+  return { ok: true, mission };
+}
+
 // --- Tasks ----------------------------------------------------------------
 
 /**
@@ -237,10 +299,14 @@ export async function createTask(
     );
   }
   if (!isValidDateOrNullish(input.tooLateBy)) {
-    throw new TypeError('createTask: `tooLateBy` must be "YYYY-MM-DD" or null.');
+    throw new TypeError(
+      'createTask: `tooLateBy` must be "YYYY-MM-DD" or null.',
+    );
   }
   if (!isValidDateOrNullish(input.notBefore)) {
-    throw new TypeError('createTask: `notBefore` must be "YYYY-MM-DD" or null.');
+    throw new TypeError(
+      'createTask: `notBefore` must be "YYYY-MM-DD" or null.',
+    );
   }
 
   // Verify the mission belongs to this user BEFORE inserting anything. This is
@@ -264,13 +330,24 @@ export async function createTask(
     };
   }
 
+  // Resolve the category. An EXPLICIT `categorySlug` must resolve (unknown →
+  // typed error). When NEITHER a slug nor a categoryId is given, default to the
+  // "general" catch-all so a new task lands in a visible bucket — but
+  // BEST-EFFORT: if "general" isn't seeded, fall back to uncategorised (null)
+  // rather than failing the create.
   let categoryId: string | null = input.categoryId ?? null;
-  if (isNonEmptyString(input.categorySlug)) {
-    const resolved = await resolveCategorySlug(input.categorySlug, db);
+  const explicitSlug = isNonEmptyString(input.categorySlug)
+    ? input.categorySlug
+    : null;
+  if (explicitSlug) {
+    const resolved = await resolveCategorySlug(explicitSlug, db);
     if (!resolved.ok) {
-      return { ok: false, error: `Unknown category slug: ${input.categorySlug}` };
+      return { ok: false, error: `Unknown category slug: ${explicitSlug}` };
     }
     categoryId = resolved.categoryId;
+  } else if (input.categoryId == null) {
+    const resolved = await resolveCategorySlug("general", db);
+    if (resolved.ok) categoryId = resolved.categoryId;
   }
 
   try {
@@ -330,28 +407,25 @@ export async function updateTask(
       "updateTask: `status` must be not-started | in-progress | done.",
     );
   }
-  if (
-    patch.tooLateBy !== undefined &&
-    !isValidDateOrNullish(patch.tooLateBy)
-  ) {
-    throw new TypeError('updateTask: `tooLateBy` must be "YYYY-MM-DD" or null.');
+  if (patch.tooLateBy !== undefined && !isValidDateOrNullish(patch.tooLateBy)) {
+    throw new TypeError(
+      'updateTask: `tooLateBy` must be "YYYY-MM-DD" or null.',
+    );
   }
-  if (
-    patch.notBefore !== undefined &&
-    !isValidDateOrNullish(patch.notBefore)
-  ) {
-    throw new TypeError('updateTask: `notBefore` must be "YYYY-MM-DD" or null.');
+  if (patch.notBefore !== undefined && !isValidDateOrNullish(patch.notBefore)) {
+    throw new TypeError(
+      'updateTask: `notBefore` must be "YYYY-MM-DD" or null.',
+    );
   }
-  if (
-    patch.sortOrder !== undefined &&
-    !Number.isInteger(patch.sortOrder)
-  ) {
+  if (patch.sortOrder !== undefined && !Number.isInteger(patch.sortOrder)) {
     throw new TypeError("updateTask: `sortOrder` must be an integer.");
   }
 
   // Build the SET object from only the keys the caller actually supplied, so
   // omitted fields are untouched and an explicit `null` clears the column.
-  const set: Partial<typeof schema.tasks.$inferInsert> = { updatedAt: new Date() };
+  const set: Partial<typeof schema.tasks.$inferInsert> = {
+    updatedAt: new Date(),
+  };
   if (patch.name !== undefined) set.name = patch.name.trim();
   if (patch.notes !== undefined) set.notes = patch.notes;
   if (patch.status !== undefined) set.status = patch.status;
@@ -363,7 +437,10 @@ export async function updateTask(
   if (isNonEmptyString(patch.categorySlug)) {
     const resolved = await resolveCategorySlug(patch.categorySlug, db);
     if (!resolved.ok) {
-      return { ok: false, error: `Unknown category slug: ${patch.categorySlug}` };
+      return {
+        ok: false,
+        error: `Unknown category slug: ${patch.categorySlug}`,
+      };
     }
     set.categoryId = resolved.categoryId;
   } else if (patch.categorySlug === null || patch.categoryId !== undefined) {
@@ -458,9 +535,7 @@ export async function addDependency(
   }
 
   try {
-    await db
-      .insert(schema.taskDependencies)
-      .values({ taskId, dependsOnId });
+    await db.insert(schema.taskDependencies).values({ taskId, dependsOnId });
     return { ok: true };
   } catch (err) {
     const code = pgErrorCode(err);
