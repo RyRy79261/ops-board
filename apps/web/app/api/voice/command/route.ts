@@ -291,11 +291,20 @@ async function handleAudio(req: Request, userId: string): Promise<Response> {
   // who turns it off gets high-confidence deletes executed without the extra
   // step. Prefs are fetched ONLY for the destructive case to avoid a per-command
   // round-trip.
+  // (Order matters: the unknown/low-confidence gate runs FIRST and is never
+  // skipped, so a low-confidence destructive intent is always confirmed
+  // regardless of the preference. Don't merge/reorder these two blocks.)
   let mustConfirm =
     intent.intent === "unknown" || intent.confidence < CONFIDENCE_FLOOR;
   if (!mustConfirm && isDestructive(intent)) {
-    const prefs = await getUserPreferences(userId);
-    mustConfirm = prefs.voiceConfirmDestructive;
+    try {
+      const prefs = await getUserPreferences(userId);
+      mustConfirm = prefs.voiceConfirmDestructive;
+    } catch {
+      // Fail CLOSED: if the preference read fails, confirm the destructive
+      // action rather than risk auto-executing a delete the user didn't see.
+      mustConfirm = true;
+    }
   }
   if (mustConfirm) {
     return NextResponse.json(

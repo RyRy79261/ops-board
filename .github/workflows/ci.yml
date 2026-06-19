@@ -126,7 +126,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @opsboard/web test
+      # Just the integration suite (the web unit tests already run in `verify`),
+      # so a failure here points squarely at the DB-backed path.
+      - run: pnpm --filter @opsboard/web exec vitest run lib/__tests__/voice-pipeline.integration.test.ts
         env:
           DATABASE_URL: postgres://opsboard:opsboard@localhost:5432/opsboard_test
 

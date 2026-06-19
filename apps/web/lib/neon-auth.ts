@@ -33,12 +33,12 @@ const cookieSecret = process.env.NEON_AUTH_COOKIE_SECRET;
 // (On Vercel the secret is injected at build time too, so this only ever trips a
 // genuinely misconfigured deploy.)
 if (
-  !cookieSecret &&
+  (!cookieSecret || cookieSecret.length < 32) &&
   process.env.NODE_ENV === "production" &&
   process.env.NEXT_PHASE !== "phase-production-build"
 ) {
   throw new Error(
-    "NEON_AUTH_COOKIE_SECRET is required in production. Set it in the deploy environment (openssl rand -base64 32).",
+    "NEON_AUTH_COOKIE_SECRET must be set to at least 32 chars in production. Set it in the deploy environment (openssl rand -base64 32).",
   );
 }
 

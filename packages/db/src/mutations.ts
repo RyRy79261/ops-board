@@ -620,6 +620,9 @@ export async function addDependency(
   // criticalPath. (neon-http has no transactions, so two concurrent adds could
   // still race a cycle in; this catches the overwhelming common case — a
   // bulletproof guard needs a serializable tx or a recursive-CTE constraint.)
+  // Join on the `taskId` side only: a dependency's BOTH endpoints are always the
+  // same user's tasks (the owned-check above enforces it on write, so the graph
+  // never crosses users), making the single-side scope sufficient + correct.
   const userEdges = await db
     .select({
       from: schema.taskDependencies.taskId,
