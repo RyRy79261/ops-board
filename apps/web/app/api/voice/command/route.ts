@@ -12,7 +12,8 @@ import { vendorErrorResponse } from "@/app/api/_shared/vendor-errors";
 
 import {
   safeParseIntent,
-  needsConfirmation as intentNeedsConfirmation,
+  isDestructive,
+  CONFIDENCE_FLOOR,
   VoiceIntent,
 } from "@opsboard/types";
 import {
@@ -25,6 +26,7 @@ import {
 import { createHttpDb } from "@opsboard/db";
 import { getMissions } from "@opsboard/db/missions";
 import { getCategories, getTasks } from "@opsboard/db/tasks";
+import { getUserPreferences } from "@opsboard/db/preferences";
 
 // /api/voice/command — the transcript → intent → execute pipeline. Node runtime
 // (Groq + Anthropic SDKs + the neon-http driver). Mirrors camp-404's transcribe
@@ -128,7 +130,9 @@ async function handleReissue(req: Request, userId: string): Promise<Response> {
     );
   }
 
-  const parsed = VoiceIntent.safeParse((payload as { intent?: unknown }).intent);
+  const parsed = VoiceIntent.safeParse(
+    (payload as { intent?: unknown }).intent,
+  );
   if (!parsed.success) {
     return NextResponse.json(
       {
@@ -150,10 +154,7 @@ async function handleReissue(req: Request, userId: string): Promise<Response> {
  * Shape A — the normal capture: transcribe → server snapshot → classify →
  * validate → confirm-gate → execute.
  */
-async function handleAudio(
-  req: Request,
-  userId: string,
-): Promise<Response> {
+async function handleAudio(req: Request, userId: string): Promise<Response> {
   let form: FormData;
   try {
     form = await req.formData();
@@ -163,10 +164,16 @@ async function handleAudio(
 
   const file = form.get("audio");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Missing `audio` file" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing `audio` file" },
+      { status: 400 },
+    );
   }
   if (!file.type.startsWith("audio/")) {
-    return NextResponse.json({ error: "File must be audio/*" }, { status: 415 });
+    return NextResponse.json(
+      { error: "File must be audio/*" },
+      { status: 415 },
+    );
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "Audio too large" }, { status: 413 });
@@ -277,8 +284,20 @@ async function handleAudio(
 
   const intent = result.intent;
 
-  // 5. Confirm gate: destructive / unknown / low-confidence are NOT executed.
-  if (intentNeedsConfirmation(intent)) {
+  // 5. Confirm gate: unknown + low-confidence intents are ALWAYS gated (never
+  // auto-act on a guess). Destructive intents are gated per the user's
+  // voiceConfirmDestructive preference (default true) — the setting was fully
+  // plumbed UI→DB→API but nothing read it, so the toggle did nothing; now a user
+  // who turns it off gets high-confidence deletes executed without the extra
+  // step. Prefs are fetched ONLY for the destructive case to avoid a per-command
+  // round-trip.
+  let mustConfirm =
+    intent.intent === "unknown" || intent.confidence < CONFIDENCE_FLOOR;
+  if (!mustConfirm && isDestructive(intent)) {
+    const prefs = await getUserPreferences(userId);
+    mustConfirm = prefs.voiceConfirmDestructive;
+  }
+  if (mustConfirm) {
     return NextResponse.json(
       {
         transcript,
