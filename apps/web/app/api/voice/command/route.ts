@@ -25,7 +25,7 @@ import {
 } from "@opsboard/ai-prompts";
 import { createHttpDb } from "@opsboard/db";
 import { getMissions } from "@opsboard/db/missions";
-import { getCategories, getTasks } from "@opsboard/db/tasks";
+import { getCategories, getTasksByMissionIds } from "@opsboard/db/tasks";
 import { getUserPreferences } from "@opsboard/db/preferences";
 
 // /api/voice/command — the transcript → intent → execute pipeline. Node runtime
@@ -342,28 +342,28 @@ async function buildSnapshot(
     getCategories(db),
   ]);
   const catNameById = new Map(categories.map((c) => [c.id, c.slug]));
+  const missionById = new Map(missions.map((m) => [m.id, m]));
 
-  const perMission = await Promise.all(
-    missions.map(async (m) => ({
-      mission: m,
-      tasks: await getTasks(m.id, userId, db),
-    })),
+  // ONE bulk read of every task across the user's missions (was a per-mission
+  // getTasks fan-out — 1 + N round-trips on the hot path of every voice command).
+  const taskRows = await getTasksByMissionIds(
+    missions.map((m) => m.id),
+    userId,
+    db,
   );
 
   const tasks: VoiceStateSnapshot["tasks"] = [];
-  for (const { mission, tasks: rows } of perMission) {
-    for (const t of rows) {
-      tasks.push({
-        name: t.name,
-        mission: mission.name,
-        category: t.categoryId
-          ? (catNameById.get(t.categoryId) ?? "uncategorised")
-          : "uncategorised",
-        // `Task.status` is the DB `text` column (typed `string`); the CHECK pins
-        // it to the three legal values, so the narrow is safe for the snapshot.
-        status: t.status as "not-started" | "in-progress" | "done",
-      });
-    }
+  for (const t of taskRows) {
+    tasks.push({
+      name: t.name,
+      mission: missionById.get(t.missionId)?.name ?? "",
+      category: t.categoryId
+        ? (catNameById.get(t.categoryId) ?? "uncategorised")
+        : "uncategorised",
+      // `Task.status` is the DB `text` column (typed `string`); the CHECK pins
+      // it to the three legal values, so the narrow is safe for the snapshot.
+      status: t.status as "not-started" | "in-progress" | "done",
+    });
   }
 
   return {
