@@ -1,12 +1,15 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { createHttpDb } from "@opsboard/db";
+import type { OpsboardDb } from "@opsboard/db";
 import { getMissions, getMission } from "@opsboard/db/missions";
 import {
   getCategories,
   getTasks,
   getTask,
   getTaskDependencies,
+  getTasksByMissionIds,
+  getTaskDependenciesByMissionIds,
 } from "@opsboard/db/tasks";
 import {
   createMission,
@@ -138,6 +141,38 @@ function toTaskView(t: Task) {
     notes: t.notes,
     sortOrder: t.sortOrder,
   };
+}
+
+/**
+ * Bulk-load tasks + dependency edges for the given missions in TWO bulk reads
+ * (not a per-mission fan-out of 1 + 2N round-trips), grouped by missionId in the
+ * missionIds order. Scoped to `userId`. Used by the read tools that derive a
+ * per-mission graph (blocked / closing).
+ */
+async function loadTasksAndEdgesByMission(
+  missionIds: string[],
+  userId: string,
+  db: OpsboardDb,
+): Promise<Map<string, { tasks: Task[]; edges: DbDependencyEdge[] }>> {
+  const [allTasks, allEdges] = await Promise.all([
+    getTasksByMissionIds(missionIds, userId, db),
+    getTaskDependenciesByMissionIds(missionIds, userId, db),
+  ]);
+  const byMission = new Map<
+    string,
+    { tasks: Task[]; edges: DbDependencyEdge[] }
+  >();
+  for (const mid of missionIds) byMission.set(mid, { tasks: [], edges: [] });
+  const missionByTaskId = new Map<string, string>();
+  for (const t of allTasks) {
+    missionByTaskId.set(t.id, t.missionId);
+    byMission.get(t.missionId)?.tasks.push(t);
+  }
+  for (const e of allEdges) {
+    const mid = missionByTaskId.get(e.taskId);
+    if (mid != null) byMission.get(mid)?.edges.push(e);
+  }
+  return byMission;
 }
 
 /**
@@ -277,19 +312,21 @@ export function registerOpsboardDataTools(server: McpServer): void {
             ? [args.missionId]
             : (await getMissions(ctx.userId, db)).map((m) => m.id);
 
-          let tasks: Task[] = [];
-          for (const mid of missionIds) {
-            tasks = tasks.concat(await getTasks(mid, ctx.userId, db));
-          }
-
-          // blocked=true needs the dependency graph; derive per-mission so the
-          // adjacency is scoped (and we reuse the same core fn the board uses).
+          // blocked=true/false needs the dependency graph; derive per-mission so
+          // the adjacency is scoped (same core fn the board uses). Only then do we
+          // pay for the edges read — a plain list skips it with one tasks query.
+          let tasks: Task[];
           let blockedFilter: Set<string> | null = null;
           if (args.blocked === true || args.blocked === false) {
+            const byMission = await loadTasksAndEdgesByMission(
+              missionIds,
+              ctx.userId,
+              db,
+            );
+            tasks = [];
             blockedFilter = new Set();
-            for (const mid of missionIds) {
-              const mTasks = tasks.filter((t) => t.missionId === mid);
-              const edges = await getTaskDependencies(mid, ctx.userId, db);
+            for (const { tasks: mTasks, edges } of byMission.values()) {
+              tasks.push(...mTasks);
               const blockedMap = deriveBlocked(
                 toBlockedTasks(mTasks),
                 toCoreEdges(edges),
@@ -300,6 +337,14 @@ export function registerOpsboardDataTools(server: McpServer): void {
                 }
               }
             }
+          } else {
+            // One bulk read; restore the per-mission grouping the old
+            // per-mission fetch produced (the bulk query orders globally by
+            // sortOrder, so re-group by missionId to keep output order stable).
+            const all = await getTasksByMissionIds(missionIds, ctx.userId, db);
+            tasks = missionIds.flatMap((mid) =>
+              all.filter((t) => t.missionId === mid),
+            );
           }
 
           const filtered = tasks.filter((t) => {
@@ -342,9 +387,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
             blockedBy: Array<{ id: string; name: string }>;
           }> = [];
 
-          for (const mid of missionIds) {
-            const tasks = await getTasks(mid, ctx.userId, db);
-            const edges = await getTaskDependencies(mid, ctx.userId, db);
+          const byMission = await loadTasksAndEdgesByMission(
+            missionIds,
+            ctx.userId,
+            db,
+          );
+          for (const { tasks, edges } of byMission.values()) {
             const coreEdges = toCoreEdges(edges);
             const blockedMap = deriveBlocked(toBlockedTasks(tasks), coreEdges);
             const nameById = new Map(tasks.map((t) => [t.id, t.name]));
@@ -411,9 +459,12 @@ export function registerOpsboardDataTools(server: McpServer): void {
             daysUntilClose: number | null;
           }> = [];
 
-          for (const mid of missionIds) {
-            const tasks = await getTasks(mid, ctx.userId, db);
-            const edges = await getTaskDependencies(mid, ctx.userId, db);
+          const byMission = await loadTasksAndEdgesByMission(
+            missionIds,
+            ctx.userId,
+            db,
+          );
+          for (const { tasks, edges } of byMission.values()) {
             const blockedMap = deriveBlocked(
               toBlockedTasks(tasks),
               toCoreEdges(edges),
