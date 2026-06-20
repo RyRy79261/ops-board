@@ -540,6 +540,36 @@ export const mcpAccessTokens = pgTable(
   }),
 );
 
+// Durable backing for the destructive-MCP-tool confirm dance (delete_task /
+// delete_mission). REPLACES the former in-process Map, which broke under
+// serverless: the issuing call and the confirming call can land on DIFFERENT
+// function instances, so an in-memory token was never found and the delete could
+// never complete. Each row is short-lived (~5min TTL) + single-use (consumed via
+// an atomic DELETE ... RETURNING) + bound to the issuing user AND the exact
+// target. Only the SHA-256 of the token is stored, so a DB dump can't replay a
+// raw one.
+export const mcpConfirmTokens = pgTable(
+  "mcp_confirm_tokens",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    // The user the token was minted for. ON DELETE CASCADE so a user delete
+    // sweeps their outstanding confirm tokens.
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // The destructive tool the token authorises (delete_task | delete_mission).
+    action: text("action").notNull(),
+    // The exact target id (task / mission UUID) the token authorises deleting.
+    // Plain text — polymorphic + ephemeral, so not FK'd.
+    targetId: text("target_id").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    expiresIdx: index("mcp_confirm_tokens_expires_idx").on(t.expiresAt),
+  }),
+);
+
 // One row per MCP tool invocation. Captures the call regardless of outcome.
 // `principal_id` is nullable (single-user — no users FK); `client_id` is NOT
 // an FK so the audit row survives a client being deleted (forensic
