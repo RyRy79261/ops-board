@@ -3,15 +3,11 @@ import "server-only";
 import type { VoiceIntent } from "@opsboard/types";
 import { createHttpDb } from "@opsboard/db";
 import type { OpsboardDb } from "@opsboard/db";
-import {
-  getMissions,
-  getMissionWithTasks,
-  type MissionView,
-} from "@opsboard/db/missions";
+import { getMissions, type MissionView } from "@opsboard/db/missions";
 import {
   getCategories,
-  getTasks,
-  getTaskDependencies,
+  getTasksByMissionIds,
+  getTaskDependenciesByMissionIds,
   updateTaskStatus,
   type CategoryView,
   type DependencyEdge,
@@ -154,22 +150,23 @@ async function allTaskResolvables(
   const resolvables: Resolvable[] = [];
   const tasksById = new Map<string, TaskWithMission>();
 
-  const perMission = await Promise.all(
-    missions.map(async (m) => ({
-      mission: m,
-      tasks: await getTasks(m.id, userId, db),
-    })),
+  const missionById = new Map(missions.map((m) => [m.id, m]));
+  // ONE bulk read of every task across the user's missions (was a per-mission
+  // getTasks fan-out — 1 + N round-trips).
+  const tasks = await getTasksByMissionIds(
+    missions.map((m) => m.id),
+    userId,
+    db,
   );
-  for (const { mission, tasks } of perMission) {
-    for (const t of tasks) {
-      const slug = t.categoryId ? catSlugById.get(t.categoryId) : undefined;
-      resolvables.push({
-        id: t.id,
-        name: t.name,
-        code: (slug ?? mission.name).toUpperCase().slice(0, 8),
-      });
-      tasksById.set(t.id, { ...t, missionName: mission.name });
-    }
+  for (const t of tasks) {
+    const missionName = missionById.get(t.missionId)?.name ?? "";
+    const slug = t.categoryId ? catSlugById.get(t.categoryId) : undefined;
+    resolvables.push({
+      id: t.id,
+      name: t.name,
+      code: (slug ?? missionName).toUpperCase().slice(0, 8),
+    });
+    tasksById.set(t.id, { ...t, missionName });
   }
   return { resolvables, tasksById };
 }
@@ -636,6 +633,47 @@ async function execDeleteMission(
 
 // --- Query (read-only; answers from @opsboard/core + reads) ------------------
 
+/**
+ * Bulk-load the user's missions + every task + every dependency edge in a FIXED
+ * three queries (was a per-mission fan-out of 1 + 2N round-trips), grouped by
+ * mission for the per-mission graph derivations (blocked / critical-path).
+ * Mirrors the dashboard's server-side grouping.
+ */
+async function loadMissionGraphs(
+  userId: string,
+  db: OpsboardDb,
+): Promise<
+  Array<{ mission: MissionView; tasks: Task[]; edges: DependencyEdge[] }>
+> {
+  const missions = await getMissions(userId, db);
+  const missionIds = missions.map((m) => m.id);
+  const [allTasks, allEdges] = await Promise.all([
+    getTasksByMissionIds(missionIds, userId, db),
+    getTaskDependenciesByMissionIds(missionIds, userId, db),
+  ]);
+  const tasksByMission = new Map<string, Task[]>();
+  const missionByTaskId = new Map<string, string>();
+  for (const t of allTasks) {
+    const list = tasksByMission.get(t.missionId);
+    if (list) list.push(t);
+    else tasksByMission.set(t.missionId, [t]);
+    missionByTaskId.set(t.id, t.missionId);
+  }
+  const edgesByMission = new Map<string, DependencyEdge[]>();
+  for (const e of allEdges) {
+    const mid = missionByTaskId.get(e.taskId);
+    if (mid == null) continue;
+    const list = edgesByMission.get(mid);
+    if (list) list.push(e);
+    else edgesByMission.set(mid, [e]);
+  }
+  return missions.map((m) => ({
+    mission: m,
+    tasks: tasksByMission.get(m.id) ?? [],
+    edges: edgesByMission.get(m.id) ?? [],
+  }));
+}
+
 async function execQuery(
   intent: Extract<VoiceIntent, { intent: "query" }>,
   userId: string,
@@ -673,13 +711,8 @@ async function queryBlocked(
   userId: string,
   db: OpsboardDb,
 ): Promise<QueryAnswer> {
-  const missions = await getMissions(userId, db);
   const rows: QueryAnswer["rows"] = [];
-  for (const mission of missions) {
-    const [tasks, edges] = await Promise.all([
-      getTasks(mission.id, userId, db),
-      getTaskDependencies(mission.id, userId, db),
-    ]);
+  for (const { tasks, edges } of await loadMissionGraphs(userId, db)) {
     const coreEdges = toCoreEdges(edges);
     // `Task.status` is the DB `text` column (typed `string`); the three legal
     // values are pinned by the CHECK, so the narrow to TaskStatus is safe.
@@ -723,28 +756,31 @@ async function queryClosing(
   // (the route's snapshot carries the tz for the CLASSIFIER, not the reader).
   const tz = "UTC";
   const missions = await getMissions(userId, db);
+  // ONE bulk read — closing is a per-task check, no per-mission grouping needed.
+  const tasks = await getTasksByMissionIds(
+    missions.map((m) => m.id),
+    userId,
+    db,
+  );
   const rows: QueryAnswer["rows"] = [];
-  for (const mission of missions) {
-    const tasks = await getTasks(mission.id, userId, db);
-    for (const t of tasks) {
-      const detail: WindowStateDetail = windowStateDetail(
-        now,
-        {
-          too_late_by: t.tooLateBy,
-          not_before: t.notBefore,
-        },
-        tz,
-      );
-      if (detail.state === "closing") {
-        rows.push({
-          taskId: t.id,
-          name: t.name,
-          window:
-            detail.daysUntilClose != null
-              ? `${detail.daysUntilClose}D LEFT`
-              : "CLOSING",
-        });
-      }
+  for (const t of tasks) {
+    const detail: WindowStateDetail = windowStateDetail(
+      now,
+      {
+        too_late_by: t.tooLateBy,
+        not_before: t.notBefore,
+      },
+      tz,
+    );
+    if (detail.state === "closing") {
+      rows.push({
+        taskId: t.id,
+        name: t.name,
+        window:
+          detail.daysUntilClose != null
+            ? `${detail.daysUntilClose}D LEFT`
+            : "CLOSING",
+      });
     }
   }
   return {
@@ -763,21 +799,17 @@ async function queryCriticalPath(
   userId: string,
   db: OpsboardDb,
 ): Promise<QueryAnswer> {
-  const missions = await getMissions(userId, db);
   let best: { rows: QueryAnswer["rows"]; mission: string } = {
     rows: [],
     mission: "",
   };
-  for (const mission of missions) {
-    const full = await getMissionWithTasks(mission.id, userId, db);
-    if (!full) continue;
-    const edges = await getTaskDependencies(mission.id, userId, db);
+  for (const { mission, tasks, edges } of await loadMissionGraphs(userId, db)) {
     const path = criticalPath(
-      full.tasks.map((t) => ({ id: t.id })),
+      tasks.map((t) => ({ id: t.id })),
       toCoreEdges(edges),
     );
     if (path.length <= best.rows.length) continue;
-    const nameById = new Map(full.tasks.map((t) => [t.id, t.name]));
+    const nameById = new Map(tasks.map((t) => [t.id, t.name]));
     best = {
       mission: mission.name,
       rows: path.map((id, i) => ({
