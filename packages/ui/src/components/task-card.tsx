@@ -12,7 +12,7 @@ import {
   type StatusCycleStatus,
 } from "./status-cycle-button";
 import { CategoryTag } from "./category-tag";
-import { iconByName } from "../lib/categories";
+import { iconByName, DEFAULT_CATEGORY_COLOR } from "../lib/categories";
 import { WindowStatePill, type WindowState } from "./window-state-pill";
 
 /**
@@ -264,7 +264,7 @@ const TaskCard = React.forwardRef<HTMLDivElement, TaskCardProps>(
           <div className="flex flex-wrap items-center gap-2">
             {task.categoryName ? (
               <CategoryTag
-                color={task.categoryColor ?? "#8a8f98"}
+                color={task.categoryColor ?? DEFAULT_CATEGORY_COLOR}
                 icon={iconByName(task.categoryIcon)}
                 label={task.categoryName.toUpperCase()}
                 variant="inline"
