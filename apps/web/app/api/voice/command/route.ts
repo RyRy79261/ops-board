@@ -342,7 +342,6 @@ async function buildSnapshot(
     getCategories(db),
   ]);
   const catNameById = new Map(categories.map((c) => [c.id, c.slug]));
-  const missionById = new Map(missions.map((m) => [m.id, m]));
 
   // ONE bulk read of every task across the user's missions (was a per-mission
   // getTasks fan-out — 1 + N round-trips on the hot path of every voice command).
@@ -352,18 +351,31 @@ async function buildSnapshot(
     db,
   );
 
+  // Group by mission, then emit in mission order. The per-mission fan-out this
+  // replaced produced mission-grouped order, and this snapshot feeds the
+  // CLASSIFIER prompt — so the task ordering must stay stable (a globally
+  // interleaved order would be a silent prompt-construction behaviour change).
+  const taskRowsByMissionId = new Map<string, typeof taskRows>();
+  for (const row of taskRows) {
+    const bucket = taskRowsByMissionId.get(row.missionId);
+    if (bucket) bucket.push(row);
+    else taskRowsByMissionId.set(row.missionId, [row]);
+  }
+
   const tasks: VoiceStateSnapshot["tasks"] = [];
-  for (const t of taskRows) {
-    tasks.push({
-      name: t.name,
-      mission: missionById.get(t.missionId)?.name ?? "",
-      category: t.categoryId
-        ? (catNameById.get(t.categoryId) ?? "uncategorised")
-        : "uncategorised",
-      // `Task.status` is the DB `text` column (typed `string`); the CHECK pins
-      // it to the three legal values, so the narrow is safe for the snapshot.
-      status: t.status as "not-started" | "in-progress" | "done",
-    });
+  for (const m of missions) {
+    for (const t of taskRowsByMissionId.get(m.id) ?? []) {
+      tasks.push({
+        name: t.name,
+        mission: m.name,
+        category: t.categoryId
+          ? (catNameById.get(t.categoryId) ?? "uncategorised")
+          : "uncategorised",
+        // `Task.status` is the DB `text` column (typed `string`); the CHECK pins
+        // it to the three legal values, so the narrow is safe for the snapshot.
+        status: t.status as "not-started" | "in-progress" | "done",
+      });
+    }
   }
 
   return {
