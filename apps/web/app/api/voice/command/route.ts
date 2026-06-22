@@ -25,7 +25,7 @@ import {
 } from "@opsboard/ai-prompts";
 import { createHttpDb } from "@opsboard/db";
 import { getMissions } from "@opsboard/db/missions";
-import { getCategories, getTasks } from "@opsboard/db/tasks";
+import { getCategories, getTasksByMissionIds } from "@opsboard/db/tasks";
 import { getUserPreferences } from "@opsboard/db/preferences";
 
 // /api/voice/command — the transcript → intent → execute pipeline. Node runtime
@@ -343,19 +343,31 @@ async function buildSnapshot(
   ]);
   const catNameById = new Map(categories.map((c) => [c.id, c.slug]));
 
-  const perMission = await Promise.all(
-    missions.map(async (m) => ({
-      mission: m,
-      tasks: await getTasks(m.id, userId, db),
-    })),
+  // ONE bulk read of every task across the user's missions (was a per-mission
+  // getTasks fan-out — 1 + N round-trips on the hot path of every voice command).
+  const taskRows = await getTasksByMissionIds(
+    missions.map((m) => m.id),
+    userId,
+    db,
   );
 
+  // Group by mission, then emit in mission order. The per-mission fan-out this
+  // replaced produced mission-grouped order, and this snapshot feeds the
+  // CLASSIFIER prompt — so the task ordering must stay stable (a globally
+  // interleaved order would be a silent prompt-construction behaviour change).
+  const taskRowsByMissionId = new Map<string, typeof taskRows>();
+  for (const row of taskRows) {
+    const bucket = taskRowsByMissionId.get(row.missionId);
+    if (bucket) bucket.push(row);
+    else taskRowsByMissionId.set(row.missionId, [row]);
+  }
+
   const tasks: VoiceStateSnapshot["tasks"] = [];
-  for (const { mission, tasks: rows } of perMission) {
-    for (const t of rows) {
+  for (const m of missions) {
+    for (const t of taskRowsByMissionId.get(m.id) ?? []) {
       tasks.push({
         name: t.name,
-        mission: mission.name,
+        mission: m.name,
         category: t.categoryId
           ? (catNameById.get(t.categoryId) ?? "uncategorised")
           : "uncategorised",
