@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { windowState, windowStateDetail } from "@opsboard/core";
 import { useNowTick } from "@opsboard/ui/hooks/use-now-tick";
-import { useMediaQuery } from "@opsboard/ui/hooks/use-media-query";
 import { AppHeader } from "@opsboard/ui/components/app-header";
 import { Sidebar } from "@opsboard/ui/components/sidebar";
 import { NavCard, type NavCardChip } from "@opsboard/ui/components/nav-card";
@@ -12,7 +11,6 @@ import { MissionDetailHeader } from "@opsboard/ui/components/mission-detail-head
 import { SyncStatus } from "@opsboard/ui/components/sync-status";
 import { ViewTabs, type ViewTabValue } from "@opsboard/ui/components/view-tabs";
 import { EmptyState } from "@opsboard/ui/components/empty-state";
-import { cn } from "@opsboard/ui/lib/utils";
 import type { TaskStatus } from "@opsboard/types";
 import type {
   DashboardData,
@@ -41,9 +39,11 @@ import { MissionSettingsLauncher } from "@/components/board/mission-settings-dia
 // router.refresh() every 45s so a status change made elsewhere (voice/MCP)
 // shows up without a manual reload.
 
-// Desktop breakpoint: at/above this, render the 3-pane (sidebar + main); below
-// it, single column (mobile-first).
-const DESKTOP_QUERY = "(min-width: 768px)";
+// The desktop/mobile layout split is CSS-only (Tailwind `md:` = 768px): the
+// sidebar + the mobile mission strip are BOTH rendered and toggled with
+// responsive visibility, so the server emits the correct layout with no JS gate
+// and no hydration flash. (Was a useMediaQuery fork that SSR'd as mobile, then
+// flipped to desktop on mount — a guaranteed layout shift for desktop users.)
 const REFRESH_MS = 45_000;
 
 export function DashboardShell({ data }: { data: DashboardData }) {
@@ -62,8 +62,6 @@ export function DashboardShell({ data }: { data: DashboardData }) {
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     [],
   );
-
-  const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
   // Liveness island: gently re-pull the server board every 45s so out-of-band
   // mutations (voice / MCP) surface. router.refresh() re-runs the RSC; React
@@ -237,27 +235,24 @@ export function DashboardShell({ data }: { data: DashboardData }) {
           </>
         }
       />
-      <div
-        className={cn(
-          "flex min-h-0 flex-1",
-          isDesktop ? "flex-row" : "flex-col",
-        )}
-      >
-        {isDesktop ? (
-          <Sidebar title="MISSIONS" count={data.missions.length}>
-            <div className="mb-3">
-              <MissionCreateLauncher className="w-full justify-center" />
-            </div>
-            {missionList}
-          </Sidebar>
-        ) : (
-          // Mobile: the mission rail collapses to a horizontal strip above the
-          // main column (single-column, thumb-reachable).
-          <nav className="flex items-center gap-2 overflow-x-auto border-b border-border bg-muted px-4 py-3">
-            <MissionCreateLauncher />
-            {missionList}
-          </nav>
-        )}
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        {/* Desktop: the 3-pane 280px sidebar (hidden below md). */}
+        <Sidebar
+          title="MISSIONS"
+          count={data.missions.length}
+          className="hidden md:flex"
+        >
+          <div className="mb-3">
+            <MissionCreateLauncher className="w-full justify-center" />
+          </div>
+          {missionList}
+        </Sidebar>
+        {/* Mobile: the mission rail collapses to a horizontal strip above the
+            main column (single-column, thumb-reachable); hidden at md+. */}
+        <nav className="flex items-center gap-2 overflow-x-auto border-b border-border bg-muted px-4 py-3 md:hidden">
+          <MissionCreateLauncher />
+          {missionList}
+        </nav>
         {mainColumn}
       </div>
       {/* The voice command flow — the fixed mic FAB + capture panel + the Toaster
