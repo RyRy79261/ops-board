@@ -16,18 +16,26 @@
         `muted` is the header/sidebar chrome surface, not an elevation step) ── */
   --color-background: oklch(0.146 0.004 286); /* #0a0a0c near-black canvas */
   --color-muted: oklch(0.189 0.01 285); /* #131318 header / sidebar */
-  --color-card: oklch(0.221 0.016 285); /* #1a1a22 cards / panels / rows / popover */
-  --color-card-elevated: oklch(0.257 0.022 285); /* #22222e deepest panel / progress track */
+  --color-card: oklch(
+    0.221 0.016 285
+  ); /* #1a1a22 cards / panels / rows / popover */
+  --color-card-elevated: oklch(
+    0.257 0.022 285
+  ); /* #22222e deepest panel / progress track */
 
   /* ── TEXT ── */
   --color-foreground: oklch(0.933 0.011 286); /* #e8e8f0 warm white */
   --color-muted-foreground: oklch(0.586 0.03 285); /* #7a7a8e secondary */
-  --color-muted-foreground-subtle: oklch(0.417 0.033 285); /* #4a4a5e 3rd-tier dim */
+  --color-muted-foreground-subtle: oklch(
+    0.417 0.033 285
+  ); /* #4a4a5e 3rd-tier dim */
 
   /* ── BRAND ── */
   --color-primary: oklch(0.705 0.193 39); /* #ff6b35 tactical orange */
   --color-primary-hover: #ff8555; /* lighter orange (derived) */
-  --color-primary-foreground: oklch(0.146 0.004 286); /* #0a0a0c near-black on orange */
+  --color-primary-foreground: oklch(
+    0.146 0.004 286
+  ); /* #0a0a0c near-black on orange */
   --color-ring: oklch(0.705 0.193 39); /* focus ring = primary */
 
   /* ── card / popover / secondary / accent foregrounds + surfaces
@@ -76,10 +84,15 @@
   --shadow-e2: 0 10px 24px #00000080; /* card-elevated (~50% black) */
 
   /* ── Brand faces. DM Sans = human text; JetBrains Mono = chrome/data/labels.
-        next/font (S4) injects the loaded faces via these vars. ── */
-  --font-dm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
-    Monaco, Consolas, monospace;
+        next/font (app/layout.tsx) self-hosts the TTFs and sets --font-*-loaded
+        on <html>; we consume those as the PRIMARY family with the named/system
+        stack as fallback. Contexts without next/font (e.g. Storybook) leave the
+        -loaded var empty and resolve straight to the fallback. ── */
+  --font-dm-sans:
+    var(--font-dm-sans-loaded), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-jetbrains-mono:
+    var(--font-jetbrains-mono-loaded), "JetBrains Mono", ui-monospace,
+    "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-jetbrains-mono);
 
