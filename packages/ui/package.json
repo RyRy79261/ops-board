@@ -10,7 +10,8 @@
     "./styles.css": "./src/styles/globals.css",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./lib/utils": "./src/lib/utils.ts"
+    "./lib/utils": "./src/lib/utils.ts",
+    "./lib/categories": "./src/lib/categories.ts"
   },
   "scripts": {
     "lint": "eslint .",

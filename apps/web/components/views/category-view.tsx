@@ -1,5 +1,6 @@
 import { CategoryGroupHeader } from "@opsboard/ui/components/category-group-header";
 import { TaskCard } from "@opsboard/ui/components/task-card";
+import { DEFAULT_CATEGORY_COLOR } from "@opsboard/ui/lib/categories";
 import type { ViewProps, TaskVM, CategoryVM } from "@/lib/dashboard-types";
 
 // The DEFAULT board view (board D3JA0i). Groups tasks by category in sort_order,
@@ -66,7 +67,7 @@ export function CategoryView({
       category: {
         slug: "__uncategorised__",
         name: "Uncategorised",
-        color: "#8a8f98",
+        color: DEFAULT_CATEGORY_COLOR,
         lucideIcon: "Inbox",
         sortOrder: Number.MAX_SAFE_INTEGER,
       },

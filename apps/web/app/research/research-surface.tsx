@@ -16,6 +16,7 @@ import { ConfirmBar } from "@opsboard/ui/components/confirm-bar";
 import { ErrorStateCard } from "@opsboard/ui/components/error-state-card";
 import { VoiceFAB } from "@opsboard/ui/components/voice-fab";
 import { RecordingPanel } from "@opsboard/ui/components/recording-panel";
+import { type Category, CATEGORIES } from "@opsboard/ui/lib/categories";
 
 import { Waveform } from "@/components/voice/waveform";
 import { useVoiceRecorder } from "@/components/voice/use-voice-recorder";
@@ -46,18 +47,14 @@ const CueResultSchema = z.object({ jobId: z.string() });
 // navigates to /research/[jobId] — the live Running surface that polls the
 // Inngest-advanced job row.
 
-type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-const KNOWN_CATEGORIES: readonly string[] = [
-  "medical",
-  "bureaucratic",
-  "travel",
-  "gear",
-  "tech",
-];
-
-/** Coerce a category slug to the UI Category union (uncategorised → a neutral default). */
+/** Coerce a research-result category slug to the UI Category union. Anything
+ *  outside the seeded tones (a user-created slug, or `general` itself) falls back
+ *  to the NEUTRAL `general` tone — NOT bureaucratic, which used to paint every
+ *  general/unknown task with the blue bureaucratic hue. */
 function asCategory(slug: string): Category {
-  return KNOWN_CATEGORIES.includes(slug) ? (slug as Category) : "bureaucratic";
+  return (CATEGORIES as readonly string[]).includes(slug)
+    ? (slug as Category)
+    : "general";
 }
 
 function formatElapsed(ms: number): string {
@@ -72,10 +69,15 @@ export interface ResearchSurfaceProps {
   missionName: string;
 }
 
-export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps) {
+export function ResearchSurface({
+  missionId,
+  missionName,
+}: ResearchSurfaceProps) {
   const router = useRouter();
   const [parse, setParse] = React.useState<ResearchParseResult | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(
+    null,
+  );
   const [error, setError] = React.useState<string | null>(null);
   const [cueState, setCueState] = React.useState<"idle" | "cueing">("idle");
   const [elapsedMs, setElapsedMs] = React.useState(0);
@@ -140,8 +142,14 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
     [tz, missionId],
   );
 
-  const { state, error: recError, start, stop, reset, analyser } =
-    useVoiceRecorder({ onBlob });
+  const {
+    state,
+    error: recError,
+    start,
+    stop,
+    reset,
+    analyser,
+  } = useVoiceRecorder({ onBlob });
 
   const isRecording = state === "recording";
 
@@ -243,8 +251,8 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
             Task Agent
           </Eyebrow>
           <p className="text-label text-muted-foreground">
-            Voice-cue a research job, scoped to one mission. Findings are proposed
-            as notes on a task — nothing is saved until you confirm.
+            Voice-cue a research job, scoped to one mission. Findings are
+            proposed as notes on a task — nothing is saved until you confirm.
           </p>
         </header>
 
@@ -264,8 +272,8 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
             ) : (
               <p className="max-w-md text-center text-[14px] leading-relaxed text-muted-foreground">
                 Hold the mic and describe what to research — name the task it
-                belongs to (e.g. “how to submit the land-use permit, for my permit
-                task”).
+                belongs to (e.g. “how to submit the land-use permit, for my
+                permit task”).
               </p>
             )}
             <VoiceFAB
@@ -290,7 +298,12 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 }
                 body={recError}
                 actions={[
-                  { label: "Try again", variant: "primary", icon: Mic, onClick: onPress },
+                  {
+                    label: "Try again",
+                    variant: "primary",
+                    icon: Mic,
+                    onClick: onPress,
+                  },
                 ]}
               />
             ) : error ? (
@@ -353,7 +366,12 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                 header="NO RESULTS FOUND"
                 body={`No task in “${missionName}” matched that. Try naming the task more directly, then re-record.`}
                 actions={[
-                  { label: "Re-record", variant: "primary", icon: Mic, onClick: reRecord },
+                  {
+                    label: "Re-record",
+                    variant: "primary",
+                    icon: Mic,
+                    onClick: reRecord,
+                  },
                 ]}
               />
             ) : (
@@ -367,7 +385,8 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
                   {`“${parse.query}”`}
                 </p>
                 <p className="text-[13px] text-muted-foreground">
-                  Several tasks match — pick the one these notes belong to below.
+                  Several tasks match — pick the one these notes belong to
+                  below.
                 </p>
               </div>
             )}
@@ -408,7 +427,9 @@ export function ResearchSurface({ missionId, missionName }: ResearchSurfaceProps
               <ConfirmBar
                 variant="bar"
                 hint="Phrasing can be terse — the mission scope plus the agent resolve the rest."
-                confirmLabel={cueState === "cueing" ? "STARTING…" : "CUE RESEARCH"}
+                confirmLabel={
+                  cueState === "cueing" ? "STARTING…" : "CUE RESEARCH"
+                }
                 onConfirm={cueResearch}
                 onCancel={reRecord}
               />

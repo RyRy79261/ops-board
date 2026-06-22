@@ -1,16 +1,13 @@
 import * as React from "react";
-import {
-  Backpack,
-  Cpu,
-  FileText,
-  Plane,
-  Stethoscope,
-  Tag,
-  type LucideIcon,
-} from "lucide-react";
+import { Tag, type LucideIcon } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "../lib/utils";
+import {
+  type Category,
+  CATEGORY_ICON,
+  CATEGORY_LABEL,
+} from "../lib/categories";
 
 /**
  * CategoryTag — the category pill (LOCKED #6: three redundant channels — hue +
@@ -28,16 +25,8 @@ import { cn } from "../lib/utils";
  * Presentational leaf (no state) → server-safe, no "use client".
  */
 
-/** §4 authoritative category map: hue token + Lucide glyph + uppercase label. */
-type Category = "medical" | "bureaucratic" | "travel" | "gear" | "tech";
-
-const CATEGORY_META: Record<Category, { icon: LucideIcon; label: string }> = {
-  medical: { icon: Stethoscope, label: "MEDICAL" },
-  bureaucratic: { icon: FileText, label: "BUREAUCRATIC" },
-  travel: { icon: Plane, label: "TRAVEL" },
-  gear: { icon: Backpack, label: "GEAR" },
-  tech: { icon: Cpu, label: "TECH" },
-};
+// The §4 hue tokens + glyph + label come from the SINGLE category source of
+// truth (../lib/categories): `Category`, `CATEGORY_ICON`, `CATEGORY_LABEL`.
 
 const categoryTagVariants = cva(
   // mono uppercase tracked label; icon + label inline. Sharp by default — the
@@ -52,6 +41,9 @@ const categoryTagVariants = cva(
         travel: "bg-cat-travel/12 border-cat-travel/40 text-cat-travel",
         gear: "bg-cat-gear/12 border-cat-gear/40 text-cat-gear",
         tech: "bg-cat-tech/12 border-cat-tech/40 text-cat-tech",
+        // general is the neutral catch-all — grey, no bespoke hue token.
+        general:
+          "bg-muted-foreground/12 border-muted-foreground/40 text-muted-foreground",
       },
       variant: {
         // showcase canonical: tinted rounded-full pill (cornerRadius 999),
@@ -76,7 +68,7 @@ const categoryTagVariants = cva(
       },
     ],
     defaultVariants: {
-      category: "medical",
+      category: "general",
       variant: "pill",
       dimmed: false,
     },
@@ -109,6 +101,7 @@ const DOT_TONE: Record<Category, string> = {
   travel: "bg-cat-travel",
   gear: "bg-cat-gear",
   tech: "bg-cat-tech",
+  general: "bg-muted-foreground",
 };
 
 const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
@@ -127,11 +120,11 @@ const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
     },
     ref,
   ) => {
-    // DATA-DRIVEN when an explicit color + label are supplied; else LEGACY 5-tone.
+    // DATA-DRIVEN when an explicit color + label are supplied; else LEGACY tone.
     const dynamic = color != null && label != null;
-    const seed = CATEGORY_META[category ?? "medical"];
-    const Icon = dynamic ? (icon ?? Tag) : seed.icon;
-    const text = dynamic ? label : seed.label;
+    const seedCategory = category ?? "general";
+    const Icon = dynamic ? (icon ?? Tag) : CATEGORY_ICON[seedCategory];
+    const text = dynamic ? label : CATEGORY_LABEL[seedCategory];
 
     // In data-driven mode the hue is applied INLINE (overriding the placeholder
     // token classes from the CVA); dimmed always uses the muted treatment.
@@ -149,7 +142,7 @@ const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
         ref={ref}
         className={cn(
           categoryTagVariants({
-            category: category ?? "medical",
+            category: category ?? "general",
             variant,
             dimmed,
           }),
@@ -167,7 +160,7 @@ const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
                 ? "bg-muted-foreground"
                 : dynamic
                   ? ""
-                  : DOT_TONE[category ?? "medical"],
+                  : DOT_TONE[category ?? "general"],
             )}
             style={dynamic && !dimmed ? { backgroundColor: color } : undefined}
           />
