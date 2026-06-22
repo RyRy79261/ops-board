@@ -224,3 +224,41 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level high
+
+  # Browser end-to-end regression tests (Playwright) against a real `next dev`
+  # server + a throwaway Postgres. Hermetic: the app talks plain Postgres via the
+  # DB_DRIVER=node-postgres seam and authenticates via the E2E_TEST_AUTH session
+  # seam — no Neon endpoint or Neon Auth secrets, so this NEVER skips.
+  e2e:
+    name: e2e · playwright
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: opsboard
+          POSTGRES_PASSWORD: opsboard
+          POSTGRES_DB: opsboard_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U opsboard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://opsboard:opsboard@localhost:5432/opsboard_e2e
+      DB_DRIVER: node-postgres
+      E2E_TEST_AUTH: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright chromium (+ OS deps)
+        run: pnpm --filter @opsboard/web exec playwright install --with-deps chromium
+      - name: Run Playwright e2e
+        run: pnpm --filter @opsboard/web exec playwright test

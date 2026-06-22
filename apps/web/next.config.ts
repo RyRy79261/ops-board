@@ -9,6 +9,11 @@ const config: NextConfig = {
   // Pin the monorepo root (apps/web → two levels up) so Next doesn't infer it
   // from an unrelated lockfile elsewhere on the machine.
   turbopack: { root: path.join(here, "..", "..") },
+  // DEV-ONLY: allow the e2e harness (Playwright drives the app over
+  // http://127.0.0.1) to load Next's dev resources (the HMR socket + React
+  // refresh runtime), which Next 16 otherwise blocks as cross-origin — that
+  // block stalls client hydration. Ignored entirely in production builds.
+  allowedDevOrigins: ["127.0.0.1"],
   transpilePackages: [
     "@opsboard/ui",
     "@opsboard/types",
