@@ -4,6 +4,43 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
+// Content-Security-Policy. Everything this app loads is same-origin: scripts +
+// fonts (next/font/local) + the next/og images are served from this origin, the
+// auth client + voice/research APIs are same-origin /api/* fetches (the AI
+// vendors are called server-side), and the waveform is a self-contained canvas.
+// So the fetch directives are 'self' (+ data: images). 'unsafe-inline' is
+// required for React's inline style attributes (the category pills set
+// backgroundColor inline); 'unsafe-eval' is added ONLY in true development
+// (Next's HMR / refresh runtime evals — production App-Router bundles don't, and
+// `test`/other non-prod modes never serve the app, so they don't need it
+// either). form-action is deliberately left UNRESTRICTED so a future OAuth POST
+// flow can't be silently broken (the e2e harness authenticates via a seam, so it
+// can't verify the real sign-in path). A nonce-based script-src is the next
+// tightening step.
+const cspDev = process.env.NODE_ENV === "development";
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${cspDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+// Permissions-Policy: deny every powerful feature except the microphone, which
+// the voice capture (getUserMedia({ audio })) needs — allowed same-origin only.
+const permissionsPolicy = [
+  "camera=()",
+  "microphone=(self)",
+  "geolocation=()",
+  "payment=()",
+  "usb=()",
+  "browsing-topics=()",
+].join(", ");
+
 const config: NextConfig = {
   reactStrictMode: true,
   // Pin the monorepo root (apps/web → two levels up) so Next doesn't infer it
@@ -51,17 +88,17 @@ const config: NextConfig = {
       },
     ];
   },
-  // Baseline security response headers on every route. These are the low-risk,
-  // high-value ones (clickjacking / MIME-sniffing / referrer leakage / forced
-  // TLS); the per-route MCP CORS headers still apply on top. A full
-  // Content-Security-Policy is deliberately deferred — it needs a policy crafted
-  // around next/og, the inline-styled pills, and the OAuth meta-refresh page, so
-  // it warrants its own focused change rather than a blanket guess here.
+  // Baseline security response headers on every route: clickjacking / MIME-
+  // sniffing / referrer leakage / forced TLS, plus a Content-Security-Policy and
+  // a Permissions-Policy (see the policy definitions above). The per-route MCP
+  // CORS headers still apply on top.
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
+          { key: "Content-Security-Policy", value: contentSecurityPolicy },
+          { key: "Permissions-Policy", value: permissionsPolicy },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           {
