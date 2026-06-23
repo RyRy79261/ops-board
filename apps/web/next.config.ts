@@ -10,12 +10,14 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 // vendors are called server-side), and the waveform is a self-contained canvas.
 // So the fetch directives are 'self' (+ data: images). 'unsafe-inline' is
 // required for React's inline style attributes (the category pills set
-// backgroundColor inline); 'unsafe-eval' is added ONLY in dev (Next's HMR /
-// refresh runtime evals — production App-Router bundles don't). form-action is
-// deliberately left UNRESTRICTED so a future OAuth POST flow can't be silently
-// broken (the e2e harness authenticates via a seam, so it can't verify the real
-// sign-in path). A nonce-based script-src is the next tightening step.
-const cspDev = process.env.NODE_ENV !== "production";
+// backgroundColor inline); 'unsafe-eval' is added ONLY in true development
+// (Next's HMR / refresh runtime evals — production App-Router bundles don't, and
+// `test`/other non-prod modes never serve the app, so they don't need it
+// either). form-action is deliberately left UNRESTRICTED so a future OAuth POST
+// flow can't be silently broken (the e2e harness authenticates via a seam, so it
+// can't verify the real sign-in path). A nonce-based script-src is the next
+// tightening step.
+const cspDev = process.env.NODE_ENV === "development";
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${cspDev ? " 'unsafe-eval'" : ""}`,
