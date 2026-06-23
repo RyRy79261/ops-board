@@ -73,6 +73,9 @@ interface CommandResponse {
   needsDisambiguation?: true;
   options?: DisambiguationOption[];
   prompt?: string;
+  /** Echoed back on a destructive re-issue to prove the confirm/disambiguation
+   *  step happened server-side (see the route's confirm-token gate). */
+  confirmToken?: string;
   error?: string;
 }
 
@@ -197,34 +200,39 @@ export function VoiceController() {
     () => {},
   );
 
-  const reissue = React.useCallback(async (intent: VoiceIntent) => {
-    try {
-      const res = await fetch(COMMAND_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ intent, confirmed: true }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | CommandResponse
-        | { error?: string }
-        | null;
-      if (!res.ok || !data) {
+  const reissue = React.useCallback(
+    async (intent: VoiceIntent, confirmToken?: string) => {
+      try {
+        const res = await fetch(COMMAND_ENDPOINT, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          // confirmToken is the server-issued proof for a destructive re-issue;
+          // omitted (undefined) for non-destructive ones, where it isn't required.
+          body: JSON.stringify({ intent, confirmed: true, confirmToken }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | CommandResponse
+          | { error?: string }
+          | null;
+        if (!res.ok || !data) {
+          toast.error("COMMAND FAILED", {
+            body:
+              (data as { error?: string } | null)?.error ??
+              "That command couldn't be completed.",
+            meta: "TAP TO DISMISS",
+          });
+          return;
+        }
+        handleResponseRef.current(data as CommandResponse);
+      } catch {
         toast.error("COMMAND FAILED", {
-          body:
-            (data as { error?: string } | null)?.error ??
-            "That command couldn't be completed.",
+          body: "Network error — please try again.",
           meta: "TAP TO DISMISS",
         });
-        return;
       }
-      handleResponseRef.current(data as CommandResponse);
-    } catch {
-      toast.error("COMMAND FAILED", {
-        body: "Network error — please try again.",
-        meta: "TAP TO DISMISS",
-      });
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Fold a CommandResponse into the right feedback surface.
   const handleResponse = React.useCallback(
@@ -259,7 +267,7 @@ export function VoiceController() {
             { label: confirmLabel(intent), intent: "confirm" },
             { label: "CANCEL", intent: "cancel" },
           ],
-          onConfirm: () => void reissue(intent),
+          onConfirm: () => void reissue(intent, data.confirmToken),
           // Cancel is a no-op (the toast just dismisses).
         });
         return;
@@ -280,7 +288,10 @@ export function VoiceController() {
           onPick: (_pick, index) => {
             const chosen = options[index];
             if (!chosen) return;
-            void reissue(rebindIntentHint(intent, chosen.name));
+            void reissue(
+              rebindIntentHint(intent, chosen.name),
+              data.confirmToken,
+            );
           },
         });
         return;
@@ -324,7 +335,10 @@ export function VoiceController() {
     async (blob: Blob, mimeType: string) => {
       const form = new FormData();
       const ext = mimeType.includes("mp4") ? "m4a" : "webm";
-      form.append("audio", new File([blob], `command.${ext}`, { type: mimeType }));
+      form.append(
+        "audio",
+        new File([blob], `command.${ext}`, { type: mimeType }),
+      );
       form.append("tz", tz);
 
       const res = await fetch(COMMAND_ENDPOINT, { method: "POST", body: form });
