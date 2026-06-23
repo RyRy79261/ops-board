@@ -28,7 +28,8 @@
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "@opsboard/types": "workspace:*",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
@@ -37,7 +38,6 @@
     "@vitest/coverage-v8": "^4.1.7",
     "drizzle-kit": "^0.31.0",
     "eslint": "^10.4.0",
-    "pg": "^8.13.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.7"
   }

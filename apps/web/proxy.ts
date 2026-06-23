@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/neon-auth";
+import { e2eSessionUserFromCookie } from "@/lib/session-e2e";
 
 /**
  * PAGE GATING + the Neon Auth OAuth verifier exchange.
@@ -60,6 +61,24 @@ const protect = auth.middleware({ loginUrl: "/auth/sign-in" });
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
+  // E2E TEST-AUTH SEAM — inert unless E2E_TEST_AUTH=1 in a NON-production build
+  // (mirrors getSessionUser; see lib/session-e2e.ts). The remote Neon Auth proxy
+  // is unavailable under e2e, so a valid `e2e-user` cookie IS the session: let
+  // the request straight through (the RSC getSessionUser resolves the SAME
+  // cookie). This branch cannot run in prod (flag never set + NODE_ENV guard).
+  const e2eActive =
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_TEST_AUTH === "1";
+  if (
+    e2eActive &&
+    e2eSessionUserFromCookie(
+      process.env,
+      request.cookies.get("e2e-user")?.value,
+    )
+  ) {
+    return NextResponse.next();
+  }
+
   // API routes are never page-gated — they authenticate via withAuth() and
   // return JSON 401s. This also keeps the Better Auth handler (/api/auth/*)
   // and the public MCP endpoints reachable.
@@ -88,6 +107,18 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
   }
 
+  // E2E (no valid cookie): the Neon Auth proxy is unavailable, so gate protected
+  // pages straight to the sign-in surface and let /auth* through (no loop) —
+  // mirroring the real gate without the remote dependency.
+  if (e2eActive) {
+    if (pathname.startsWith("/auth")) {
+      return NextResponse.next();
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/sign-in";
+    return NextResponse.redirect(url);
+  }
+
   // Everything else (the board pages + /auth itself) goes through the Neon
   // Auth proxy: verifier exchange on the /auth callback, plus the
   // unauth→/auth/sign-in redirect for protected pages. loginUrl is
@@ -100,6 +131,6 @@ export const config = {
   // Skip Next internals and static files so the proxy only ever runs on
   // real navigations. (The /api/* short-circuit above is belt-and-braces.)
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
+    "/((?!_next|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };
