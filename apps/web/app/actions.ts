@@ -9,8 +9,10 @@ import {
   deleteMission,
   createTask,
 } from "@opsboard/db/mutations";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/neon-auth";
 import { ensureUserSynced } from "@/lib/auth-middleware";
+import { e2eSessionUserFromCookie } from "@/lib/session-e2e";
 import {
   NameField,
   DateField,
@@ -33,6 +35,20 @@ import {
 /** Resolve the verified session user (synced into our mirror), or null. userId
  *  is ALWAYS the session principal — never client input. */
 async function sessionUserId(): Promise<string | null> {
+  // E2E TEST-AUTH SEAM — mirrors getSessionUser (lib/session.ts); inert unless
+  // E2E_TEST_AUTH=1 in a non-production build. The seeded e2e user already exists
+  // in the mirror, so no ensureUserSynced / Neon Auth round-trip is needed.
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_TEST_AUTH === "1"
+  ) {
+    const e2eUser = e2eSessionUserFromCookie(
+      process.env,
+      (await cookies()).get("e2e-user")?.value,
+    );
+    return e2eUser?.userId ?? null;
+  }
+
   const { data: session } = await auth.getSession();
   if (!session?.user?.id) return null;
   const userId = session.user.id;

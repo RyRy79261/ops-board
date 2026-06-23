@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
+    "e2e:local": "bash e2e/run-local.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
@@ -38,6 +41,7 @@
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
     "@opsboard/typescript-config": "workspace:*",
+    "@playwright/test": "^1.49.0",
     "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.1",

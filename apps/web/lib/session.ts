@@ -1,10 +1,12 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createHttpDb } from "@opsboard/db";
 import { getUserSetupCompletedAt } from "@opsboard/db/api-keys";
 import { auth } from "@/lib/neon-auth";
 import { ensureUserSynced } from "@/lib/auth-middleware";
+import { e2eSessionUserFromCookie } from "@/lib/session-e2e";
 
 // RSC / Server-Action session helper — the read-side counterpart to `withAuth`
 // (lib/auth-middleware.ts), which only covers API route handlers. RSC pages and
@@ -31,6 +33,26 @@ export interface SessionUser {
  * returns `{ userId, email }`.
  */
 export async function getSessionUser(): Promise<SessionUser> {
+  // E2E TEST-AUTH SEAM — inert unless E2E_TEST_AUTH=1 in a NON-production build
+  // (set only by the e2e CI job / local `pnpm e2e` against a throwaway DB; never
+  // in prod/preview). When active and the `e2e-user` cookie is present, resolve
+  // the seeded principal and skip the remote Neon Auth round-trip. The real path
+  // below is untouched. See lib/session-e2e.ts for the full security rationale.
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_TEST_AUTH === "1"
+  ) {
+    const e2eUser = e2eSessionUserFromCookie(
+      process.env,
+      (await cookies()).get("e2e-user")?.value,
+    );
+    if (e2eUser) return e2eUser;
+    // In e2e mode the remote Neon Auth API is intentionally unavailable, so a
+    // missing/invalid cookie means "unauthenticated" — redirect cleanly instead
+    // of falling through to a guaranteed network failure against the placeholder.
+    redirect("/auth");
+  }
+
   const { data: session } = await auth.getSession();
   if (!session?.user?.id) {
     redirect("/auth");
