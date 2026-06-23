@@ -100,9 +100,17 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "Audio too large" }, { status: 413 });
   }
 
-  const missionId = form.get("missionId");
-  if (typeof missionId !== "string" || missionId.length === 0) {
-    return NextResponse.json({ error: "Missing `missionId`" }, { status: 400 });
+  // Validate the shape BEFORE the query: missions.id is a uuid column, so a
+  // non-UUID string would reach Postgres and throw "invalid input syntax for
+  // type uuid" → a raw 500. Reject it as a 400 (client error) instead.
+  const missionIdRaw = form.get("missionId");
+  const missionId =
+    typeof missionIdRaw === "string" ? missionIdRaw : "";
+  if (!z.string().uuid().safeParse(missionId).success) {
+    return NextResponse.json(
+      { error: "Invalid or missing `missionId`" },
+      { status: 400 },
+    );
   }
 
   // Scope: the mission must exist AND belong to this user. This is the locked
