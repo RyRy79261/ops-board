@@ -614,8 +614,9 @@ export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 
 // Stored task status (the three CHECK'd values). `blocked` is NOT here — it's
-// derived in @opsboard/core.
-export type TaskStatus = "not-started" | "in-progress" | "done";
+// derived in @opsboard/core. The single source of truth is @opsboard/types;
+// re-exported here so @opsboard/db/schema consumers keep importing it locally.
+export type { TaskStatus } from "@opsboard/types";
 
 export type TaskDependency = typeof taskDependencies.$inferSelect;
 export type NewTaskDependency = typeof taskDependencies.$inferInsert;

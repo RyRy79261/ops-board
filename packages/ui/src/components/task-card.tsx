@@ -7,6 +7,7 @@ import { windowStateDetail, type WindowStateDetail } from "@opsboard/core";
 import { cn } from "../lib/utils";
 import { cardVariants } from "./card";
 import {
+  NEXT_STATUS,
   StatusCycleButton,
   Touch44,
   type StatusCycleStatus,
@@ -126,13 +127,6 @@ export interface TaskCardProps extends Omit<
   /** Tap handler → POST update_task_status with the next wrapping status. */
   onCycle: (next: TaskStatus) => void;
 }
-
-/** Next status in the wrapping cycle (mirrors StatusCycleButton). */
-const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
-  "not-started": "in-progress",
-  "in-progress": "done",
-  done: "not-started",
-};
 
 /** Maps the core detail → the UI pill state (adds the `blocked` overload). */
 function pillState(detail: WindowStateDetail): WindowState {
