@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 import {
   type Category,
+  CATEGORY_DOT,
   CATEGORY_ICON,
   CATEGORY_LABEL,
 } from "../lib/categories";
@@ -95,15 +96,6 @@ export interface CategoryTagProps
   dimmed?: boolean;
 }
 
-const DOT_TONE: Record<Category, string> = {
-  medical: "bg-cat-medical",
-  bureaucratic: "bg-cat-bureaucratic",
-  travel: "bg-cat-travel",
-  gear: "bg-cat-gear",
-  tech: "bg-cat-tech",
-  general: "bg-muted-foreground",
-};
-
 const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
   (
     {
@@ -160,7 +152,7 @@ const CategoryTag = React.forwardRef<HTMLSpanElement, CategoryTagProps>(
                 ? "bg-muted-foreground"
                 : dynamic
                   ? ""
-                  : DOT_TONE[category ?? "general"],
+                  : CATEGORY_DOT[category ?? "general"],
             )}
             style={dynamic && !dimmed ? { backgroundColor: color } : undefined}
           />
