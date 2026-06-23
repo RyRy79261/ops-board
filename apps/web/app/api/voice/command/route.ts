@@ -6,6 +6,7 @@ import { transcribeAudio } from "@/lib/groq";
 import { getClientIp, rateLimiter } from "@/lib/rate-limit";
 import { callForcedToolStrict } from "@/lib/anthropic";
 import { executeIntent } from "@/lib/voice-execute";
+import { issueVoiceConfirmToken, reissueAuthorized } from "@/lib/voice-confirm";
 import { resolveAiKey } from "@/lib/ai-key-resolver";
 import { aiKeyErrorResponse } from "@/app/api/_shared/ai-error-response";
 import { vendorErrorResponse } from "@/app/api/_shared/vendor-errors";
@@ -66,7 +67,37 @@ interface CommandResponseBody {
   options?: unknown;
   /** A prompt for the confirm / disambiguation surfaces. */
   prompt?: string;
+  /**
+   * Server-issued, single-use token the FAB must echo back on a DESTRUCTIVE
+   * re-issue (confirm or disambiguation pick). Proves the confirm/disambiguation
+   * step really happened server-side — a bare `confirmed:true` no longer
+   * executes a delete. See lib/voice-confirm.ts.
+   */
+  confirmToken?: string;
   error?: string;
+}
+
+/**
+ * Attach a fresh confirm token to a DESTRUCTIVE re-issue response so the FAB can
+ * echo it back on the confirm / disambiguation pick. No-op for non-destructive
+ * intents or non-re-issue responses (results / errors). See lib/voice-confirm.ts.
+ */
+async function attachConfirmToken(
+  userId: string,
+  body: CommandResponseBody,
+): Promise<CommandResponseBody> {
+  if (
+    (body.needsConfirmation || body.needsDisambiguation) &&
+    body.intent &&
+    isDestructive(body.intent)
+  ) {
+    body.confirmToken = await issueVoiceConfirmToken(
+      createHttpDb(),
+      userId,
+      body.intent,
+    );
+  }
+  return body;
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -144,8 +175,37 @@ async function handleReissue(req: Request, userId: string): Promise<Response> {
     );
   }
 
+  // SECURITY: a DESTRUCTIVE re-issue (delete_task / delete_mission) must present
+  // the server-issued confirm token from the gate/disambiguation step — a bare
+  // `confirmed:true` is no longer sufficient. This closes the bypass where a
+  // crafted JSON POST could delete the caller's data without the confirm gate.
+  // Non-destructive re-issues are unaffected. (lib/voice-confirm.ts)
+  const presented = (payload as { confirmToken?: unknown }).confirmToken;
+  const authorized = await reissueAuthorized(
+    createHttpDb(),
+    userId,
+    parsed.data,
+    typeof presented === "string" ? presented : undefined,
+  );
+  if (!authorized) {
+    return NextResponse.json(
+      {
+        transcript: "",
+        intent: parsed.data,
+        error:
+          "This delete needs a fresh confirmation — please run the command again.",
+      } satisfies CommandResponseBody,
+      { status: 403 },
+    );
+  }
+
   const outcome = await executeIntent(parsed.data, userId);
-  const body = outcomeToBody("", parsed.data, outcome);
+  // attachConfirmToken handles a CHAINED destructive disambiguation (the pick
+  // resolved one hint but the other is still ambiguous → new token for the next).
+  const body = await attachConfirmToken(
+    userId,
+    outcomeToBody("", parsed.data, outcome),
+  );
   if ("result" in outcome) revalidatePath("/");
   return NextResponse.json(body, { status: 200 });
 }
@@ -307,20 +367,26 @@ async function handleAudio(req: Request, userId: string): Promise<Response> {
     }
   }
   if (mustConfirm) {
+    // A destructive gate issues a confirm token (attachConfirmToken) the FAB
+    // must echo on the re-issue; low-confidence non-destructive gates don't.
     return NextResponse.json(
-      {
+      await attachConfirmToken(userId, {
         transcript,
         intent,
         needsConfirmation: true,
-      } satisfies CommandResponseBody,
+      }),
       { status: 200 },
     );
   }
 
   // 6. Execute (resolve hints → mutation / read). May still surface a soft
-  // confirm / disambiguation if a hint resolves to 0 / many.
+  // confirm / disambiguation if a hint resolves to 0 / many — a destructive
+  // disambiguation also issues a confirm token for the pick re-issue.
   const outcome = await executeIntent(intent, userId);
-  const body = outcomeToBody(transcript, intent, outcome);
+  const body = await attachConfirmToken(
+    userId,
+    outcomeToBody(transcript, intent, outcome),
+  );
   if ("result" in outcome) revalidatePath("/");
   return NextResponse.json(body, { status: 200 });
 }
