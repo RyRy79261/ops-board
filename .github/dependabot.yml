@@ -1,0 +1,29 @@
+# Dependabot version updates. (GitHub's vulnerability ALERTS were already on, but
+# there was no config here, so no update PRs were ever opened — this turns those
+# on.) pnpm keeps a single lockfile at the repo root, so one "/" npm entry covers
+# every workspace package.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # Collapse routine minor/patch bumps into a single PR to keep the noise down;
+    # majors still come as individual PRs so they get a proper look.
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  # Keep the CI workflow's actions (checkout, setup-node, neon-*, pnpm) current.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
