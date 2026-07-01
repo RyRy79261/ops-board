@@ -19,8 +19,8 @@
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
     "@opsboard/typescript-config": "workspace:*",
-    "eslint": "^10.4.0",
+    "eslint": "^10.6.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   }
 }

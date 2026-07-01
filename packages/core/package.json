@@ -25,10 +25,10 @@
   "devDependencies": {
     "@opsboard/eslint-config": "workspace:*",
     "@opsboard/typescript-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.7",
-    "eslint": "^10.4.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^10.6.0",
     "fast-check": "^3.23.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   }
 }
