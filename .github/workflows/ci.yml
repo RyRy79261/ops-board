@@ -191,7 +191,7 @@ jobs:
       - name: Create ephemeral Neon branch
         id: neon-branch
         if: steps.gate.outputs.enabled == 'true'
-        uses: neondatabase/create-branch-action@v5
+        uses: neondatabase/create-branch-action@v6
         with:
           api_key: ${{ secrets.NEON_API_KEY }}
           project_id: ${{ secrets.NEON_PROJECT_ID }}
