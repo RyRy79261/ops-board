@@ -13,6 +13,7 @@ authoritative detail, follow the document map below — don't duplicate it here,
 | `docs/scaffolding-plan.md` | The build plan: stages S0–S8 with file pointers + the asset reuse manifest. |
 | `ops-board.html` | The v1 visual prototype — the three view algorithms to port ~1:1. |
 | `design/design-brief.md` | A one-time handoff to the Pencil agent. **Design is owned downstream of here** (see Pencil section); don't treat it as a spec to maintain. |
+| `docs/research-delegate-v2.md` | The forward plan for external apps using OpsBoard as a research backend: REST + API keys (v2a), integration context sources (v2b). |
 
 **Design is out of scope for this repo's agents.** The visual system (tokens, palette,
 components, screen layouts, states) is owned by the **Pencil agent** + the human operator.
@@ -25,19 +26,16 @@ task orchestration. Single user. It mirrors Camp 404's monorepo conventions in a
 repo and reuses Camp 404's voice + MCP + DB infrastructure, stripped from multi-user to
 single-user. The one net-new piece is the voice **transcript → intent → execute** layer.
 
-## Current state — greenfield, pre-scaffold
+## Current state — built and shipping
 
-This repo currently holds only the brief, prototype, design brief, and planning docs.
-**There is no code, no `package.json`, no `apps/`/`packages/` yet.** Pipeline status:
-
-1. ✅ Research the reference repos + prototype.
-2. ✅ Produce the Pencil design brief (`design/design-brief.md`).
-3. ⏳ The **human operator** drives Pencil to produce a design (see Pencil section).
-4. ⏳ Re-invoke Claude to write the **technical spec** from that design.
-5. ⏳ Scaffold + build per `docs/scaffolding-plan.md`.
-
-Treat the "Conventions" and "Workspace layout" sections below as the rules to **follow when
-scaffolding** — not as descriptions of code that already exists.
+The scaffold plan (S0–S8) is **complete**: the monorepo, DB schema + migrations, core
+derivations, the web app, the voice pipeline, the MCP surface (OAuth+PKCE + the data
+tools + the research-delegate tools), and the AI Research engine (Inngest runner +
+`/api/research*` + `@opsboard/db/research`) all exist and have merged CI-green PRs
+behind them. **Treat the code on disk as the source of truth** — the planning docs
+below describe intent and decisions, not necessarily current shape. Direction of
+travel: OpsBoard is becoming a **shared mission-based research backend** that other
+apps drive over MCP (and, planned, a REST API) — see `docs/research-delegate-v2.md`.
 
 ## Reference repos (local clones — read, don't modify)
 
@@ -58,9 +56,9 @@ scaffolding** — not as descriptions of code that already exists.
 - `design/app.pen` is **encrypted/binary** — never `Read`/`Grep`/`cat` it. The `.pen` file
   is a regenerable artifact, not a source of truth.
 
-## Workspace layout (to scaffold)
+## Workspace layout
 
-Turborepo + pnpm workspaces. **Node >= 22, pnpm 10.x.** Mirror Camp 404:
+Turborepo + pnpm workspaces. **Node >= 22, pnpm 10.x.** Mirrors Camp 404:
 
 ```
 apps/
@@ -76,7 +74,7 @@ packages/
   eslint-config/  typescript-config/
 ```
 
-Once scaffolded, all work runs through Turbo from the repo root:
+All work runs through Turbo from the repo root:
 `pnpm turbo run lint typecheck test build` is the full CI gate; per-package work uses
 `--filter`, e.g. `pnpm --filter @opsboard/web dev`.
 
