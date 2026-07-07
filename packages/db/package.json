@@ -16,7 +16,9 @@
     "./missions": "./src/missions.ts",
     "./mutations": "./src/mutations.ts",
     "./research": "./src/research.ts",
-    "./tasks": "./src/tasks.ts"
+    "./tasks": "./src/tasks.ts",
+    "./client-api-keys": "./src/client-api-keys.ts",
+    "./integrations": "./src/integrations.ts"
   },
   "scripts": {
     "lint": "eslint .",

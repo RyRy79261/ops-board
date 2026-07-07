@@ -28,14 +28,19 @@ const MIGRATIONS_FOLDER = resolve(
  * four MCP tables, the `users` table (added in 0002) that the user-scoping FKs
  * target, `user_api_keys` (added in 0004) for the BYO key vault, `user_
  * preferences` (0006), plus the AI-Research pair `research_jobs` +
- * `task_research_notes` (added in 0007).
+ * `task_research_notes` (added in 0007), the programmatic `client_api_keys`
+ * (0012), and the research-context pair `integrations` +
+ * `mission_integrations` (0012).
  */
 export const EXPECTED_TABLES = [
   "categories",
+  "client_api_keys",
+  "integrations",
   "mcp_access_tokens",
   "mcp_audit_log",
   "mcp_auth_codes",
   "mcp_oauth_clients",
+  "mission_integrations",
   "missions",
   "research_jobs",
   "task_dependencies",

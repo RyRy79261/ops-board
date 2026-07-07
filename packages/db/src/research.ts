@@ -43,6 +43,12 @@ export interface CreateResearchJobInput {
   taskId: string;
   /** The research question the user confirmed via CUE RESEARCH. */
   query: string;
+  /**
+   * Cue-time SNAPSHOT of the mission's merged linked-integration context (see
+   * ./integrations.ts getMergedContextForMission). Null/absent when the
+   * mission has no linked context sources.
+   */
+  context?: string | null;
 }
 
 /** A patch for updateResearchJob — only provided fields are written. */
@@ -132,6 +138,7 @@ export async function createResearchJob(
       missionId: input.missionId,
       taskId: input.taskId,
       query: input.query.trim(),
+      context: input.context ?? null,
     })
     // Race-proof idempotency: the partial unique index (task_id WHERE
     // state='running') rejects a second running job for the same task. On

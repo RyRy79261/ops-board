@@ -317,6 +317,96 @@ export const userPreferences = pgTable("user_preferences", {
     .defaultNow(),
 });
 
+// --- Programmatic API keys (the /api/v1 REST surface) ---------------------
+// Machine credentials for the operator's OWN external apps (e.g. the Van Build
+// console) to call the /api/v1 REST mirror of the MCP surface. DISTINCT from
+// `user_api_keys` above (the BYO AI-provider vault): these are credentials WE
+// mint, so — like mcp_access_tokens — only the SHA-256 of the secret is stored
+// and a DB dump can't replay a key. `prefix` is the first few chars of the
+// plaintext for display ("opsb_a1b2…"), never enough to reconstruct it.
+// Creation/revocation happens in the Settings UI ONLY (session-authed) — never
+// over REST or MCP, so a leaked credential can't mint more credentials.
+export const clientApiKeys = pgTable(
+  "client_api_keys",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // Operator-facing label ("van-build console").
+    name: text("name").notNull(),
+    keyHash: text("key_hash").notNull().unique(),
+    prefix: text("prefix").notNull(),
+    // Space-separated scopes, reserved for later narrowing; empty = full access.
+    scope: text("scope").notNull().default(""),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { mode: "date" }),
+    revokedAt: timestamp("revoked_at", { mode: "date" }),
+  },
+  (k) => ({
+    userIdx: index("client_api_keys_user_idx").on(k.userId),
+  }),
+);
+
+// --- Integrations (external apps as research context sources) --------------
+// A consuming app registers itself as an integration with a standing `context`
+// document (constraints the research runner should know: "MWB Crafter, 24 V /
+// 300 Ah system, budget X"). Linking an integration to a mission (join table)
+// makes every research job cued on that mission carry a SNAPSHOT of the merged
+// linked context (research_jobs.context) into the synthesis prompt. The
+// context is operator/app-authored plain text, hard-capped in the service
+// layer because it enters a prompt.
+export const integrations = pgTable(
+  "integrations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // Stable machine identifier, unique per user (e.g. "van-build").
+    slug: text("slug").notNull(),
+    description: text("description"),
+    context: text("context").notNull().default(""),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (i) => ({
+    userSlugIdx: uniqueIndex("integrations_user_slug_idx").on(
+      i.userId,
+      i.slug,
+    ),
+    userIdx: index("integrations_user_idx").on(i.userId),
+  }),
+);
+
+// Mission ↔ integration links (many-to-many): one app can inform several
+// missions, a mission can draw context from several apps. Mission-level on
+// purpose — task-level linking adds bookkeeping without a clearer story.
+export const missionIntegrations = pgTable(
+  "mission_integrations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    missionId: uuid("mission_id")
+      .notNull()
+      .references(() => missions.id, { onDelete: "cascade" }),
+    integrationId: uuid("integration_id")
+      .notNull()
+      .references(() => integrations.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (mi) => ({
+    linkIdx: uniqueIndex("mission_integrations_link_idx").on(
+      mi.missionId,
+      mi.integrationId,
+    ),
+    missionIdx: index("mission_integrations_mission_idx").on(mi.missionId),
+    integrationIdx: index("mission_integrations_integration_idx").on(
+      mi.integrationId,
+    ),
+  }),
+);
+
 // --- AI Research (Task Agent) --------------------------------------------
 // The research flow is the ONE place voice WRITES. A `research_jobs` row tracks
 // one async, mission+task-bound web-research job run by the durable runner
@@ -353,6 +443,11 @@ export const researchJobs = pgTable(
       .references(() => tasks.id, { onDelete: "cascade" }),
     // The research question the user confirmed via CUE RESEARCH.
     query: text("query").notNull(),
+    // SNAPSHOT of the merged linked-integration context taken at cue time (see
+    // `integrations` above). NULL when the mission has no linked integrations.
+    // A snapshot (not a live read at run time) so a completed job records
+    // exactly what informed it, even if the context changes later.
+    context: text("context"),
     state: researchJobStateEnum("state").notNull().default("running"),
     // The streaming LIVE STEP LOG the runner advances. Defaults to an empty log.
     steps: jsonb("steps")
@@ -626,6 +721,15 @@ export type NewUserApiKeyRow = typeof userApiKeys.$inferInsert;
 
 export type UserPreferencesRow = typeof userPreferences.$inferSelect;
 export type NewUserPreferencesRow = typeof userPreferences.$inferInsert;
+
+export type ClientApiKey = typeof clientApiKeys.$inferSelect;
+export type NewClientApiKey = typeof clientApiKeys.$inferInsert;
+
+export type Integration = typeof integrations.$inferSelect;
+export type NewIntegration = typeof integrations.$inferInsert;
+
+export type MissionIntegration = typeof missionIntegrations.$inferSelect;
+export type NewMissionIntegration = typeof missionIntegrations.$inferInsert;
 
 export type ResearchJob = typeof researchJobs.$inferSelect;
 export type NewResearchJob = typeof researchJobs.$inferInsert;
