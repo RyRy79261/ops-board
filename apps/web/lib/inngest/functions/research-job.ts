@@ -77,7 +77,9 @@ export const researchJob = inngest.createFunction(
     // (e.g. dismissed, or a duplicate event for an already-finished job).
     const job = await step.run("load-job", async () => {
       const j = await getResearchJob(jobId, userId);
-      return j && j.state === "running" ? { query: j.query } : null;
+      return j && j.state === "running"
+        ? { query: j.query, context: j.context }
+        : null;
     });
     if (!job) return { skipped: true };
 
@@ -94,7 +96,7 @@ export const researchJob = inngest.createFunction(
       } catch {
         return { ok: false as const, error: "No Anthropic key configured." };
       }
-      return synthesizeResearch(job.query, apiKey);
+      return synthesizeResearch(job.query, apiKey, job.context);
     });
     if (!synth.ok) {
       await step.run("fail", () =>

@@ -13,6 +13,7 @@ import {
   getResearchJobsForTask,
   updateResearchJob,
 } from "@opsboard/db/research";
+import { getMergedContextForMission } from "@opsboard/db/integrations";
 
 // /api/research — the CUE RESEARCH enqueue (the first write-consent gate). Takes
 // a confirmed { missionId, taskId, query }, creates the research_jobs row
@@ -96,11 +97,20 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json(body, { status: 200 });
   }
 
+  // Cue-time SNAPSHOT of the mission's merged linked-integration context (null
+  // when nothing is linked) — the runner's synthesis prompt reads it as a
+  // fenced CONTEXT block (see @opsboard/db/integrations).
+  const context = await getMergedContextForMission(
+    parsed.data.missionId,
+    user.id,
+  );
+
   const res = await createResearchJob(
     {
       missionId: parsed.data.missionId,
       taskId: parsed.data.taskId,
       query: parsed.data.query,
+      context,
     },
     user.id,
   );
@@ -123,7 +133,14 @@ export async function POST(req: Request): Promise<Response> {
     await updateResearchJob(res.job.id, user.id, {
       state: "error",
       errorMessage: "Couldn't start the research runner. Try again.",
-    }).catch(() => {});
+    }).catch((rollbackErr) => {
+      // A double-failure strands the row in `running` (blocking re-cues via
+      // the idempotency check) — make it operationally discoverable.
+      console.error(
+        `research job ${res.job.id} stuck in "running" — rollback to "error" also failed`,
+        rollbackErr,
+      );
+    });
     return NextResponse.json(
       { error: "Couldn't start the research runner. Try again." },
       { status: 502 },
