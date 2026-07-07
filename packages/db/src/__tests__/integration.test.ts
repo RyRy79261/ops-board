@@ -48,15 +48,16 @@ describe.skipIf(!hasDb)("@opsboard/db integration (real Postgres)", () => {
 
   // --- Migration --------------------------------------------------------
   describe("migration", () => {
-    it("applies cleanly and creates the 13 expected tables", async () => {
+    it("applies cleanly and creates every expected table", async () => {
       const tables = await h.listTables();
       for (const expected of EXPECTED_TABLES) {
         expect(tables).toContain(expected);
       }
-      // 4 domain + 4 MCP + users + user_api_keys + user_preferences +
-      // research_jobs + task_research_notes are present.
+      // The full inventory (see EXPECTED_TABLES in db-harness.ts): domain +
+      // MCP + auth/keys/preferences + research + integrations. Pinned to the
+      // harness list rather than a literal so adding a table updates ONE place.
       const present = EXPECTED_TABLES.filter((t) => tables.includes(t));
-      expect(present).toHaveLength(13);
+      expect(present).toHaveLength(EXPECTED_TABLES.length);
     });
   });
 
