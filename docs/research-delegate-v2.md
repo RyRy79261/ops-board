@@ -1,11 +1,14 @@
 # Research Delegate v2 — REST surface, API keys, integration context sources
 
-**Status: proposal (not yet built).** v1 — the 5 research MCP tools
-(`cue_research`, `get_research_job`, `list_research_jobs`,
-`keep_research_notes`, `read_research_notes`) — ships on this branch and is
-documented in `apps/web/lib/mcp/tools/research.ts`. This doc specs the next
-two stages so consuming apps (Van Build console and future ones) can use
-OpsBoard as a shared, mission-based research backend.
+**Status: BUILT (same branch as v1).** v1 — the 5 research MCP tools — plus
+both stages below now ship together: v2a is `apps/web/app/api/v1/**` +
+`apps/web/lib/api-principal.ts` + `/settings/api-access`; v2b is
+`@opsboard/db/integrations`, the integration MCP tools
+(`apps/web/lib/mcp/tools/integrations.ts`), and the cue-time context snapshot
+threaded through `@/lib/research-ops` into the runner's synthesis prompt.
+This doc remains the design rationale; the "open questions" at the end were
+resolved with the recommended options (full CRUD mirror, UI-only key
+creation, 4k/8k context caps).
 
 The product framing: OpsBoard is the **fact-finder and tracker** — it owns
 missions, tasks, dependencies, and cited research notes. Each consuming app is
