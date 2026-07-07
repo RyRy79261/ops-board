@@ -13,7 +13,7 @@ authoritative detail, follow the document map below — don't duplicate it here,
 | `docs/scaffolding-plan.md` | The build plan: stages S0–S8 with file pointers + the asset reuse manifest. |
 | `ops-board.html` | The v1 visual prototype — the three view algorithms to port ~1:1. |
 | `design/design-brief.md` | A one-time handoff to the Pencil agent. **Design is owned downstream of here** (see Pencil section); don't treat it as a spec to maintain. |
-| `docs/research-delegate-v2.md` | The forward plan for external apps using OpsBoard as a research backend: REST + API keys (v2a), integration context sources (v2b). |
+| `docs/research-delegate-v2.md` | The forward plan for external apps using OpsBoard as a research backend. |
 
 **Design is out of scope for this repo's agents.** The visual system (tokens, palette,
 components, screen layouts, states) is owned by the **Pencil agent** + the human operator.

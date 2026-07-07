@@ -1,18 +1,17 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
-  createResearchJob,
   getResearchJob,
   getResearchJobsForTask,
-  updateResearchJob,
   getResearchNotes,
   getResearchNoteSummariesByMissionId,
-  appendResearchNote,
 } from "@opsboard/db/research";
 import { getTask } from "@opsboard/db/tasks";
 import { getMission } from "@opsboard/db/missions";
-import { resolveAiKey, NoAiKeyError } from "@/lib/ai-key-resolver";
-import { inngest } from "@/lib/inngest/client";
+import {
+  cueResearchForTask,
+  keepResearchNotesForJob,
+} from "@/lib/research-ops";
 import { rateLimiter } from "@/lib/rate-limit";
 import { toResearchJobView } from "@/lib/research-types";
 import { runTool, ToolError, notFound } from "../tool-utils";
@@ -28,8 +27,12 @@ import { runTool, ToolError, notFound } from "../tool-utils";
 // (audit + owner-scoping + error masking), Zod at the boundary, foreign ids
 // read as not-found, `{ok:false}` service results surfaced as ToolError.
 //
+// The cue / keep FLOWS live in @/lib/research-ops (shared with the /api/v1
+// REST surface — one implementation, two transports); this layer only maps
+// outcome codes onto the MCP error vocabulary.
+//
 // KEY SAFETY: the user's Anthropic key is resolved INSIDE the runner per step
-// and never crosses this layer — `cue_research` only does a fail-closed
+// and never crosses this layer — the cue flow only does a fail-closed
 // EXISTENCE check (the MCP analogue of the HTTP route's 402) so a keyless
 // user's cue never creates a job that is doomed to fail inside the runner.
 //
@@ -45,7 +48,7 @@ import { runTool, ToolError, notFound } from "../tool-utils";
 
 // --- Shared validation -------------------------------------------------------
 
-const uuid = z.string().uuid("Expected a UUID.");
+const uuid = z.uuid("Expected a UUID.");
 
 /** Same bound as the HTTP route's CueResearchBody. */
 const researchQuery = z.string().trim().min(1).max(280);
@@ -60,8 +63,6 @@ const researchFocus = z.string().trim().min(1).max(500);
 /** Same per-principal budgets as the HTTP routes. */
 const CUE_LIMIT_PER_MINUTE = 20;
 const KEEP_LIMIT_PER_MINUTE = 30;
-
-const RUNNER_START_FAILED = "Couldn't start the research runner. Try again.";
 
 /** Reserve one token from a principal bucket or throw a caller-visible error. */
 async function limitOrThrow(key: string, limit: number): Promise<void> {
@@ -104,75 +105,22 @@ export function registerResearchTools(server: McpServer): void {
             CUE_LIMIT_PER_MINUTE,
           );
 
-          // missionId is DERIVED from the task, never caller-supplied. A
-          // foreign/unknown task reads as not-found (owner-scoped read).
-          const task = await getTask(args.taskId, ctx.userId);
-          if (!task) notFound("No task with that id.");
-
-          // Fail CLOSED on the BYO key BEFORE any write (the MCP analogue of
-          // the HTTP route's 402): never create a job row for a keyless user —
-          // the failure would otherwise only surface inside the runner.
-          try {
-            await resolveAiKey(ctx.userId, "anthropic");
-          } catch (err) {
-            if (err instanceof NoAiKeyError) {
-              throw new ToolError(
-                "No Anthropic key configured — add one in Settings before cueing research.",
-              );
-            }
-            throw err;
-          }
-
-          // Idempotency: at most one RUNNING job per task — return the
-          // in-flight job rather than fanning out duplicate spend. (The DB's
-          // partial unique index backstops the read-then-write race.)
-          const existing = await getResearchJobsForTask(
-            args.taskId,
+          // The shared flow: ownership → fail-closed key check → idempotency →
+          // context snapshot → create → enqueue (see @/lib/research-ops).
+          // missionId is DERIVED from the task, never caller-supplied.
+          const out = await cueResearchForTask(
+            { taskId: args.taskId, query: args.query, focus: args.focus },
             ctx.userId,
           );
-          const running = existing.find((j) => j.state === "running");
-          if (running) {
-            return {
-              jobId: running.id,
-              taskId: args.taskId,
-              state: "running" as const,
-              alreadyRunning: true,
-            };
+          if (!out.ok) {
+            if (out.code === "not-found") notFound(out.error);
+            throw new ToolError(out.error);
           }
-
-          // `focus` rides along as a suffix on the stored query — the runner's
-          // synthesis prompt reads the whole string; no engine change.
-          const query = args.focus
-            ? `${args.query}\nFocus: ${args.focus}`
-            : args.query;
-
-          const res = await createResearchJob(
-            { missionId: task!.missionId, taskId: args.taskId, query },
-            ctx.userId,
-          );
-          if (!res.ok) throw new ToolError(res.error);
-
-          // Fire the durable runner. If the enqueue fails the row would dangle
-          // in `running` forever — fail it (best-effort) and surface cleanly.
-          try {
-            await inngest.send({
-              name: "research/job.requested",
-              data: { jobId: res.job.id, userId: ctx.userId },
-            });
-          } catch (err) {
-            console.error("inngest.send research/job.requested failed", err);
-            await updateResearchJob(res.job.id, ctx.userId, {
-              state: "error",
-              errorMessage: RUNNER_START_FAILED,
-            }).catch(() => {});
-            throw new ToolError(RUNNER_START_FAILED);
-          }
-
           return {
-            jobId: res.job.id,
-            taskId: args.taskId,
+            jobId: out.jobId,
+            taskId: out.taskId,
             state: "running" as const,
-            alreadyRunning: false,
+            alreadyRunning: out.alreadyRunning,
           };
         },
       }),
@@ -253,38 +201,19 @@ export function registerResearchTools(server: McpServer): void {
             KEEP_LIMIT_PER_MINUTE,
           );
 
-          const job = await getResearchJob(args.jobId, ctx.userId);
-          if (!job) notFound("No research job with that id.");
-          if (job!.state !== "complete" || !job!.result) {
-            throw new ToolError("This research isn't ready to keep yet.");
+          // Shared flow (see @/lib/research-ops): complete-only, idempotent
+          // per job, persists the job's OWN server-stored result.
+          const out = await keepResearchNotesForJob(args.jobId, ctx.userId);
+          if (!out.ok) {
+            if (out.code === "not-found") notFound(out.error);
+            throw new ToolError(out.error);
           }
-
-          // Idempotency: already kept for THIS job → return the existing note.
-          // (The DB's partial unique index on job_id backstops the race.)
-          const existing = await getResearchNotes(job!.taskId, ctx.userId);
-          const kept = existing.find((n) => n.jobId === args.jobId);
-          if (kept) {
-            return {
-              ok: true,
-              taskId: job!.taskId,
-              jobId: args.jobId,
-              noteId: kept.id,
-              alreadyKept: true,
-            };
-          }
-
-          // Persist the job's OWN result (re-validated inside appendResearchNote).
-          const res = await appendResearchNote(
-            { taskId: job!.taskId, jobId: args.jobId, content: job!.result },
-            ctx.userId,
-          );
-          if (!res.ok) throw new ToolError(res.error);
           return {
             ok: true,
-            taskId: job!.taskId,
-            jobId: args.jobId,
-            noteId: res.note.id,
-            alreadyKept: false,
+            taskId: out.taskId,
+            jobId: out.jobId,
+            noteId: out.noteId,
+            alreadyKept: out.alreadyKept,
           };
         },
       }),

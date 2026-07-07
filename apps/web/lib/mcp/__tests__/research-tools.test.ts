@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { z } from "zod";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -29,6 +29,9 @@ vi.mock("@opsboard/db/tasks", () => ({
 }));
 vi.mock("@opsboard/db/missions", () => ({
   getMission: vi.fn(),
+}));
+vi.mock("@opsboard/db/integrations", () => ({
+  getMergedContextForMission: vi.fn(async () => null),
 }));
 vi.mock("@/lib/ai-key-resolver", () => {
   class NoAiKeyError extends Error {
@@ -62,6 +65,7 @@ import {
 } from "@opsboard/db/research";
 import { getTask } from "@opsboard/db/tasks";
 import { getMission } from "@opsboard/db/missions";
+import { getMergedContextForMission } from "@opsboard/db/integrations";
 import { resolveAiKey, NoAiKeyError } from "@/lib/ai-key-resolver";
 import { inngest } from "@/lib/inngest/client";
 import { rateLimiter } from "@/lib/rate-limit";
@@ -90,7 +94,10 @@ const fakeServer = {
     tools.set(name, { inputSchema: cfg.inputSchema, handler });
   },
 } as unknown as McpServer;
-registerResearchTools(fakeServer);
+
+beforeAll(() => {
+  registerResearchTools(fakeServer);
+});
 
 const extra = {
   authInfo: {
@@ -195,7 +202,12 @@ describe("cue_research", () => {
     });
     // missionId derived from the task, never caller-supplied.
     expect(createResearchJob).toHaveBeenCalledWith(
-      { missionId: MISSION_ID, taskId: TASK_ID, query: "gas vs induction" },
+      {
+        missionId: MISSION_ID,
+        taskId: TASK_ID,
+        query: "gas vs induction",
+        context: null,
+      },
       USER,
     );
     expect(inngest.send).toHaveBeenCalledWith({
@@ -223,6 +235,31 @@ describe("cue_research", () => {
         taskId: TASK_ID,
         query:
           "compare 24V inverters\nFocus: specs, price, where to buy — as a comparison",
+        context: null,
+      },
+      USER,
+    );
+  });
+
+  it("snapshots the mission's merged integration context onto the job", async () => {
+    vi.mocked(getTask).mockResolvedValue(task() as never);
+    vi.mocked(getResearchJobsForTask).mockResolvedValue([]);
+    vi.mocked(getMergedContextForMission).mockResolvedValue(
+      "[Van Build]\nMWB Crafter, 24V / 300Ah system.",
+    );
+    vi.mocked(createResearchJob).mockResolvedValue({
+      ok: true,
+      job: job() as never,
+    });
+
+    await call("cue_research", { taskId: TASK_ID, query: "gas vs induction" });
+    expect(getMergedContextForMission).toHaveBeenCalledWith(MISSION_ID, USER);
+    expect(createResearchJob).toHaveBeenCalledWith(
+      {
+        missionId: MISSION_ID,
+        taskId: TASK_ID,
+        query: "gas vs induction",
+        context: "[Van Build]\nMWB Crafter, 24V / 300Ah system.",
       },
       USER,
     );
@@ -230,6 +267,7 @@ describe("cue_research", () => {
 
   it("fails CLOSED for a keyless user — clear error, no job row created", async () => {
     vi.mocked(getTask).mockResolvedValue(task() as never);
+    vi.mocked(getResearchJobsForTask).mockResolvedValue([]);
     vi.mocked(resolveAiKey).mockRejectedValue(new NoAiKeyError("anthropic"));
 
     const res = await call("cue_research", {
@@ -242,8 +280,32 @@ describe("cue_research", () => {
     expect(inngest.send).not.toHaveBeenCalled();
   });
 
+  it("re-attaches to an in-flight job even when the key is missing (no write, no key needed)", async () => {
+    vi.mocked(getTask).mockResolvedValue(task() as never);
+    vi.mocked(getResearchJobsForTask).mockResolvedValue([
+      job({ state: "running" }) as never,
+    ]);
+    vi.mocked(resolveAiKey).mockRejectedValue(new NoAiKeyError("anthropic"));
+
+    const res = await call("cue_research", {
+      taskId: TASK_ID,
+      query: "gas vs induction",
+    });
+    expect(res).toEqual({
+      kind: "ok",
+      payload: {
+        jobId: JOB_ID,
+        taskId: TASK_ID,
+        state: "running",
+        alreadyRunning: true,
+      },
+    });
+    expect(resolveAiKey).not.toHaveBeenCalled();
+  });
+
   it("masks a non-key resolveAiKey failure as a generic internal error", async () => {
     vi.mocked(getTask).mockResolvedValue(task() as never);
+    vi.mocked(getResearchJobsForTask).mockResolvedValue([]);
     vi.mocked(resolveAiKey).mockRejectedValue(new Error("vault exploded: sql"));
 
     const res = await call("cue_research", {
@@ -301,6 +363,28 @@ describe("cue_research", () => {
     expect(updateResearchJob).toHaveBeenCalledWith(JOB_ID, USER, {
       state: "error",
       errorMessage: "Couldn't start the research runner. Try again.",
+    });
+  });
+
+  it("still surfaces a clean error when the rollback itself also fails", async () => {
+    vi.mocked(getTask).mockResolvedValue(task() as never);
+    vi.mocked(getResearchJobsForTask).mockResolvedValue([]);
+    vi.mocked(createResearchJob).mockResolvedValue({
+      ok: true,
+      job: job() as never,
+    });
+    vi.mocked(inngest.send).mockRejectedValue(new Error("inngest down"));
+    vi.mocked(updateResearchJob).mockRejectedValue(new Error("db down too"));
+
+    const res = await call("cue_research", {
+      taskId: TASK_ID,
+      query: "gas vs induction",
+    });
+    // The double-failure is logged (job stuck in running) but the caller
+    // still gets the clean message — never an unhandled rejection.
+    expect(res).toEqual({
+      kind: "error",
+      message: "Couldn't start the research runner. Try again.",
     });
   });
 

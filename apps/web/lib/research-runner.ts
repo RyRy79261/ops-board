@@ -107,10 +107,11 @@ const EMIT_RESEARCH_RESULT_TOOL: ForcedTool = {
 export async function synthesizeResearch(
   query: string,
   apiKey: string,
+  context?: string | null,
 ): Promise<SynthesizeOutcome> {
   let prose: string;
   try {
-    prose = await synthesize(query, apiKey);
+    prose = await synthesize(query, apiKey, context);
   } catch (err) {
     console.error("research synthesis failed", err);
     return { ok: false, error: "Research failed while searching the web." };
@@ -155,10 +156,16 @@ export async function structureResearch(
  * before a pause isn't lost. THROWS if the turn never completes within the budget
  * (so a truncated answer is never presented as a finished result).
  */
-async function synthesize(query: string, apiKey: string): Promise<string> {
+async function synthesize(
+  query: string,
+  apiKey: string,
+  context?: string | null,
+): Promise<string> {
   const client = new Anthropic({ apiKey });
   const messages: Anthropic.MessageParam[] = [
-    { role: "user", content: researchSynthesisPrompt.user(query) },
+    // `context` is the job's cue-time integration-context snapshot (or absent);
+    // the prompt template fences it as reference data.
+    { role: "user", content: researchSynthesisPrompt.user(query, context) },
   ];
 
   const deadline = Date.now() + SYNTHESIS_BUDGET_MS;

@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerOpsboardDataTools } from "./tools/opsboard";
 import { registerResearchTools } from "./tools/research";
+import { registerIntegrationTools } from "./tools/integrations";
 
 // ADAPTED from camp-404 apps/web/lib/mcp/server.ts (scaffolding-plan.md S6).
 // `registerOpsboardTools(server)` is the single entry point that registers the
@@ -17,4 +18,5 @@ import { registerResearchTools } from "./tools/research";
 export function registerOpsboardTools(server: McpServer): void {
   registerOpsboardDataTools(server);
   registerResearchTools(server);
+  registerIntegrationTools(server);
 }
