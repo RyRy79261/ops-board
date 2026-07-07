@@ -135,6 +135,16 @@ export function SettingsHub({
               />
             </Link>
             <Link
+              href="/settings/api-access"
+              className="outline-none focus-visible:bg-card-elevated"
+            >
+              <SettingsRow
+                label="API access"
+                description="Keys for your own apps to use the REST API."
+                chevron
+              />
+            </Link>
+            <Link
               href="/account"
               className="outline-none focus-visible:bg-card-elevated"
             >
