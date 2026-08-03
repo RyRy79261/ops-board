@@ -204,7 +204,11 @@ jobs:
           DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
         run: pnpm --filter @opsboard/db db:migrate
       - name: Delete the ephemeral Neon branch
-        if: always() && steps.gate.outputs.enabled == 'true'
+        # Only if the branch actually got created. Without the outcome check a
+        # failed create (e.g. the project is at its branch limit) is followed by
+        # a "Branch not found" delete failure, which buries the real error under
+        # a second, misleading one.
+        if: always() && steps.gate.outputs.enabled == 'true' && steps.neon-branch.outcome == 'success'
         uses: neondatabase/delete-branch-action@v3
         with:
           api_key: ${{ secrets.NEON_API_KEY }}
@@ -223,6 +227,39 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Governance, adopted from intake-tracker: the audit only stays meaningful
+      # if the hardening settings and the documented ignore list are still there.
+      # Without this, deleting four lines from pnpm-workspace.yaml or emptying
+      # ignoreGhsas would leave the job green while the posture silently changed.
+      - name: Verify supply chain config
+        run: |
+          missing=0
+          for setting in minimumReleaseAge trustPolicy blockExoticSubdeps auditLevel; do
+            if ! grep -q "^${setting}:" pnpm-workspace.yaml; then
+              echo "::error::Missing required security setting: ${setting} in pnpm-workspace.yaml"
+              missing=1
+            fi
+          done
+          # Every ignored GHSA is a better-auth advisory that cannot be actioned
+          # while @neondatabase/auth@0.4.1-beta pins better-auth@1.4.18. If that
+          # pin is ever lifted, drop the ignores rather than growing the list.
+          if ! node -e "
+            const p = require('./package.json');
+            const ig = p.pnpm?.auditConfig?.ignoreGhsas ?? [];
+            const ov = Object.keys(p.pnpm?.overrides ?? {});
+            if (ig.length === 0) throw new Error('pnpm.auditConfig.ignoreGhsas is empty');
+            if (ov.length === 0) throw new Error('pnpm.overrides is empty');
+            if (p.pnpm?.overrides?.['better-auth'] !== '~1.4.18')
+              throw new Error('the better-auth pin changed — re-check the ignored advisories');
+            console.log(\`ignoreGhsas: \${ig.length}, overrides: \${ov.length}\`);
+          "; then
+            echo "::error::Supply-chain config in package.json failed its checks"
+            missing=1
+          fi
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+          echo "All supply chain settings present"
       - run: pnpm audit --audit-level high
 
   # Browser end-to-end regression tests (Playwright) against a real `next dev`

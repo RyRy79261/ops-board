@@ -1,3 +1,20 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Supply-chain posture, adopted from intake-tracker.
+#   minimumReleaseAge  - quarantine brand-new releases for 24h, so a compromised
+#                        publish has to survive a day before it can land here.
+#   trustPolicy        - refuse resolutions that move a package backwards.
+#   blockExoticSubdeps - no git/tarball/link subdependencies.
+#   auditLevel         - the floor `pnpm audit` fails at, matching CI.
+#
+# The advisory ignore list and the transitive overrides live in the root
+# package.json under `pnpm.auditConfig.ignoreGhsas` / `pnpm.overrides`, because
+# pnpm 10.x reads auditConfig from package.json and not from this file. Every
+# ignored GHSA is a better-auth advisory blocked by @neondatabase/auth@0.4.1-beta
+# pinning better-auth@1.4.18 — see the CI `Verify supply chain config` step.
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+auditLevel: high
